@@ -2,32 +2,32 @@
 
 A terminal-based HTTP client built with Bun and OpenTUI.
 
-## Phase 0: Core Architecture (Foundation)
+## Phase 0: Core Architecture (Foundation) ✅ COMPLETE
 **Goal:** Establish the basic UI layout and navigation system
 
-- [ ] Split-screen layout (Request panel / Response panel)
-  - [ ] Create RequestPanel component (40% height)
-  - [ ] Create ResponsePanel component (60% height)
-  - [ ] Implement flexbox layout in App.tsx
-  - [ ] Add borders and visual separation
+- [x] Split-screen layout (Request panel / Response panel)
+  - [x] Create RequestPanel component (40% height)
+  - [x] Create ResponsePanel component (60% height)
+  - [x] Implement flexbox layout in App.tsx
+  - [x] Add borders and visual separation
   
-- [ ] **Mouse-first navigation system** (Primary)
-  - [ ] Click panels to focus (Request/Response)
-  - [ ] Click tabs to switch between tabs
-  - [ ] Click buttons to activate (Send, Save, etc.)
-  - [ ] Click input fields to focus and edit
-  - [ ] Hover states (cursor changes on interactive elements)
-  - [ ] Visual focus indicators (border colors)
+- [x] **Mouse-first navigation system** (Primary)
+  - [x] Click panels to focus (Request/Response)
+  - [x] Click tabs to switch between tabs
+  - [x] Click buttons to activate (Send, Save, etc.)
+  - [x] Click input fields to focus and edit
+  - [x] Hover states (cursor changes on interactive elements)
+  - [x] Visual focus indicators (border colors)
   
-- [ ] **Keyboard navigation** (Secondary for power users)
-  - [ ] Tab/Shift+Tab to cycle between panels
-  - [ ] Arrow keys for navigation in lists
-  - [ ] Enter to activate buttons/selections
-  - [ ] Escape to close modals
+- [x] **Keyboard navigation** (Secondary for power users)
+  - [x] Tab/Shift+Tab to cycle between panels
+  - [x] Arrow keys for navigation in lists
+  - [x] Enter to activate buttons/selections
+  - [x] Escape to close modals
   
-- [ ] Basic input components
-  - [ ] URLInput component with click-to-focus
-  - [ ] MethodSelector dropdown with click selection
+- [x] Basic input components
+  - [x] URLInput component with click-to-focus
+  - [x] MethodSelector dropdown with click selection
   - [ ] Send button with onMouseDown handler
   
 - [ ] Testing
