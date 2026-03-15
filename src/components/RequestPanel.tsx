@@ -61,7 +61,7 @@ export function RequestPanel({
           style={{
             flexGrow: 1,
             border: true,
-            borderColor: '#555555',
+            borderColor: focused ? '#CC8844' : '#555555',
             paddingLeft: 1,
             paddingRight: 1,
           }}
@@ -69,7 +69,7 @@ export function RequestPanel({
             e.stopPropagation();
           }}
         >
-          <text fg={url ? '#FFFFFF' : '#666666'}>{url || 'Enter URL...'}</text>
+          <input placeholder="Enter URL..." value={url} onInput={onUrlChange} focused={focused} />
         </box>
       </box>
 

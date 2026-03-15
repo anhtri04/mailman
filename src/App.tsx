@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { useFocus } from './hooks';
 import { RequestPanel, ResponsePanel } from './components';
+import { sendRequest } from './services/http-client';
 import type { RequestOptions, ResponseState } from './types';
 
 export function App() {
@@ -33,17 +34,22 @@ export function App() {
 
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+      const result = await sendRequest(request);
+      setResponse(result);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       setResponse({
-        status: 200,
-        statusText: 'OK',
-        body: JSON.stringify({ message: 'Hello from mailman!' }, null, 2),
-        headers: { 'content-type': 'application/json' },
-        time: 150,
+        status: 0,
+        statusText: 'ERROR',
+        body: `Error: ${errorMessage}`,
+        headers: {},
+        time: 0,
       });
+    } finally {
       setIsLoading(false);
-    }, 500);
-  }, [request.url]);
+    }
+  }, [request]);
 
   return (
     <box

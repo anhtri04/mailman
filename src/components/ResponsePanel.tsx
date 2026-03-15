@@ -30,8 +30,20 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
       <box style={{ flexGrow: 1, marginTop: 1 }}>
         {response ? (
           <box style={{ flexDirection: 'column' }}>
-            <text fg={response.status < 400 ? '#99AA77' : '#AA5555'}>
-              {response.status} {response.statusText}
+            <text
+              fg={
+                response.status === 0
+                  ? '#CC8844'
+                  : response.status >= 200 && response.status < 300
+                    ? '#99AA77'
+                    : response.status >= 400 && response.status < 500
+                      ? '#AA7733'
+                      : '#AA5555'
+              }
+            >
+              {response.status > 0
+                ? `${response.status} ${response.statusText}`
+                : response.statusText}
             </text>
 
             <box style={{ marginTop: 1, flexGrow: 1 }}>
