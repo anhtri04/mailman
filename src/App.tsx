@@ -10,6 +10,8 @@ export function App() {
   const [request, setRequest] = useState<RequestOptions>({
     method: 'GET',
     url: '',
+    headers: {},
+    body: '',
   });
   const [response, setResponse] = useState<ResponseState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +29,14 @@ export function App() {
 
   const handleMethodChange = useCallback((method: string) => {
     setRequest((prev) => ({ ...prev, method }));
+  }, []);
+
+  const handleHeadersChange = useCallback((headers: Record<string, string>) => {
+    setRequest((prev) => ({ ...prev, headers }));
+  }, []);
+
+  const handleBodyChange = useCallback((body: string) => {
+    setRequest((prev) => ({ ...prev, body }));
   }, []);
 
   const handleSend = useCallback(async () => {
@@ -76,6 +86,10 @@ export function App() {
           method={request.method}
           onMethodChange={handleMethodChange}
           onSend={handleSend}
+          headers={request.headers}
+          onHeadersChange={handleHeadersChange}
+          body={request.body}
+          onBodyChange={handleBodyChange}
         />
       </box>
 
