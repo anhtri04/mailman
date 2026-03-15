@@ -107,7 +107,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
   );
 
   return (
-    <box style={{ flexDirection: 'column', gap: 1 }}>
+    <box style={{ flexDirection: 'column', gap: 1, flexGrow: 1, height: '100%' }}>
       <text fg="#CC8844">
         <strong>Headers</strong>
       </text>

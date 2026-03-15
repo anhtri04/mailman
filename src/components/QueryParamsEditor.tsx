@@ -92,6 +92,8 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
         border: true,
         borderColor: '#555555',
         padding: 1,
+        flexGrow: 1,
+        height: '100%',
       }}
     >
       <text fg="#CC8844">

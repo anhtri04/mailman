@@ -114,7 +114,7 @@ export function App() {
         <text fg="#999999">Click panels to focus • Press Q to quit</text>
       </box>
 
-      <box style={{ flexBasis: '40%', flexDirection: 'column' }}>
+      <box height="40%" style={{ flexDirection: 'column' }}>
         <RequestPanel
           focused={isFocused('request')}
           onFocus={() => setFocus('request')}
@@ -133,7 +133,7 @@ export function App() {
         />
       </box>
 
-      <box style={{ flexBasis: '60%', flexDirection: 'column', marginTop: 1 }}>
+      <box height="60%" style={{ flexDirection: 'column', marginTop: 1 }}>
         <ResponsePanel
           focused={isFocused('response')}
           onFocus={() => setFocus('response')}
