@@ -32,8 +32,8 @@ export function RequestPanel({
       }}
       onMouseDown={onFocus}
     >
-      <text fg="#CC8844" bold>
-        Request
+      <text fg="#CC8844">
+        <strong>Request</strong>
       </text>
 
       <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
@@ -48,7 +48,10 @@ export function RequestPanel({
             e.stopPropagation();
             const currentIndex = METHODS.indexOf(method);
             const nextIndex = (currentIndex + 1) % METHODS.length;
-            onMethodChange(METHODS[nextIndex]);
+            const nextMethod = METHODS[nextIndex];
+            if (nextMethod) {
+              onMethodChange(nextMethod);
+            }
           }}
         >
           <text fg="#FFFFFF">{method}</text>
@@ -66,9 +69,7 @@ export function RequestPanel({
             e.stopPropagation();
           }}
         >
-          <text fg={url ? '#FFFFFF' : '#666666'}>
-            {url || 'Enter URL...'}
-          </text>
+          <text fg={url ? '#FFFFFF' : '#666666'}>{url || 'Enter URL...'}</text>
         </box>
       </box>
 
@@ -87,8 +88,8 @@ export function RequestPanel({
           onSend();
         }}
       >
-        <text fg="#000000" bold>
-          Send
+        <text fg="#000000">
+          <strong>Send</strong>
         </text>
       </box>
     </box>

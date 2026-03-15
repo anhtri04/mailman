@@ -63,13 +63,13 @@ describe('useFocus logic', () => {
 
     // Test: set focus to 'request'
     setFocus('request');
-    expect(focusedArea).toBe('request');
+    expect(focusedArea as any).toBe('request');
     expect(isFocused('request')).toBe(true);
     expect(isFocused('response')).toBe(false);
 
     // Test: change focus to 'response'
     setFocus('response');
-    expect(focusedArea).toBe('response');
+    expect(focusedArea as any).toBe('response');
     expect(isFocused('request')).toBe(false);
     expect(isFocused('response')).toBe(true);
 

@@ -23,7 +23,7 @@ describe('RequestPanel', () => {
       url: 'https://example.com',
       method: 'POST',
     };
-    
+
     expect(() => RequestPanel(props)).not.toThrow();
   });
 });

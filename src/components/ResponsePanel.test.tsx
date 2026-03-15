@@ -20,7 +20,7 @@ describe('ResponsePanel', () => {
       headers: {},
       time: 150,
     };
-    
+
     expect(() => ResponsePanel({ ...defaultProps, response })).not.toThrow();
   });
 });

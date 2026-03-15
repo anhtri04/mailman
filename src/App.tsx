@@ -32,7 +32,7 @@ export function App() {
     if (!request.url) return;
 
     setIsLoading(true);
-    
+
     setTimeout(() => {
       setResponse({
         status: 200,
@@ -55,12 +55,10 @@ export function App() {
       }}
     >
       <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 1 }}>
-        <text fg="#CC8844" bold>
-          Mailman v0.0.1
+        <text fg="#CC8844">
+          <strong>Mailman v0.0.1</strong>
         </text>
-        <text fg="#999999">
-          Click panels to focus • Press Q to quit
-        </text>
+        <text fg="#999999">Click panels to focus • Press Q to quit</text>
       </box>
 
       <box style={{ flexGrow: 2, flexDirection: 'column' }}>

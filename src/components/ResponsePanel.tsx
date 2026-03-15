@@ -21,14 +21,10 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
       onMouseDown={onFocus}
     >
       <box style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <text fg="#CC8844" bold>
-          Response
+        <text fg="#CC8844">
+          <strong>Response</strong>
         </text>
-        {response && (
-          <text fg="#999999">
-            {response.time}ms
-          </text>
-        )}
+        {response && <text fg="#999999">{response.time}ms</text>}
       </box>
 
       <box style={{ flexGrow: 1, marginTop: 1 }}>
@@ -37,17 +33,13 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
             <text fg={response.status < 400 ? '#99AA77' : '#AA5555'}>
               {response.status} {response.statusText}
             </text>
-            
+
             <box style={{ marginTop: 1, flexGrow: 1 }}>
-              <text fg="#FFFFFF">
-                {response.body}
-              </text>
+              <text fg="#FFFFFF">{response.body}</text>
             </box>
           </box>
         ) : (
-          <text fg="#666666">
-            No response yet. Send a request to see results.
-          </text>
+          <text fg="#666666">No response yet. Send a request to see results.</text>
         )}
       </box>
     </box>

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { FocusArea } from '../types';
+import type { FocusArea } from '../types';
 
 interface UseFocusReturn {
   focusedArea: FocusArea;
@@ -19,9 +19,12 @@ export function useFocus(): UseFocusReturn {
     setFocusedArea(null);
   }, []);
 
-  const isFocused = useCallback((area: FocusArea): boolean => {
-    return focusedArea === area;
-  }, [focusedArea]);
+  const isFocused = useCallback(
+    (area: FocusArea): boolean => {
+      return focusedArea === area;
+    },
+    [focusedArea],
+  );
 
   return {
     focusedArea,
