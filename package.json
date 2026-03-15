@@ -1,0 +1,32 @@
+{
+  "name": "mailman",
+  "version": "0.0.1",
+  "private": true,
+  "description": "A terminal-based HTTP client built with Bun and OpenTUI",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run ./index.tsx",
+    "start": "bun run ./index.tsx",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "lint": "oxlint --type-aware --type-check",
+    "lint:fix": "oxlint --fix",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.1.87",
+    "@opentui/react": "^0.1.87",
+    "react": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.2.8",
+    "oxfmt": "^0.26.0",
+    "oxlint": "^1.41.0",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
