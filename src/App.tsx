@@ -1,8 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useKeyboard } from '@opentui/react';
-import { useFocus } from './hooks/useFocus';
-import { RequestPanel } from './components/RequestPanel';
-import { ResponsePanel } from './components/ResponsePanel';
+import { useFocus } from './hooks';
+import { RequestPanel, ResponsePanel } from './components';
 import type { RequestOptions, ResponseState } from './types';
 
 export function App() {
