@@ -1,4 +1,7 @@
+import { useState } from 'react';
+import { useKeyboard } from '@opentui/react';
 import type { ResponseState } from '../types';
+import { Modal } from './Modal';
 
 interface ResponsePanelProps {
   focused: boolean;
@@ -8,6 +11,15 @@ interface ResponsePanelProps {
 
 export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps) {
   const borderColor = focused ? '#CC8844' : '#555555';
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useKeyboard((key) => {
+    if (key.name === 'space' && response && !isExpanded) {
+      setIsExpanded(true);
+    } else if (key.name === 'escape' && isExpanded) {
+      setIsExpanded(false);
+    }
+  });
 
   return (
     <box
@@ -46,14 +58,33 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
                 : response.statusText}
             </text>
 
-            <box style={{ marginTop: 1, flexGrow: 1 }}>
+            <scrollbox style={{ flexGrow: 1, marginTop: 1 }}>
               <text fg="#FFFFFF">{response.body}</text>
-            </box>
+            </scrollbox>
+
+            <text fg="#666666" style={{ marginTop: 1 }}>
+              Press SPACE to expand
+            </text>
           </box>
         ) : (
           <text fg="#666666">No response yet. Send a request to see results.</text>
         )}
       </box>
+
+      {isExpanded && response && (
+        <Modal
+          isOpen={true}
+          onClose={() => setIsExpanded(false)}
+          title={`Response - ${response.status} ${response.statusText}`}
+        >
+          <box style={{ flexDirection: 'column', flexGrow: 1 }}>
+            <text fg="#999999">{response.time}ms • Press ESC to close</text>
+            <scrollbox style={{ flexGrow: 1, marginTop: 1 }}>
+              <text fg="#FFFFFF">{response.body}</text>
+            </scrollbox>
+          </box>
+        </Modal>
+      )}
     </box>
   );
 }

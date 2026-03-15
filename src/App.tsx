@@ -1,9 +1,14 @@
 import { useState, useCallback } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { useFocus } from './hooks';
-import { RequestPanel, ResponsePanel } from './components';
+import { RequestPanel, ResponsePanel, Modal } from './components';
+import { HeadersEditor } from './components/HeadersEditor';
+import { BodyEditor } from './components/BodyEditor';
+import { QueryParamsEditor } from './components/QueryParamsEditor';
 import { sendRequest } from './services/http-client';
 import type { RequestOptions, ResponseState } from './types';
+
+type Tab = 'headers' | 'body' | 'query';
 
 export function App() {
   const { focusedArea, setFocus, isFocused } = useFocus();
@@ -15,9 +20,12 @@ export function App() {
   });
   const [response, setResponse] = useState<ResponseState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeModal, setActiveModal] = useState<Tab | null>(null);
 
   useKeyboard((key) => {
-    if (key.name === 'q') {
+    if (key.name === 'escape' && activeModal) {
+      setActiveModal(null);
+    } else if (key.name === 'q') {
       const cleanExit = (globalThis as any).__mailmanCleanExit;
       if (cleanExit) cleanExit();
     }
@@ -38,6 +46,35 @@ export function App() {
   const handleBodyChange = useCallback((body: string) => {
     setRequest((prev) => ({ ...prev, body }));
   }, []);
+
+  // Extract base URL without query params for QueryParamsEditor
+  const baseUrl = request.url.split('?')[0] ?? request.url;
+  const queryParams: Record<string, string> = {};
+  try {
+    const urlObj = new URL(
+      request.url.startsWith('http') ? request.url : `http://localhost${request.url}`,
+    );
+    urlObj.searchParams.forEach((value, key) => {
+      queryParams[key] = value;
+    });
+  } catch {
+    // Invalid URL, ignore query params
+  }
+
+  const handleQueryParamsChange = useCallback(
+    (newParams: Record<string, string>) => {
+      const paramsList = Object.entries(newParams).filter(([, value]) => value !== '');
+      if (paramsList.length === 0) {
+        handleUrlChange(baseUrl);
+        return;
+      }
+      const encodedParams = paramsList
+        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+        .join('&');
+      handleUrlChange(`${baseUrl}?${encodedParams}`);
+    },
+    [baseUrl, handleUrlChange],
+  );
 
   const handleSend = useCallback(async () => {
     if (!request.url) return;
@@ -77,7 +114,7 @@ export function App() {
         <text fg="#999999">Click panels to focus • Press Q to quit</text>
       </box>
 
-      <box style={{ flexGrow: 2, flexDirection: 'column' }}>
+      <box style={{ flexBasis: '40%', flexDirection: 'column' }}>
         <RequestPanel
           focused={isFocused('request')}
           onFocus={() => setFocus('request')}
@@ -90,10 +127,13 @@ export function App() {
           onHeadersChange={handleHeadersChange}
           body={request.body}
           onBodyChange={handleBodyChange}
+          onOpenHeaders={() => setActiveModal('headers')}
+          onOpenBody={() => setActiveModal('body')}
+          onOpenQuery={() => setActiveModal('query')}
         />
       </box>
 
-      <box style={{ flexGrow: 3, flexDirection: 'column', marginTop: 1 }}>
+      <box style={{ flexBasis: '60%', flexDirection: 'column', marginTop: 1 }}>
         <ResponsePanel
           focused={isFocused('response')}
           onFocus={() => setFocus('response')}
@@ -115,6 +155,29 @@ export function App() {
         >
           <text fg="#CC8844">Loading...</text>
         </box>
+      )}
+
+      {/* Modal popups for editors - rendered at App level for full screen sizing */}
+      {activeModal === 'headers' && (
+        <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Headers">
+          <HeadersEditor headers={request.headers ?? {}} onHeadersChange={handleHeadersChange} />
+        </Modal>
+      )}
+
+      {activeModal === 'body' && (
+        <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Request Body">
+          <BodyEditor body={request.body ?? ''} onBodyChange={handleBodyChange} focused={true} />
+        </Modal>
+      )}
+
+      {activeModal === 'query' && (
+        <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Query Parameters">
+          <QueryParamsEditor
+            baseUrl={baseUrl}
+            params={queryParams}
+            onParamsChange={handleQueryParamsChange}
+          />
+        </Modal>
       )}
     </box>
   );

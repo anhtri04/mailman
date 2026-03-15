@@ -1,7 +1,4 @@
 import { useState, useCallback } from 'react';
-import { HeadersEditor } from './HeadersEditor';
-import { BodyEditor } from './BodyEditor';
-import { QueryParamsEditor } from './QueryParamsEditor';
 
 type Tab = 'headers' | 'body' | 'query';
 
@@ -17,6 +14,9 @@ interface RequestPanelProps {
   onHeadersChange: (headers: Record<string, string>) => void;
   body?: string;
   onBodyChange: (body: string) => void;
+  onOpenHeaders: () => void;
+  onOpenBody: () => void;
+  onOpenQuery: () => void;
 }
 
 const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
@@ -33,16 +33,27 @@ export function RequestPanel({
   onHeadersChange,
   body = '',
   onBodyChange,
+  onOpenHeaders,
+  onOpenBody,
+  onOpenQuery,
 }: RequestPanelProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('headers');
+  const [activeTab, setActiveTab] = useState<Tab | null>(null);
   const borderColor = focused ? '#CC8844' : '#555555';
 
   const handleTabClick = useCallback(
     (tab: Tab) => (e: { stopPropagation: () => void }) => {
       e.stopPropagation();
-      setActiveTab(tab);
+      // Toggle: if clicking same tab, close it; otherwise open new one
+      if (activeTab === tab) {
+        setActiveTab(null);
+      } else {
+        setActiveTab(tab);
+        if (tab === 'headers') onOpenHeaders();
+        else if (tab === 'body') onOpenBody();
+        else if (tab === 'query') onOpenQuery();
+      }
     },
-    [],
+    [activeTab, onOpenHeaders, onOpenBody, onOpenQuery],
   );
 
   const renderTabButton = useCallback(
@@ -66,33 +77,6 @@ export function RequestPanel({
       );
     },
     [activeTab, handleTabClick],
-  );
-
-  // Extract base URL without query params for QueryParamsEditor
-  const baseUrl = url.split('?')[0] ?? url;
-  const queryParams: Record<string, string> = {};
-  try {
-    const urlObj = new URL(url.startsWith('http') ? url : `http://localhost${url}`);
-    urlObj.searchParams.forEach((value, key) => {
-      queryParams[key] = value;
-    });
-  } catch {
-    // Invalid URL, ignore query params
-  }
-
-  const handleQueryParamsChange = useCallback(
-    (newParams: Record<string, string>) => {
-      const paramsList = Object.entries(newParams).filter(([, value]) => value !== '');
-      if (paramsList.length === 0) {
-        onUrlChange(baseUrl);
-        return;
-      }
-      const encodedParams = paramsList
-        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-        .join('&');
-      onUrlChange(`${baseUrl}?${encodedParams}`);
-    },
-    [baseUrl, onUrlChange],
   );
 
   return (
@@ -171,28 +155,6 @@ export function RequestPanel({
           </text>
         </box>
       </box>
-
-      <scrollbox
-        style={{
-          flexGrow: 1,
-          flexDirection: 'column',
-          marginTop: 1,
-        }}
-      >
-        {activeTab === 'headers' && (
-          <HeadersEditor headers={headers} onHeadersChange={onHeadersChange} />
-        )}
-        {activeTab === 'body' && (
-          <BodyEditor body={body} onBodyChange={onBodyChange} focused={focused} />
-        )}
-        {activeTab === 'query' && (
-          <QueryParamsEditor
-            baseUrl={baseUrl}
-            params={queryParams}
-            onParamsChange={handleQueryParamsChange}
-          />
-        )}
-      </scrollbox>
     </box>
   );
 }
