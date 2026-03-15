@@ -11,23 +11,31 @@ A terminal-based HTTP client built with Bun and OpenTUI.
   - [ ] Implement flexbox layout in App.tsx
   - [ ] Add borders and visual separation
   
-- [ ] Keyboard navigation system
-  - [ ] Implement focus management (useFocus hook)
-  - [ ] Tab/Shift+Tab to cycle between panels
+- [ ] **Mouse-first navigation system** (Primary)
+  - [ ] Click panels to focus (Request/Response)
+  - [ ] Click tabs to switch between tabs
+  - [ ] Click buttons to activate (Send, Save, etc.)
+  - [ ] Click input fields to focus and edit
+  - [ ] Hover states (cursor changes on interactive elements)
   - [ ] Visual focus indicators (border colors)
-  - [ ] Help text showing current focus
+  
+- [ ] **Keyboard navigation** (Secondary for power users)
+  - [ ] Tab/Shift+Tab to cycle between panels
+  - [ ] Arrow keys for navigation in lists
+  - [ ] Enter to activate buttons/selections
+  - [ ] Escape to close modals
   
 - [ ] Basic input components
-  - [ ] URLInput component with focus support
-  - [ ] MethodSelector dropdown (GET, POST, PUT, DELETE, PATCH)
-  - [ ] Send button (Enter key or S key)
+  - [ ] URLInput component with click-to-focus
+  - [ ] MethodSelector dropdown with click selection
+  - [ ] Send button with onMouseDown handler
   
 - [ ] Testing
   - [ ] Unit tests for layout components
-  - [ ] Keyboard navigation tests
-  - [ ] Manual testing: verify Tab cycles correctly
+  - [ ] Mouse interaction tests
+  - [ ] Manual testing: click around all interactive elements
 
-**Exit Criteria:** App shows two panels, Tab switches focus, can type URL and select method
+**Exit Criteria:** App shows two panels, click to focus each panel, click URL input to type, click Send button
 
 ---
 
@@ -138,9 +146,11 @@ A terminal-based HTTP client built with Bun and OpenTUI.
   - [ ] Create HistoryViewer modal
   - [ ] List last N requests (newest first)
   - [ ] Display: method, URL, timestamp, status
-  - [ ] Keyboard navigation (up/down arrows)
-  - [ ] Enter to load request
-  - [ ] H key to open history
+  - [ ] **Mouse: Click to select and load request**
+  - [ ] **Mouse: Click X button to delete entry**
+  - [ ] Keyboard: Up/down arrows to navigate
+  - [ ] Keyboard: Enter to load, D to delete
+  - [ ] Open with H key or menu click
   
 - [ ] Auto-save requests
   - [ ] Save on successful send
@@ -177,9 +187,11 @@ A terminal-based HTTP client built with Bun and OpenTUI.
   - [ ] Create SavedRequestsModal
   - [ ] List all saved requests
   - [ ] Search/filter by name
-  - [ ] Keyboard navigation
-  - [ ] Enter to load, D to delete
-  - [ ] L key to open viewer
+  - [ ] **Mouse: Click to load request**
+  - [ ] **Mouse: Click delete button to remove**
+  - [ ] Keyboard: Arrow keys to navigate
+  - [ ] Keyboard: Enter to load, D to delete
+  - [ ] Open with L key or menu click
   
 - [ ] Testing
   - [ ] Saved requests storage unit tests
@@ -366,6 +378,38 @@ Each phase should be implemented using the Task tool with appropriate agents:
 - Follow bite-sized tasks (2-5 minutes each)
 - Review between tasks
 - Never overwhelm the agent with too many requirements
+
+### Mouse Interaction Guidelines
+When implementing UI components, always prioritize mouse interaction:
+
+```tsx
+// Good - Mouse clickable with visual feedback
+<box 
+  borderColor={isFocused ? '#CC8844' : '#555555'}
+  onMouseDown={() => setFocus('panel')}
+>
+  <text>Clickable Panel</text>
+</box>
+
+// Good - Button with onMouseDown
+<box
+  backgroundColor="#CC8844"
+  onMouseDown={handleSend}
+>
+  <text>Send</text>
+</box>
+
+// Good - List item clickable
+<box onMouseDown={() => loadRequest(request)}>
+  <text>{request.name}</text>
+</box>
+```
+
+**Mouse Event Priority:**
+1. Use `onMouseDown` for immediate response (not onClick)
+2. Show visual hover/focus states
+3. Ensure clickable areas are large enough
+4. Support keyboard as fallback (Tab, Enter, arrows)
 
 ---
 
