@@ -374,5 +374,208 @@ describe('http-client', () => {
       expect(result.headers['x-custom']).toBe('value');
       expect(result.headers['cache-control']).toBe('no-cache');
     });
+
+    test('should apply bearer token auth to headers', async () => {
+      let capturedInit: RequestInit | undefined;
+      const mockResponse = new Response('{}', { status: 200, statusText: 'OK' });
+
+      globalThis.fetch = ((url: string | URL | Request, init?: RequestInit) => {
+        capturedInit = init;
+        return Promise.resolve(mockResponse);
+      }) as unknown as typeof fetch;
+
+      const options: RequestOptions = {
+        method: 'GET',
+        url: 'https://example.com/api',
+        auth: {
+          type: 'bearer',
+          token: 'my-secret-token-123',
+        },
+      };
+
+      await sendRequest(options);
+
+      expect(capturedInit?.headers).toEqual({
+        Authorization: 'Bearer my-secret-token-123',
+      });
+    });
+
+    test('should apply API key auth to headers by default', async () => {
+      let capturedInit: RequestInit | undefined;
+      const mockResponse = new Response('{}', { status: 200, statusText: 'OK' });
+
+      globalThis.fetch = ((url: string | URL | Request, init?: RequestInit) => {
+        capturedInit = init;
+        return Promise.resolve(mockResponse);
+      }) as unknown as typeof fetch;
+
+      const options: RequestOptions = {
+        method: 'GET',
+        url: 'https://example.com/api',
+        auth: {
+          type: 'api-key',
+          key: 'X-API-Key',
+          value: 'secret-api-key',
+          location: 'header',
+        },
+      };
+
+      await sendRequest(options);
+
+      expect(capturedInit?.headers).toEqual({
+        'X-API-Key': 'secret-api-key',
+      });
+    });
+
+    test('should apply API key auth to query string', async () => {
+      let capturedUrl: string | undefined;
+      const mockResponse = new Response('{}', { status: 200, statusText: 'OK' });
+
+      globalThis.fetch = ((url: string | URL | Request) => {
+        capturedUrl = url.toString();
+        return Promise.resolve(mockResponse);
+      }) as unknown as typeof fetch;
+
+      const options: RequestOptions = {
+        method: 'GET',
+        url: 'https://example.com/api',
+        auth: {
+          type: 'api-key',
+          key: 'api_key',
+          value: 'my-api-key',
+          location: 'query',
+        },
+      };
+
+      await sendRequest(options);
+
+      expect(capturedUrl).toBe('https://example.com/api?api_key=my-api-key');
+    });
+
+    test('should append API key to existing query string', async () => {
+      let capturedUrl: string | undefined;
+      const mockResponse = new Response('{}', { status: 200, statusText: 'OK' });
+
+      globalThis.fetch = ((url: string | URL | Request) => {
+        capturedUrl = url.toString();
+        return Promise.resolve(mockResponse);
+      }) as unknown as typeof fetch;
+
+      const options: RequestOptions = {
+        method: 'GET',
+        url: 'https://example.com/api?limit=10',
+        auth: {
+          type: 'api-key',
+          key: 'token',
+          value: 'abc123',
+          location: 'query',
+        },
+      };
+
+      await sendRequest(options);
+
+      expect(capturedUrl).toBe('https://example.com/api?limit=10&token=abc123');
+    });
+
+    test('should not apply auth when type is none', async () => {
+      let capturedInit: RequestInit | undefined;
+      const mockResponse = new Response('{}', { status: 200, statusText: 'OK' });
+
+      globalThis.fetch = ((url: string | URL | Request, init?: RequestInit) => {
+        capturedInit = init;
+        return Promise.resolve(mockResponse);
+      }) as unknown as typeof fetch;
+
+      const options: RequestOptions = {
+        method: 'GET',
+        url: 'https://example.com/api',
+        auth: {
+          type: 'none',
+        },
+      };
+
+      await sendRequest(options);
+
+      expect(capturedInit?.headers).toEqual({});
+    });
+
+    test('should combine auth headers with existing headers', async () => {
+      let capturedInit: RequestInit | undefined;
+      const mockResponse = new Response('{}', { status: 200, statusText: 'OK' });
+
+      globalThis.fetch = ((url: string | URL | Request, init?: RequestInit) => {
+        capturedInit = init;
+        return Promise.resolve(mockResponse);
+      }) as unknown as typeof fetch;
+
+      const options: RequestOptions = {
+        method: 'GET',
+        url: 'https://example.com/api',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        auth: {
+          type: 'bearer',
+          token: 'my-token',
+        },
+      };
+
+      await sendRequest(options);
+
+      expect(capturedInit?.headers).toEqual({
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer my-token',
+      });
+    });
+
+    test('should not apply bearer auth when token is empty', async () => {
+      let capturedInit: RequestInit | undefined;
+      const mockResponse = new Response('{}', { status: 200, statusText: 'OK' });
+
+      globalThis.fetch = ((url: string | URL | Request, init?: RequestInit) => {
+        capturedInit = init;
+        return Promise.resolve(mockResponse);
+      }) as unknown as typeof fetch;
+
+      const options: RequestOptions = {
+        method: 'GET',
+        url: 'https://example.com/api',
+        auth: {
+          type: 'bearer',
+          token: '',
+        },
+      };
+
+      await sendRequest(options);
+
+      expect(capturedInit?.headers).toEqual({});
+    });
+
+    test('should URL-encode API key values in query string', async () => {
+      let capturedUrl: string | undefined;
+      const mockResponse = new Response('{}', { status: 200, statusText: 'OK' });
+
+      globalThis.fetch = ((url: string | URL | Request) => {
+        capturedUrl = url.toString();
+        return Promise.resolve(mockResponse);
+      }) as unknown as typeof fetch;
+
+      const options: RequestOptions = {
+        method: 'GET',
+        url: 'https://example.com/api',
+        auth: {
+          type: 'api-key',
+          key: 'token',
+          value: 'hello world & more=special',
+          location: 'query',
+        },
+      };
+
+      await sendRequest(options);
+
+      expect(capturedUrl).toBe(
+        'https://example.com/api?token=hello%20world%20%26%20more%3Dspecial',
+      );
+    });
   });
 });

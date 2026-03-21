@@ -39,6 +39,35 @@ function classifyError(error: unknown): HttpError {
   return { type: 'unknown', message: 'An unexpected error occurred' };
 }
 
+function applyAuthToRequest(options: RequestOptions): {
+  url: string;
+  headers: Record<string, string>;
+} {
+  let url = options.url;
+  const headers: Record<string, string> = { ...(options.headers ?? {}) };
+
+  if (!options.auth || options.auth.type === 'none') {
+    return { url, headers };
+  }
+
+  const auth = options.auth;
+
+  if (auth.type === 'bearer' && auth.token) {
+    headers['Authorization'] = `Bearer ${auth.token}`;
+  } else if (auth.type === 'api-key' && auth.key && auth.value) {
+    if (auth.location === 'query') {
+      // Add to query string
+      const separator = url.includes('?') ? '&' : '?';
+      url = `${url}${separator}${encodeURIComponent(auth.key)}=${encodeURIComponent(auth.value)}`;
+    } else {
+      // Add to headers (default)
+      headers[auth.key] = auth.value;
+    }
+  }
+
+  return { url, headers };
+}
+
 export async function sendRequest(
   options: RequestOptions,
   timeoutMs: number = DEFAULT_TIMEOUT,
@@ -49,9 +78,12 @@ export async function sendRequest(
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
+    // Apply auth configuration
+    const { url, headers } = applyAuthToRequest(options);
+
     const fetchOptions: RequestInit = {
       method: options.method,
-      headers: options.headers,
+      headers: headers,
       signal: controller.signal,
     };
 
@@ -59,7 +91,7 @@ export async function sendRequest(
       fetchOptions.body = options.body;
     }
 
-    const response = await fetch(options.url, fetchOptions);
+    const response = await fetch(url, fetchOptions);
 
     clearTimeout(timeoutId);
 

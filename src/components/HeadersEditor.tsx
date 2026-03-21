@@ -113,39 +113,43 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
       </text>
 
       <box style={{ flexDirection: 'column', gap: 1 }}>
-        {entries.map((entry, index) => (
-          <box key={`${entry.key}-${index}`} style={{ flexDirection: 'row', gap: 1 }}>
-            <box style={{ flexGrow: 1, border: true, borderColor: '#555555' }}>
-              <input
-                value={entry.key}
-                onInput={(value) => handleUpdateEntry(index, 'key', value)}
-                placeholder="Header name..."
-                backgroundColor="#1a1a1a"
-                textColor="#FFFFFF"
-              />
+        <scrollbox
+          style={{ flexDirection: 'column', gap: 1, maxHeight: 10, justifyContent: 'flex-start' }}
+        >
+          {entries.map((entry, index) => (
+            <box key={`${entry.key}-${index}`} style={{ flexDirection: 'row', gap: 1 }}>
+              <box style={{ flexGrow: 1, border: true, borderColor: '#555555' }}>
+                <input
+                  value={entry.key}
+                  onInput={(value) => handleUpdateEntry(index, 'key', value)}
+                  placeholder="Header name..."
+                  backgroundColor="#1a1a1a"
+                  textColor="#FFFFFF"
+                />
+              </box>
+              <box style={{ flexGrow: 2, border: true, borderColor: '#555555' }}>
+                <input
+                  value={entry.value}
+                  onInput={(value) => handleUpdateEntry(index, 'value', value)}
+                  placeholder="Header value..."
+                  backgroundColor="#1a1a1a"
+                  textColor="#FFFFFF"
+                />
+              </box>
+              <box
+                style={{
+                  paddingLeft: 1,
+                  paddingRight: 1,
+                  border: true,
+                  borderColor: '#555555',
+                }}
+                onMouseDown={() => handleRemoveHeader(index)}
+              >
+                <text fg="#FF6666">✕</text>
+              </box>
             </box>
-            <box style={{ flexGrow: 2, border: true, borderColor: '#555555' }}>
-              <input
-                value={entry.value}
-                onInput={(value) => handleUpdateEntry(index, 'value', value)}
-                placeholder="Header value..."
-                backgroundColor="#1a1a1a"
-                textColor="#FFFFFF"
-              />
-            </box>
-            <box
-              style={{
-                paddingLeft: 1,
-                paddingRight: 1,
-                border: true,
-                borderColor: '#555555',
-              }}
-              onMouseDown={() => handleRemoveHeader(index)}
-            >
-              <text fg="#FF6666">✕</text>
-            </box>
-          </box>
-        ))}
+          ))}
+        </scrollbox>
       </box>
 
       <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
@@ -203,8 +207,8 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
             alignSelf: 'flex-start',
             paddingLeft: 2,
             paddingRight: 2,
-            paddingTop: 1,
-            paddingBottom: 1,
+            // paddingTop: 1,
+            // paddingBottom: 1,
             border: true,
             borderColor: showPresets ? '#CC8844' : '#555555',
             backgroundColor: showPresets ? '#CC8844' : undefined,

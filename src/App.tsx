@@ -5,10 +5,11 @@ import { RequestPanel, ResponsePanel, Modal } from './components';
 import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
 import { QueryParamsEditor } from './components/QueryParamsEditor';
+import { AuthEditor } from './components/AuthEditor';
 import { sendRequest } from './services/http-client';
-import type { RequestOptions, ResponseState } from './types';
+import type { RequestOptions, ResponseState, AuthConfig } from './types';
 
-type Tab = 'headers' | 'body' | 'query';
+type Tab = 'headers' | 'body' | 'query' | 'auth';
 
 export function App() {
   const { focusedArea, setFocus, isFocused } = useFocus();
@@ -25,7 +26,7 @@ export function App() {
   useKeyboard((key) => {
     if (key.name === 'escape' && activeModal) {
       setActiveModal(null);
-    } else if (key.name === 'q') {
+    } else if (key.ctrl && key.name === 'q') {
       const cleanExit = (globalThis as any).__mailmanCleanExit;
       if (cleanExit) cleanExit();
     }
@@ -45,6 +46,10 @@ export function App() {
 
   const handleBodyChange = useCallback((body: string) => {
     setRequest((prev) => ({ ...prev, body }));
+  }, []);
+
+  const handleAuthChange = useCallback((auth: AuthConfig) => {
+    setRequest((prev) => ({ ...prev, auth }));
   }, []);
 
   // Extract base URL without query params for QueryParamsEditor
@@ -111,7 +116,7 @@ export function App() {
         <text fg="#CC8844">
           <strong>Mailman v0.0.1</strong>
         </text>
-        <text fg="#999999">Click panels to focus • Press Q to quit</text>
+        <text fg="#999999">Click panels to focus • Press Q to quit • Press H for help</text>
       </box>
 
       <box height="40%" style={{ flexDirection: 'column' }}>
@@ -127,9 +132,12 @@ export function App() {
           onHeadersChange={handleHeadersChange}
           body={request.body}
           onBodyChange={handleBodyChange}
+          queryParams={queryParams}
+          auth={request.auth}
           onOpenHeaders={() => setActiveModal('headers')}
           onOpenBody={() => setActiveModal('body')}
           onOpenQuery={() => setActiveModal('query')}
+          onOpenAuth={() => setActiveModal('auth')}
         />
       </box>
 
@@ -177,6 +185,12 @@ export function App() {
             params={queryParams}
             onParamsChange={handleQueryParamsChange}
           />
+        </Modal>
+      )}
+
+      {activeModal === 'auth' && (
+        <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Authentication">
+          <AuthEditor auth={request.auth} onAuthChange={handleAuthChange} />
         </Modal>
       )}
     </box>

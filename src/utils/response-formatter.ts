@@ -3,17 +3,23 @@
 export type ContentType = 'json' | 'xml' | 'html' | 'text' | 'binary' | 'unknown';
 
 export interface Token {
-  type: 'key' | 'string' | 'number' | 'boolean' | 'null' | 'bracket' | 'comma' | 'colon' | 'whitespace';
+  type:
+    | 'key'
+    | 'string'
+    | 'number'
+    | 'boolean'
+    | 'null'
+    | 'bracket'
+    | 'comma'
+    | 'colon'
+    | 'whitespace';
   value: string;
 }
 
 /**
  * Detect content type from headers and body
  */
-export function detectContentType(
-  headers: Record<string, string>,
-  body: string,
-): ContentType {
+export function detectContentType(headers: Record<string, string>, body: string): ContentType {
   const contentType = headers['content-type']?.toLowerCase() ?? '';
 
   if (contentType.includes('application/json') || contentType.includes('text/json')) {
@@ -75,40 +81,40 @@ export function formatJson(body: string): string {
  */
 export function formatXml(body: string): string {
   if (!body.trim()) return body;
-  
+
   let formatted = '';
   let indent = 0;
-  
+
   // Split on tag boundaries, keeping the delimiters
   const parts = body.split(/(<[^>]+>)/g).filter(Boolean);
-  
+
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
     if (part === undefined) continue;
-    
+
     const trimmed = part.trim();
     if (!trimmed) continue;
-    
+
     // Check if this is a tag
     if (trimmed.startsWith('<')) {
       // Closing tag - decrease indent
       if (trimmed.startsWith('</')) {
         indent = Math.max(0, indent - 1);
       }
-      
+
       // Add newline before tag (except first)
       if (formatted) {
         formatted += '\n';
       }
-      
+
       // Add indentation and tag
       formatted += '  '.repeat(indent) + trimmed;
-      
+
       // Opening tag (not self-closing) - increase indent
       const isSelfClosing = trimmed.endsWith('/>');
       const isClosingTag = trimmed.startsWith('</');
       const isProcessingInstruction = trimmed.startsWith('<?') || trimmed.startsWith('<!');
-      
+
       if (!isSelfClosing && !isClosingTag && !isProcessingInstruction) {
         indent++;
       }
@@ -125,7 +131,7 @@ export function formatXml(body: string): string {
       }
     }
   }
-  
+
   return formatted || body;
 }
 
@@ -157,7 +163,7 @@ export function parseJsonForHighlighting(body: string): Token[] {
   try {
     // Validate JSON first
     JSON.parse(body);
-    
+
     // Format first to ensure proper structure
     const formatted = formatJson(body);
     let i = 0;

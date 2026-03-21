@@ -142,7 +142,11 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
                 <scrollbox style={{ flexGrow: 1 }}>
                   <SyntaxHighlighter
                     code={formattedBody}
-                    language={contentType === 'json' || contentType === 'xml' || contentType === 'html' ? contentType : 'text'}
+                    language={
+                      contentType === 'json' || contentType === 'xml' || contentType === 'html'
+                        ? contentType
+                        : 'text'
+                    }
                   />
                 </scrollbox>
               )}
@@ -193,7 +197,11 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
               {activeTab === 'body' && (
                 <SyntaxHighlighter
                   code={formattedBody}
-                  language={contentType === 'json' || contentType === 'xml' || contentType === 'html' ? contentType : 'text'}
+                  language={
+                    contentType === 'json' || contentType === 'xml' || contentType === 'html'
+                      ? contentType
+                      : 'text'
+                  }
                 />
               )}
 

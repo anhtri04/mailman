@@ -22,7 +22,6 @@ interface ModalProps {
  * - Primary color (#CC8844) for title and border
  * - Dark background (#1a1a1a)
  * - Centered on screen at 80% width/height
- * - Content scrolls if it overflows
  */
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   // Don't render if modal is closed
@@ -46,14 +45,15 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
     >
       <box style={{ flexDirection: 'column', height: '100%' }}>
         {/* Title bar */}
-        <box style={{ flexDirection: 'row', marginBottom: 1 }}>
+        {/* <box style={{ flexDirection: 'row', marginBottom: 1 }}>
           <text fg="#CC8844">
             <strong>{title}</strong>
           </text>
-        </box>
+        </box> */}
+        {children}
 
         {/* Scrollable content area */}
-        <scrollbox style={{ flexGrow: 1, flexDirection: 'column' }}>{children}</scrollbox>
+        {/* <scrollbox style={{ flexGrow: 1, flexDirection: 'column' }}>{children}</scrollbox> */}
       </box>
     </box>
   );

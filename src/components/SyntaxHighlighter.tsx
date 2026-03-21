@@ -1,6 +1,11 @@
 // Syntax highlighter component for JSON, XML, and text content
 import { useMemo } from 'react';
-import { parseJsonForHighlighting, getTokenColor, formatXml, formatJson } from '../utils/response-formatter';
+import {
+  parseJsonForHighlighting,
+  getTokenColor,
+  formatXml,
+  formatJson,
+} from '../utils/response-formatter';
 import type { ContentType } from '../utils/response-formatter';
 
 interface SyntaxHighlighterProps {
@@ -15,7 +20,7 @@ interface HighlightedSegment {
 
 function highlightJson(body: string): HighlightedSegment[] {
   const tokens = parseJsonForHighlighting(body);
-  
+
   return tokens.map((token) => ({
     text: token.value,
     color: getTokenColor(token.type),
@@ -50,7 +55,7 @@ function highlightXml(body: string): HighlightedSegment[] {
           i++;
         }
       }
-      
+
       // Tag color based on type
       let color = '#FFFFFF'; // Default brackets
       if (tagContent.startsWith('</')) {
@@ -64,7 +69,7 @@ function highlightXml(body: string): HighlightedSegment[] {
       } else {
         color = '#CC8844'; // Opening tag
       }
-      
+
       segments.push({ text: tagContent, color });
     } else if (char === '"') {
       // String attribute value
@@ -142,15 +147,15 @@ export function SyntaxHighlighter({ code, language }: SyntaxHighlighterProps) {
 
     for (const segment of segments) {
       const parts = segment.text.split('\n');
-      
+
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
         if (part === undefined) continue;
-        
+
         if (part) {
           currentLine.push({ text: part, color: segment.color });
         }
-        
+
         // If this part ends with a newline (except the last one), start new line
         if (i < parts.length - 1) {
           if (currentLine.length > 0) {
@@ -160,11 +165,11 @@ export function SyntaxHighlighter({ code, language }: SyntaxHighlighterProps) {
         }
       }
     }
-    
+
     if (currentLine.length > 0) {
       result.push(currentLine);
     }
-    
+
     return result;
   }, [segments]);
 

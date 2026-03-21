@@ -39,8 +39,8 @@ export function BodyEditor({ body, onBodyChange, focused, detectedContentType }:
     <box
       style={{
         flexDirection: 'column',
-        border: true,
-        borderColor,
+        // border: true,
+        // borderColor,
         padding: 1,
         flexGrow: 1,
         marginTop: 1,
@@ -68,16 +68,18 @@ export function BodyEditor({ body, onBodyChange, focused, detectedContentType }:
           backgroundColor: '#1a1a1a',
         }}
       >
-        <textarea
-          ref={textareaRef}
-          initialValue={body}
-          placeholder="Enter request body..."
-          focused={focused}
-          onContentChange={handleContentChange}
-          backgroundColor="#1a1a1a"
-          textColor="#FFFFFF"
-          placeholderColor="#666666"
-        />
+        <scrollbox style={{ flexGrow: 1 }}>
+          <textarea
+            ref={textareaRef}
+            initialValue={body}
+            placeholder="Enter request body..."
+            focused={focused}
+            onContentChange={handleContentChange}
+            backgroundColor="#1a1a1a"
+            textColor="#FFFFFF"
+            placeholderColor="#666666"
+          />
+        </scrollbox>
       </box>
 
       <box

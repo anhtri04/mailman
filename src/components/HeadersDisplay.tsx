@@ -7,8 +7,8 @@ interface HeadersDisplayProps {
 
 export function HeadersDisplay({ headers }: HeadersDisplayProps) {
   const sortedHeaders = useMemo(() => {
-    return Object.entries(headers).sort(([keyA], [keyB]) => 
-      keyA.toLowerCase().localeCompare(keyB.toLowerCase())
+    return Object.entries(headers).sort(([keyA], [keyB]) =>
+      keyA.toLowerCase().localeCompare(keyB.toLowerCase()),
     );
   }, [headers]);
 
@@ -23,9 +23,9 @@ export function HeadersDisplay({ headers }: HeadersDisplayProps) {
   return (
     <box style={{ flexDirection: 'column' }}>
       {sortedHeaders.map(([key, value], index) => (
-        <box 
-          key={key} 
-          style={{ 
+        <box
+          key={key}
+          style={{
             flexDirection: 'row',
             paddingLeft: 1,
             paddingRight: 1,

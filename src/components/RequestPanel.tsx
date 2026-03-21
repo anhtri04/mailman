@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
+import type { AuthConfig } from '../types';
 
-type Tab = 'headers' | 'body' | 'query';
+type Tab = 'headers' | 'body' | 'query' | 'auth';
 
 interface RequestPanelProps {
   focused: boolean;
@@ -14,9 +15,12 @@ interface RequestPanelProps {
   onHeadersChange: (headers: Record<string, string>) => void;
   body?: string;
   onBodyChange: (body: string) => void;
+  queryParams?: Record<string, string>;
+  auth?: AuthConfig;
   onOpenHeaders: () => void;
   onOpenBody: () => void;
   onOpenQuery: () => void;
+  onOpenAuth: () => void;
 }
 
 const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
@@ -33,12 +37,21 @@ export function RequestPanel({
   onHeadersChange,
   body = '',
   onBodyChange,
+  queryParams = {},
+  auth,
   onOpenHeaders,
   onOpenBody,
   onOpenQuery,
+  onOpenAuth,
 }: RequestPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab | null>(null);
   const borderColor = focused ? '#CC8844' : '#555555';
+
+  // Check if each section has data for indicator
+  const hasHeaders = Object.keys(headers).length > 0;
+  const hasBody = !!body && body.trim().length > 0;
+  const hasQuery = Object.keys(queryParams).length > 0;
+  const hasAuth = !!auth && auth.type !== 'none';
 
   const handleTabClick = useCallback(
     (tab: Tab) => (e: { stopPropagation: () => void }) => {
@@ -51,14 +64,16 @@ export function RequestPanel({
         if (tab === 'headers') onOpenHeaders();
         else if (tab === 'body') onOpenBody();
         else if (tab === 'query') onOpenQuery();
+        else if (tab === 'auth') onOpenAuth();
       }
     },
-    [activeTab, onOpenHeaders, onOpenBody, onOpenQuery],
+    [activeTab, onOpenHeaders, onOpenBody, onOpenQuery, onOpenAuth],
   );
 
   const renderTabButton = useCallback(
-    (tab: Tab, label: string) => {
+    (tab: Tab, label: string, hasData: boolean) => {
       const isActive = activeTab === tab;
+      const displayLabel = hasData ? `${label} ●` : label;
       return (
         <box
           style={{
@@ -71,7 +86,7 @@ export function RequestPanel({
           onMouseDown={handleTabClick(tab)}
         >
           <text fg={isActive ? '#000000' : '#999999'}>
-            {isActive ? <strong>{label}</strong> : label}
+            {isActive ? <strong>{displayLabel}</strong> : displayLabel}
           </text>
         </box>
       );
@@ -132,9 +147,10 @@ export function RequestPanel({
       </box>
 
       <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
-        {renderTabButton('headers', 'Headers')}
-        {renderTabButton('body', 'Body')}
-        {renderTabButton('query', 'Query')}
+        {renderTabButton('headers', 'Headers', hasHeaders)}
+        {renderTabButton('body', 'Body', hasBody)}
+        {renderTabButton('query', 'Query', hasQuery)}
+        {renderTabButton('auth', 'Auth', hasAuth)}
 
         <box
           style={{

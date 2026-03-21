@@ -168,7 +168,7 @@ describe('response-formatter', () => {
       const input = '{"name": "John"}';
       const tokens = parseJsonForHighlighting(input);
       expect(tokens.length).toBeGreaterThan(0);
-      
+
       const keyToken = tokens.find((t: Token) => t.type === 'key');
       expect(keyToken).toBeDefined();
       expect(keyToken?.value).toBe('"name"');
@@ -177,7 +177,7 @@ describe('response-formatter', () => {
     test('should parse JSON with strings', () => {
       const input = '{"message": "hello"}';
       const tokens = parseJsonForHighlighting(input);
-      
+
       const stringToken = tokens.find((t: Token) => t.type === 'string');
       expect(stringToken).toBeDefined();
       expect(stringToken?.value).toBe('"hello"');
@@ -186,7 +186,7 @@ describe('response-formatter', () => {
     test('should parse JSON with numbers', () => {
       const input = '{"count": 42}';
       const tokens = parseJsonForHighlighting(input);
-      
+
       const numberToken = tokens.find((t: Token) => t.type === 'number');
       expect(numberToken).toBeDefined();
       expect(numberToken?.value).toBe('42');
@@ -195,7 +195,7 @@ describe('response-formatter', () => {
     test('should parse JSON with booleans', () => {
       const input = '{"active": true, "disabled": false}';
       const tokens = parseJsonForHighlighting(input);
-      
+
       const boolTokens = tokens.filter((t: Token) => t.type === 'boolean');
       expect(boolTokens.length).toBe(2);
     });
@@ -203,7 +203,7 @@ describe('response-formatter', () => {
     test('should parse JSON with null', () => {
       const input = '{"value": null}';
       const tokens = parseJsonForHighlighting(input);
-      
+
       const nullToken = tokens.find((t: Token) => t.type === 'null');
       expect(nullToken).toBeDefined();
       expect(nullToken?.value).toBe('null');
@@ -212,7 +212,7 @@ describe('response-formatter', () => {
     test('should parse JSON brackets', () => {
       const input = '{"items": [1, 2]}';
       const tokens = parseJsonForHighlighting(input);
-      
+
       const bracketTokens = tokens.filter((t: Token) => t.type === 'bracket');
       expect(bracketTokens.length).toBeGreaterThan(0);
     });
@@ -228,7 +228,7 @@ describe('response-formatter', () => {
     test('should parse nested objects', () => {
       const input = '{"user": {"name": "John"}}';
       const tokens = parseJsonForHighlighting(input);
-      
+
       const keyTokens = tokens.filter((t: Token) => t.type === 'key');
       expect(keyTokens.length).toBe(2); // "user" and "name"
     });

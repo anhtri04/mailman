@@ -1,10 +1,21 @@
 // Request and response types for the HTTP client
 
+export type AuthType = 'none' | 'bearer' | 'api-key';
+
+export interface AuthConfig {
+  type: AuthType;
+  token?: string;
+  key?: string;
+  value?: string;
+  location?: 'header' | 'query';
+}
+
 export interface RequestOptions {
   method: string;
   url: string;
   headers?: Record<string, string>;
   body?: string;
+  auth?: AuthConfig;
 }
 
 export interface ResponseState {
