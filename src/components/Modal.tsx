@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { colors } from '../theme/colors';
 
 interface ModalProps {
   isOpen: boolean;
@@ -19,8 +20,8 @@ interface ModalProps {
  * - This component only renders when isOpen is true
  *
  * Styling:
- * - Primary color (#CC8844) for title and border
- * - Dark background (#1a1a1a)
+ * - Primary color (colors.accent.primary) for title and border
+ * - Dark background (colors.bg.panel)
  * - Centered on screen at 80% width/height
  */
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
@@ -37,16 +38,16 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         left: '10%',
         width: '80%',
         height: '80%',
-        backgroundColor: '#1a1a1a',
+        backgroundColor: colors.bg.panel,
         border: true,
-        borderColor: '#CC8844',
+        borderColor: colors.accent.primary,
         padding: 1,
       }}
     >
       <box style={{ flexDirection: 'column', height: '100%' }}>
         {/* Title bar */}
         {/* <box style={{ flexDirection: 'row', marginBottom: 1 }}>
-          <text fg="#CC8844">
+          <text fg={colors.accent.primary}>
             <strong>{title}</strong>
           </text>
         </box> */}

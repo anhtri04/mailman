@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { colors } from '../theme/colors';
 
 interface HeadersEditorProps {
   headers: Record<string, string>;
@@ -108,7 +109,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
 
   return (
     <box style={{ flexDirection: 'column', gap: 1, flexGrow: 1, height: '100%' }}>
-      <text fg="#CC8844">
+      <text fg={colors.accent.primary}>
         <strong>Headers</strong>
       </text>
 
@@ -118,22 +119,22 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
         >
           {entries.map((entry, index) => (
             <box key={`${entry.key}-${index}`} style={{ flexDirection: 'row', gap: 1 }}>
-              <box style={{ flexGrow: 1, border: true, borderColor: '#555555' }}>
+              <box style={{ flexGrow: 1, border: true, borderColor: colors.border.default }}>
                 <input
                   value={entry.key}
                   onInput={(value) => handleUpdateEntry(index, 'key', value)}
                   placeholder="Header name..."
-                  backgroundColor="#1a1a1a"
-                  textColor="#FFFFFF"
+                  backgroundColor={colors.bg.panel}
+                  textColor={colors.text.primary}
                 />
               </box>
-              <box style={{ flexGrow: 2, border: true, borderColor: '#555555' }}>
+              <box style={{ flexGrow: 2, border: true, borderColor: colors.border.default }}>
                 <input
                   value={entry.value}
                   onInput={(value) => handleUpdateEntry(index, 'value', value)}
                   placeholder="Header value..."
-                  backgroundColor="#1a1a1a"
-                  textColor="#FFFFFF"
+                  backgroundColor={colors.bg.panel}
+                  textColor={colors.text.primary}
                 />
               </box>
               <box
@@ -141,11 +142,11 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
                   paddingLeft: 1,
                   paddingRight: 1,
                   border: true,
-                  borderColor: '#555555',
+                  borderColor: colors.border.default,
                 }}
                 onMouseDown={() => handleRemoveHeader(index)}
               >
-                <text fg="#FF6666">✕</text>
+                <text fg={colors.syntax.error}>✕</text>
               </box>
             </box>
           ))}
@@ -158,7 +159,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
             style={{
               flexGrow: 1,
               border: true,
-              borderColor: focusedField === 'key' ? '#CC8844' : '#555555',
+              borderColor: focusedField === 'key' ? colors.accent.primary : colors.border.default,
             }}
           >
             <input
@@ -166,15 +167,15 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
               onInput={setNewKey}
               placeholder="New header name..."
               focused={focusedField === 'key'}
-              backgroundColor="#1a1a1a"
-              textColor="#FFFFFF"
+              backgroundColor={colors.bg.panel}
+              textColor={colors.text.primary}
             />
           </box>
           <box
             style={{
               flexGrow: 2,
               border: true,
-              borderColor: focusedField === 'value' ? '#CC8844' : '#555555',
+              borderColor: focusedField === 'value' ? colors.accent.primary : colors.border.default,
             }}
           >
             <input
@@ -182,8 +183,8 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
               onInput={setNewValue}
               placeholder="Header value..."
               focused={focusedField === 'value'}
-              backgroundColor="#1a1a1a"
-              textColor="#FFFFFF"
+              backgroundColor={colors.bg.panel}
+              textColor={colors.text.primary}
             />
           </box>
           <box
@@ -191,12 +192,12 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
               paddingLeft: 2,
               paddingRight: 2,
               border: true,
-              borderColor: '#CC8844',
-              backgroundColor: '#CC8844',
+              borderColor: colors.accent.primary,
+              backgroundColor: colors.accent.primary,
             }}
             onMouseDown={handleAddHeader}
           >
-            <text fg="#000000">
+            <text fg={colors.bg.app}>
               <strong>Add</strong>
             </text>
           </box>
@@ -210,23 +211,23 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
             // paddingTop: 1,
             // paddingBottom: 1,
             border: true,
-            borderColor: showPresets ? '#CC8844' : '#555555',
-            backgroundColor: showPresets ? '#CC8844' : undefined,
+            borderColor: showPresets ? colors.accent.primary : colors.border.default,
+            backgroundColor: showPresets ? colors.accent.primary : undefined,
           }}
           onMouseDown={() => setShowPresets(!showPresets)}
         >
-          <text fg={showPresets ? '#000000' : '#999999'}>
+          <text fg={showPresets ? colors.bg.app : colors.text.muted}>
             {showPresets ? <strong>Hide Presets</strong> : 'Common Headers'}
           </text>
         </box>
 
         {showPresets && (
           <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
-            <text fg="#999999">Click to add:</text>
+            <text fg={colors.text.muted}>Click to add:</text>
             <box style={{ flexDirection: 'column', gap: 1 }}>
               {Object.entries(HEADER_PRESETS).map(([headerName, values]) => (
                 <box key={headerName} style={{ flexDirection: 'column', gap: 1 }}>
-                  <text fg="#CC8844">{headerName}:</text>
+                  <text fg={colors.accent.primary}>{headerName}:</text>
                   <box style={{ flexDirection: 'row', gap: 1, flexWrap: 'wrap' }}>
                     {values.map((value) => (
                       <box
@@ -237,11 +238,11 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
                           paddingTop: 0,
                           paddingBottom: 0,
                           border: true,
-                          borderColor: '#555555',
+                          borderColor: colors.border.default,
                         }}
                         onMouseDown={() => handlePresetSelect(headerName, value)}
                       >
-                        <text fg="#FFFFFF">{value}</text>
+                        <text fg={colors.text.primary}>{value}</text>
                       </box>
                     ))}
                   </box>
@@ -253,7 +254,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
       </box>
 
       {entries.length === 0 && (
-        <text fg="#555555">
+        <text fg={colors.text.dim}>
           <em>No headers set. Add headers above or use presets.</em>
         </text>
       )}

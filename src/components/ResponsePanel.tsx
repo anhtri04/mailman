@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useKeyboard } from '@opentui/react';
+import { colors } from '../theme/colors';
 import type { ResponseState } from '../types';
 import { Modal } from './Modal';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
@@ -17,7 +18,7 @@ interface ResponsePanelProps {
 const TABS: ResponseTab[] = ['body', 'headers', 'raw'];
 
 export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps) {
-  const borderColor = focused ? '#CC8844' : '#555555';
+  const borderColor = focused ? colors.accent.primary : colors.border.default;
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<ResponseTab>('body');
 
@@ -72,12 +73,12 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
             paddingLeft: 2,
             paddingRight: 2,
             border: true,
-            borderColor: isActive ? '#CC8844' : '#555555',
-            backgroundColor: isActive ? '#CC8844' : undefined,
+            borderColor: isActive ? colors.accent.primary : colors.border.default,
+            backgroundColor: isActive ? colors.accent.primary : undefined,
           }}
           onMouseDown={handleTabClick(tab)}
         >
-          <text fg={isActive ? '#000000' : '#999999'}>
+          <text fg={isActive ? colors.bg.app : colors.text.muted}>
             {isActive ? <strong>{label}</strong> : label}
           </text>
         </box>
@@ -87,12 +88,12 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
   );
 
   const getStatusColor = (status: number): string => {
-    if (status === 0) return '#CC8844'; // Error/Network
-    if (status >= 200 && status < 300) return '#99AA77'; // Success
-    if (status >= 300 && status < 400) return '#BBAA77'; // Redirect
-    if (status >= 400 && status < 500) return '#AA7733'; // Client error
-    if (status >= 500) return '#AA5555'; // Server error
-    return '#FFFFFF';
+    if (status === 0) return colors.syntax.warning; // Error/Network
+    if (status >= 200 && status < 300) return colors.syntax.success; // Success
+    if (status >= 300 && status < 400) return colors.syntax.warning; // Redirect
+    if (status >= 400 && status < 500) return colors.syntax.error; // Client error
+    if (status >= 500) return colors.syntax.error; // Server error
+    return colors.text.primary;
   };
 
   return (
@@ -107,13 +108,13 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
       onMouseDown={onFocus}
     >
       <box style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <text fg="#CC8844">
+        <text fg={colors.accent.primary}>
           <strong>Response</strong>
         </text>
         {response && (
           <box style={{ flexDirection: 'row', gap: 2 }}>
-            <text fg="#999999">{contentSize}</text>
-            <text fg="#999999">{response.time}ms</text>
+            <text fg={colors.text.muted}>{contentSize}</text>
+            <text fg={colors.text.muted}>{response.time}ms</text>
           </box>
         )}
       </box>
@@ -159,17 +160,17 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
 
               {activeTab === 'raw' && (
                 <scrollbox style={{ flexGrow: 1 }}>
-                  <text fg="#FFFFFF">{response.body}</text>
+                  <text fg={colors.text.primary}>{response.body}</text>
                 </scrollbox>
               )}
             </box>
 
-            <text fg="#666666" style={{ marginTop: 1 }}>
+            <text fg={colors.text.dim} style={{ marginTop: 1 }}>
               Press SPACE to expand • TAB to switch tabs
             </text>
           </box>
         ) : (
-          <text fg="#666666">No response yet. Send a request to see results.</text>
+          <text fg={colors.text.dim}>No response yet. Send a request to see results.</text>
         )}
       </box>
 
@@ -181,9 +182,9 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
         >
           <box style={{ flexDirection: 'column', flexGrow: 1 }}>
             <box style={{ flexDirection: 'row', gap: 2, marginBottom: 1 }}>
-              <text fg="#999999">{contentSize}</text>
-              <text fg="#999999">{response.time}ms</text>
-              <text fg="#999999">• Press ESC to close</text>
+              <text fg={colors.text.muted}>{contentSize}</text>
+              <text fg={colors.text.muted}>{response.time}ms</text>
+              <text fg={colors.text.muted}>• Press ESC to close</text>
             </box>
 
             {/* Tabs in modal */}
@@ -209,7 +210,7 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
                 <HeadersDisplay headers={response.headers} />
               )}
 
-              {activeTab === 'raw' && <text fg="#FFFFFF">{response.body}</text>}
+              {activeTab === 'raw' && <text fg={colors.text.primary}>{response.body}</text>}
             </scrollbox>
           </box>
         </Modal>

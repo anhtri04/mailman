@@ -1,5 +1,6 @@
 // Headers display component for showing HTTP response headers
 import { useMemo } from 'react';
+import { colors } from '../theme/colors';
 
 interface HeadersDisplayProps {
   headers: Record<string, string>;
@@ -15,7 +16,7 @@ export function HeadersDisplay({ headers }: HeadersDisplayProps) {
   if (sortedHeaders.length === 0) {
     return (
       <box style={{ flexDirection: 'column', padding: 1 }}>
-        <text fg="#999999">No headers available</text>
+        <text fg={colors.text.muted}>No headers available</text>
       </box>
     );
   }
@@ -33,10 +34,10 @@ export function HeadersDisplay({ headers }: HeadersDisplayProps) {
             paddingBottom: 0,
           }}
         >
-          <text fg="#CC8844" style={{ width: 30 }}>
+          <text fg={colors.accent.primary} style={{ width: 30 }}>
             {key}:
           </text>
-          <text fg="#99AA77">{value}</text>
+          <text fg={colors.syntax.success}>{value}</text>
         </box>
       ))}
     </box>

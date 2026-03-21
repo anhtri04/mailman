@@ -1,5 +1,6 @@
 // Syntax highlighter component for JSON, XML, and text content
 import { useMemo } from 'react';
+import { colors } from '../theme/colors';
 import {
   parseJsonForHighlighting,
   getTokenColor,
@@ -57,17 +58,17 @@ function highlightXml(body: string): HighlightedSegment[] {
       }
 
       // Tag color based on type
-      let color = '#FFFFFF'; // Default brackets
+      let color: string = colors.text.primary as string; // Default brackets
       if (tagContent.startsWith('</')) {
-        color = '#CC8844'; // Closing tag
+        color = colors.accent.primary as string; // Closing tag
       } else if (tagContent.startsWith('<!--')) {
-        color = '#999999'; // Comment
+        color = colors.text.muted as string; // Comment
       } else if (tagContent.startsWith('<!')) {
-        color = '#999999'; // DOCTYPE
+        color = colors.text.muted as string; // DOCTYPE
       } else if (tagContent.startsWith('<?')) {
-        color = '#999999'; // Processing instruction
+        color = colors.text.muted as string; // Processing instruction
       } else {
-        color = '#CC8844'; // Opening tag
+        color = colors.accent.primary as string; // Opening tag
       }
 
       segments.push({ text: tagContent, color });
@@ -102,7 +103,7 @@ function highlightXml(body: string): HighlightedSegment[] {
           i++;
         }
       }
-      segments.push({ text: value, color: '#99AA77' });
+      segments.push({ text: value, color: colors.syntax.success });
     } else {
       // Regular text content
       let text = '';
@@ -114,7 +115,7 @@ function highlightXml(body: string): HighlightedSegment[] {
         i++;
       }
       if (text) {
-        segments.push({ text, color: '#FFFFFF' });
+        segments.push({ text, color: colors.text.primary });
       }
     }
   }
@@ -123,7 +124,7 @@ function highlightXml(body: string): HighlightedSegment[] {
 }
 
 function highlightPlainText(body: string): HighlightedSegment[] {
-  return [{ text: body, color: '#FFFFFF' }];
+  return [{ text: body, color: colors.text.primary }];
 }
 
 export function SyntaxHighlighter({ code, language }: SyntaxHighlighterProps) {

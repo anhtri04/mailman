@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { colors } from '../theme/colors';
 import type { AuthConfig } from '../types';
 
 type Tab = 'headers' | 'body' | 'query' | 'auth';
@@ -45,7 +46,7 @@ export function RequestPanel({
   onOpenAuth,
 }: RequestPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab | null>(null);
-  const borderColor = focused ? '#CC8844' : '#555555';
+  const borderColor = focused ? colors.accent.primary : colors.border.default;
 
   // Check if each section has data for indicator
   const hasHeaders = Object.keys(headers).length > 0;
@@ -80,12 +81,12 @@ export function RequestPanel({
             paddingLeft: 2,
             paddingRight: 2,
             border: true,
-            borderColor: isActive ? '#CC8844' : '#555555',
-            backgroundColor: isActive ? '#CC8844' : undefined,
+            borderColor: isActive ? colors.accent.primary : colors.border.default,
+            backgroundColor: isActive ? colors.accent.primary : undefined,
           }}
           onMouseDown={handleTabClick(tab)}
         >
-          <text fg={isActive ? '#000000' : '#999999'}>
+          <text fg={isActive ? colors.bg.app : colors.text.muted}>
             {isActive ? <strong>{displayLabel}</strong> : displayLabel}
           </text>
         </box>
@@ -105,7 +106,7 @@ export function RequestPanel({
       }}
       onMouseDown={onFocus}
     >
-      <text fg="#CC8844">
+      <text fg={colors.accent.primary}>
         <strong>Request</strong>
       </text>
 
@@ -113,9 +114,11 @@ export function RequestPanel({
         <box
           style={{
             border: true,
-            borderColor: '#555555',
+            borderColor: colors.border.default,
             paddingLeft: 1,
             paddingRight: 1,
+            backgroundColor:
+              colors.methods[method as keyof typeof colors.methods]?.bg ?? colors.bg.panel,
           }}
           onMouseDown={(e) => {
             e.stopPropagation();
@@ -127,14 +130,18 @@ export function RequestPanel({
             }
           }}
         >
-          <text fg="#FFFFFF">{method}</text>
+          <text
+            fg={colors.methods[method as keyof typeof colors.methods]?.text ?? colors.text.primary}
+          >
+            {method}
+          </text>
         </box>
 
         <box
           style={{
             flexGrow: 1,
             border: true,
-            borderColor: focused ? '#CC8844' : '#555555',
+            borderColor: focused ? colors.accent.primary : colors.border.default,
             paddingLeft: 1,
             paddingRight: 1,
           }}
@@ -156,8 +163,8 @@ export function RequestPanel({
           style={{
             marginLeft: 1,
             border: true,
-            borderColor: '#CC8844',
-            backgroundColor: '#CC8844',
+            borderColor: colors.accent.primary,
+            backgroundColor: colors.accent.primary,
             paddingLeft: 2,
             paddingRight: 2,
           }}
@@ -166,7 +173,7 @@ export function RequestPanel({
             onSend();
           }}
         >
-          <text fg="#000000">
+          <text fg={colors.bg.app}>
             <strong>Send</strong>
           </text>
         </box>

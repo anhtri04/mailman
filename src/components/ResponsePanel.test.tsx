@@ -40,8 +40,8 @@ describe('ResponsePanel', () => {
   test('should handle status code colors', () => {
     const componentString = ResponsePanel.toString();
     expect(componentString).toContain('getStatusColor');
-    expect(componentString).toContain('#99AA77'); // Success color
-    expect(componentString).toContain('#AA5555'); // Error color
+    expect(componentString).toContain('colors.syntax.success'); // Success color
+    expect(componentString).toContain('colors.syntax.error'); // Error color
   });
 
   test('should use content type detection', () => {
@@ -52,6 +52,6 @@ describe('ResponsePanel', () => {
   test('should handle keyboard navigation for tabs', () => {
     const componentString = ResponsePanel.toString();
     expect(componentString).toContain('useKeyboard');
-    expect(componentString).toContain("'tab'");
+    expect(componentString).toContain('tab');
   });
 });

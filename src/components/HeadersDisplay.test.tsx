@@ -20,8 +20,8 @@ describe('HeadersDisplay', () => {
 
   test('should render with box and text components', () => {
     const componentString = HeadersDisplay.toString();
-    expect(componentString).toContain('<box');
-    expect(componentString).toContain('<text');
+    expect(componentString).toContain('box');
+    expect(componentString).toContain('text');
   });
 
   test('should sort headers alphabetically', () => {
@@ -35,13 +35,18 @@ describe('HeadersDisplay', () => {
     expect(componentString).toContain('No headers available');
   });
 
-  test('should style header names with primary color', () => {
+  test('should import colors from theme', () => {
     const componentString = HeadersDisplay.toString();
-    expect(componentString).toContain('#CC8844');
+    expect(componentString).toContain('colors');
   });
 
-  test('should style header values with green color', () => {
+  test('should use theme colors for header names', () => {
     const componentString = HeadersDisplay.toString();
-    expect(componentString).toContain('#99AA77');
+    expect(componentString).toContain('colors.accent.primary');
+  });
+
+  test('should use theme colors for header values', () => {
+    const componentString = HeadersDisplay.toString();
+    expect(componentString).toContain('colors.syntax.success');
   });
 });

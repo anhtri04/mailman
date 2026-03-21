@@ -7,6 +7,7 @@ import { BodyEditor } from './components/BodyEditor';
 import { QueryParamsEditor } from './components/QueryParamsEditor';
 import { AuthEditor } from './components/AuthEditor';
 import { sendRequest } from './services/http-client';
+import { colors } from './theme/colors';
 import type { RequestOptions, ResponseState, AuthConfig } from './types';
 
 type Tab = 'headers' | 'body' | 'query' | 'auth';
@@ -108,15 +109,17 @@ export function App() {
       style={{
         flexDirection: 'column',
         height: '100%',
-        backgroundColor: 'black',
+        backgroundColor: colors.bg.app,
         padding: 1,
       }}
     >
       <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 1 }}>
-        <text fg="#CC8844">
+        <text fg={colors.accent.primary}>
           <strong>Mailman v0.0.1</strong>
         </text>
-        <text fg="#999999">Click panels to focus • Press Q to quit • Press H for help</text>
+        <text fg={colors.text.muted}>
+          Click panels to focus • Press Q to quit • Press H for help
+        </text>
       </box>
 
       <box height="40%" style={{ flexDirection: 'column' }}>
@@ -155,13 +158,13 @@ export function App() {
             position: 'absolute',
             top: '50%',
             left: '50%',
-            backgroundColor: '#1a1a1a',
+            backgroundColor: colors.bg.panel,
             border: true,
-            borderColor: '#CC8844',
+            borderColor: colors.accent.primary,
             padding: 1,
           }}
         >
-          <text fg="#CC8844">Loading...</text>
+          <text fg={colors.accent.primary}>Loading...</text>
         </box>
       )}
 

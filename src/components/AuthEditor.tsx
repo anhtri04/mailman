@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { colors } from '../theme/colors';
 import type { AuthConfig, AuthType } from '../types';
 
 interface AuthEditorProps {
@@ -74,13 +75,13 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
 
   return (
     <box style={{ flexDirection: 'column', gap: 1, flexGrow: 1, height: '100%' }}>
-      <text fg="#CC8844">
+      <text fg={colors.accent.primary}>
         <strong>Authentication</strong>
       </text>
 
       {/* Auth Type Selector */}
       <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
-        <text fg="#999999">Auth Type:</text>
+        <text fg={colors.text.muted}>Auth Type:</text>
         <box style={{ flexDirection: 'row', gap: 1 }}>
           {AUTH_TYPES.map((authType) => (
             <box
@@ -89,12 +90,16 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 paddingLeft: 2,
                 paddingRight: 2,
                 border: true,
-                borderColor: currentAuth.type === authType.value ? '#CC8844' : '#555555',
-                backgroundColor: currentAuth.type === authType.value ? '#CC8844' : undefined,
+                borderColor:
+                  currentAuth.type === authType.value
+                    ? colors.accent.primary
+                    : colors.border.default,
+                backgroundColor:
+                  currentAuth.type === authType.value ? colors.accent.primary : undefined,
               }}
               onMouseDown={() => handleTypeChange(authType.value)}
             >
-              <text fg={currentAuth.type === authType.value ? '#000000' : '#999999'}>
+              <text fg={currentAuth.type === authType.value ? colors.bg.app : colors.text.muted}>
                 {currentAuth.type === authType.value ? (
                   <strong>{authType.label}</strong>
                 ) : (
@@ -109,11 +114,11 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
       {/* Bearer Token Input */}
       {currentAuth.type === 'bearer' && (
         <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
-          <text fg="#999999">Bearer Token:</text>
+          <text fg={colors.text.muted}>Bearer Token:</text>
           <box
             style={{
               border: true,
-              borderColor: '#555555',
+              borderColor: colors.border.default,
               paddingLeft: 1,
               paddingRight: 1,
             }}
@@ -122,12 +127,12 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
               value={token}
               onInput={handleTokenChange}
               placeholder="Enter bearer token..."
-              backgroundColor="#1a1a1a"
-              textColor="#FFFFFF"
+              backgroundColor={colors.bg.panel}
+              textColor={colors.text.primary}
             />
           </box>
           {token && (
-            <text fg="#999999">
+            <text fg={colors.text.muted}>
               <em>
                 Will add: Authorization: Bearer {token.substring(0, 20)}
                 {token.length > 20 ? '...' : ''}
@@ -140,22 +145,22 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
       {/* API Key Inputs */}
       {currentAuth.type === 'api-key' && (
         <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
-          <text fg="#999999">API Key Configuration:</text>
+          <text fg={colors.text.muted}>API Key Configuration:</text>
 
           {/* Location Selector */}
           <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
-            <text fg="#999999">Location:</text>
+            <text fg={colors.text.muted}>Location:</text>
             <box
               style={{
                 paddingLeft: 2,
                 paddingRight: 2,
                 border: true,
-                borderColor: location === 'header' ? '#CC8844' : '#555555',
-                backgroundColor: location === 'header' ? '#CC8844' : undefined,
+                borderColor: location === 'header' ? colors.accent.primary : colors.border.default,
+                backgroundColor: location === 'header' ? colors.accent.primary : undefined,
               }}
               onMouseDown={() => handleLocationChange('header')}
             >
-              <text fg={location === 'header' ? '#000000' : '#999999'}>
+              <text fg={location === 'header' ? colors.bg.app : colors.text.muted}>
                 {location === 'header' ? <strong>Header</strong> : 'Header'}
               </text>
             </box>
@@ -164,12 +169,12 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 paddingLeft: 2,
                 paddingRight: 2,
                 border: true,
-                borderColor: location === 'query' ? '#CC8844' : '#555555',
-                backgroundColor: location === 'query' ? '#CC8844' : undefined,
+                borderColor: location === 'query' ? colors.accent.primary : colors.border.default,
+                backgroundColor: location === 'query' ? colors.accent.primary : undefined,
               }}
               onMouseDown={() => handleLocationChange('query')}
             >
-              <text fg={location === 'query' ? '#000000' : '#999999'}>
+              <text fg={location === 'query' ? colors.bg.app : colors.text.muted}>
                 {location === 'query' ? <strong>Query</strong> : 'Query'}
               </text>
             </box>
@@ -177,11 +182,11 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
 
           {/* Key Name Input */}
           <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
-            <text fg="#999999">Key Name:</text>
+            <text fg={colors.text.muted}>Key Name:</text>
             <box
               style={{
                 border: true,
-                borderColor: '#555555',
+                borderColor: colors.border.default,
                 paddingLeft: 1,
                 paddingRight: 1,
               }}
@@ -190,19 +195,19 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 value={apiKey}
                 onInput={handleApiKeyChange}
                 placeholder="e.g., X-API-Key, api_key..."
-                backgroundColor="#1a1a1a"
-                textColor="#FFFFFF"
+                backgroundColor={colors.bg.panel}
+                textColor={colors.text.primary}
               />
             </box>
           </box>
 
           {/* Key Value Input */}
           <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
-            <text fg="#999999">Key Value:</text>
+            <text fg={colors.text.muted}>Key Value:</text>
             <box
               style={{
                 border: true,
-                borderColor: '#555555',
+                borderColor: colors.border.default,
                 paddingLeft: 1,
                 paddingRight: 1,
               }}
@@ -211,8 +216,8 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 value={apiValue}
                 onInput={handleApiValueChange}
                 placeholder="Enter API key value..."
-                backgroundColor="#1a1a1a"
-                textColor="#FFFFFF"
+                backgroundColor={colors.bg.panel}
+                textColor={colors.text.primary}
               />
             </box>
           </box>
@@ -220,7 +225,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
           {/* Preview */}
           {apiKey && apiValue && (
             <box style={{ marginTop: 1 }}>
-              <text fg="#999999">
+              <text fg={colors.text.muted}>
                 <em>
                   Will add:{' '}
                   {location === 'header' ? `Header "${apiKey}"` : `Query param "${apiKey}"`} ={' '}
@@ -234,7 +239,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
       )}
 
       {currentAuth.type === 'none' && (
-        <text fg="#555555" style={{ marginTop: 1 }}>
+        <text fg={colors.text.dim} style={{ marginTop: 1 }}>
           <em>No authentication configured. Requests will be sent without auth headers.</em>
         </text>
       )}

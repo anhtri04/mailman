@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useKeyboard } from '@opentui/react';
+import { colors } from '../theme/colors';
 
 interface QueryParamsEditorProps {
   baseUrl: string;
@@ -90,20 +91,20 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
       style={{
         flexDirection: 'column',
         border: true,
-        borderColor: '#555555',
+        borderColor: colors.border.default,
         padding: 1,
         flexGrow: 1,
         height: '100%',
       }}
     >
-      <text fg="#CC8844">
+      <text fg={colors.accent.primary}>
         <strong>Query Parameters</strong>
       </text>
 
       {/* Params List */}
       <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
         {paramsArray.length === 0 ? (
-          <text fg="#999999">No query parameters added.</text>
+          <text fg={colors.text.muted}>No query parameters added.</text>
         ) : (
           paramsArray.map(([key, value], index) => (
             <box key={`${key}-${index}`} style={{ flexDirection: 'row', gap: 1 }}>
@@ -112,7 +113,7 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
                 style={{
                   flexGrow: 1,
                   border: true,
-                  borderColor: '#555555',
+                  borderColor: colors.border.default,
                   paddingLeft: 1,
                   paddingRight: 1,
                 }}
@@ -124,14 +125,14 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
                 />
               </box>
 
-              <text fg="#999999">=</text>
+              <text fg={colors.text.muted}>=</text>
 
               {/* Value Input */}
               <box
                 style={{
                   flexGrow: 2,
                   border: true,
-                  borderColor: '#555555',
+                  borderColor: colors.border.default,
                   paddingLeft: 1,
                   paddingRight: 1,
                 }}
@@ -147,13 +148,13 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
               <box
                 style={{
                   border: true,
-                  borderColor: '#AA5555',
+                  borderColor: colors.syntax.error,
                   paddingLeft: 1,
                   paddingRight: 1,
                 }}
                 onMouseDown={() => removeParam(key)}
               >
-                <text fg="#AA5555">-</text>
+                <text fg={colors.syntax.error}>-</text>
               </box>
             </box>
           ))
@@ -165,28 +166,28 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
         style={{
           marginTop: 1,
           border: true,
-          borderColor: '#99AA77',
+          borderColor: colors.syntax.success,
           paddingLeft: 2,
           paddingRight: 2,
           alignSelf: 'flex-start',
         }}
         onMouseDown={addParam}
       >
-        <text fg="#99AA77">+ Add Parameter</text>
+        <text fg={colors.syntax.success}>+ Add Parameter</text>
       </box>
 
       {/* Full URL Display */}
       <box style={{ marginTop: 1, flexDirection: 'column' }}>
-        <text fg="#999999">Full URL:</text>
+        <text fg={colors.text.muted}>Full URL:</text>
         <box
           style={{
             border: true,
-            borderColor: '#333333',
+            borderColor: colors.bg.selection,
             padding: 1,
             marginTop: 1,
           }}
         >
-          <text fg="#CCCCCC">{fullUrl}</text>
+          <text fg={colors.text.primary}>{fullUrl}</text>
         </box>
       </box>
     </box>

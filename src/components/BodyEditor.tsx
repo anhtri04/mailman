@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
 import type { TextareaRenderable } from '@opentui/core';
+import { colors } from '../theme/colors';
 
 interface BodyEditorProps {
   body: string;
@@ -23,7 +24,7 @@ function detectContentType(body: string): string {
 }
 
 export function BodyEditor({ body, onBodyChange, focused, detectedContentType }: BodyEditorProps) {
-  const borderColor = focused ? '#CC8844' : '#555555';
+  const borderColor = focused ? colors.accent.primary : colors.border.default;
   const contentType = detectedContentType ?? detectContentType(body);
   const charCount = body.length;
   const textareaRef = useRef<TextareaRenderable>(null);
@@ -54,18 +55,18 @@ export function BodyEditor({ body, onBodyChange, focused, detectedContentType }:
           marginBottom: 1,
         }}
       >
-        <text fg="#CC8844">
+        <text fg={colors.accent.primary}>
           <strong>Body</strong>
         </text>
-        <text fg="#999999">{contentType}</text>
+        <text fg={colors.text.muted}>{contentType}</text>
       </box>
 
       <box
         style={{
           flexGrow: 1,
           border: true,
-          borderColor: focused ? '#CC8844' : '#555555',
-          backgroundColor: '#1a1a1a',
+          borderColor: focused ? colors.accent.primary : colors.border.default,
+          backgroundColor: colors.bg.panel,
         }}
       >
         <scrollbox style={{ flexGrow: 1 }}>
@@ -75,9 +76,9 @@ export function BodyEditor({ body, onBodyChange, focused, detectedContentType }:
             placeholder="Enter request body..."
             focused={focused}
             onContentChange={handleContentChange}
-            backgroundColor="#1a1a1a"
-            textColor="#FFFFFF"
-            placeholderColor="#666666"
+            backgroundColor={colors.bg.panel}
+            textColor={colors.text.primary}
+            placeholderColor={colors.text.dim}
           />
         </scrollbox>
       </box>
@@ -89,7 +90,7 @@ export function BodyEditor({ body, onBodyChange, focused, detectedContentType }:
           marginTop: 1,
         }}
       >
-        <text fg="#999999">{charCount} chars</text>
+        <text fg={colors.text.muted}>{charCount} chars</text>
       </box>
     </box>
   );
