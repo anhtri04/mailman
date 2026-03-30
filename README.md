@@ -2,6 +2,8 @@
 
 A terminal-based HTTP client built with Bun and OpenTUI.
 
+![mailman.png](mailman.png)
+
 ## Features
 
 - **Interactive TUI**: Full terminal user interface with mouse and keyboard support
