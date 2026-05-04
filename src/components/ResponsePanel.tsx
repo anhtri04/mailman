@@ -72,6 +72,8 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
           style={{
             paddingLeft: 2,
             paddingRight: 2,
+            paddingTop: 0.5,
+            paddingBottom: 0.5,
             border: true,
             borderColor: isActive ? colors.accent.primary : colors.border.default,
             backgroundColor: isActive ? colors.accent.primary : undefined,

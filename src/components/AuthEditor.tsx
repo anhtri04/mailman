@@ -89,6 +89,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
               style={{
                 paddingLeft: 2,
                 paddingRight: 2,
+                paddingTop: 0.5,
                 border: true,
                 borderColor:
                   currentAuth.type === authType.value
@@ -154,6 +155,8 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
               style={{
                 paddingLeft: 2,
                 paddingRight: 2,
+                paddingTop: 0.5,
+                paddingBottom: 0.5,
                 border: true,
                 borderColor: location === 'header' ? colors.accent.primary : colors.border.default,
                 backgroundColor: location === 'header' ? colors.accent.primary : undefined,
@@ -168,6 +171,8 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
               style={{
                 paddingLeft: 2,
                 paddingRight: 2,
+                paddingTop: 0.5,
+                paddingBottom: 0.5,
                 border: true,
                 borderColor: location === 'query' ? colors.accent.primary : colors.border.default,
                 backgroundColor: location === 'query' ? colors.accent.primary : undefined,
@@ -189,6 +194,8 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 borderColor: colors.border.default,
                 paddingLeft: 1,
                 paddingRight: 1,
+                paddingTop: 0.5,
+                paddingBottom: 0.5,
               }}
             >
               <input
@@ -210,6 +217,8 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 borderColor: colors.border.default,
                 paddingLeft: 1,
                 paddingRight: 1,
+                paddingTop: 0.5,
+                paddingBottom: 0.5,
               }}
             >
               <input

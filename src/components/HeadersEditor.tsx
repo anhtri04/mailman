@@ -158,6 +158,8 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
           <box
             style={{
               flexGrow: 1,
+              paddingTop: 0.5,
+              paddingBottom: 0.5,
               border: true,
               borderColor: focusedField === 'key' ? colors.accent.primary : colors.border.default,
             }}
@@ -174,6 +176,8 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
           <box
             style={{
               flexGrow: 2,
+              paddingTop: 0.5,
+              paddingBottom: 0.5,
               border: true,
               borderColor: focusedField === 'value' ? colors.accent.primary : colors.border.default,
             }}
@@ -191,6 +195,8 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
             style={{
               paddingLeft: 2,
               paddingRight: 2,
+              paddingTop: 0.5,
+              paddingBottom: 0.5,
               border: true,
               borderColor: colors.accent.primary,
               backgroundColor: colors.accent.primary,
@@ -208,8 +214,8 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
             alignSelf: 'flex-start',
             paddingLeft: 2,
             paddingRight: 2,
-            // paddingTop: 1,
-            // paddingBottom: 1,
+            paddingTop: 0.5,
+            paddingBottom: 0.5,
             border: true,
             borderColor: showPresets ? colors.accent.primary : colors.border.default,
             backgroundColor: showPresets ? colors.accent.primary : undefined,
@@ -235,8 +241,8 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
                         style={{
                           paddingLeft: 1,
                           paddingRight: 1,
-                          paddingTop: 0,
-                          paddingBottom: 0,
+                          paddingTop: 0.5,
+                          paddingBottom: 0.5,
                           border: true,
                           borderColor: colors.border.default,
                         }}

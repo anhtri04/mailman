@@ -118,7 +118,7 @@ export function App() {
           <strong>Mailman v0.0.1</strong>
         </text>
         <text fg={colors.text.muted}>
-          Click panels to focus • Press Q to quit • Press H for help
+          Click panels to focus • Press Ctrl + Q to quit • Press H for help
         </text>
       </box>
 

@@ -80,6 +80,8 @@ export function RequestPanel({
           style={{
             paddingLeft: 2,
             paddingRight: 2,
+            paddingTop: 0.5,
+            paddingBottom: 0.5,
             border: true,
             borderColor: isActive ? colors.accent.primary : colors.border.default,
             backgroundColor: isActive ? colors.accent.primary : undefined,
@@ -117,6 +119,8 @@ export function RequestPanel({
             borderColor: colors.border.default,
             paddingLeft: 1,
             paddingRight: 1,
+            paddingTop: 0.5,
+            paddingBottom: 0.5,
             backgroundColor:
               colors.methods[method as keyof typeof colors.methods]?.bg ?? colors.bg.panel,
           }}
@@ -144,6 +148,8 @@ export function RequestPanel({
             borderColor: focused ? colors.accent.primary : colors.border.default,
             paddingLeft: 1,
             paddingRight: 1,
+            paddingTop: 0.5,
+            paddingBottom: 0.5,
           }}
           onMouseDown={(e) => {
             e.stopPropagation();
@@ -167,6 +173,8 @@ export function RequestPanel({
             backgroundColor: colors.accent.primary,
             paddingLeft: 2,
             paddingRight: 2,
+            paddingTop: 0.5,
+            paddingBottom: 0.5,
           }}
           onMouseDown={(e) => {
             e.stopPropagation();
