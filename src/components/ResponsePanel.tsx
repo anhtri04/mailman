@@ -106,12 +106,17 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
         borderColor,
         padding: 1,
         flexGrow: 1,
+        borderStyle: 'rounded',
       }}
       onMouseDown={onFocus}
     >
-      <box style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <text fg={colors.accent.primary}>
-          <strong>Response</strong>
+      <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }}>
+        <text
+          fg={colors.accent.primary}
+          bg={colors.bg.app}
+          style={{ paddingLeft: 1, paddingRight: 1 }}
+        >
+          <strong> Response </strong>
         </text>
         {response && (
           <box style={{ flexDirection: 'row', gap: 2 }}>

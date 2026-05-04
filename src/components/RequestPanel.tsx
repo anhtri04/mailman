@@ -84,11 +84,11 @@ export function RequestPanel({
             paddingBottom: 0.5,
             border: true,
             borderColor: isActive ? colors.accent.primary : colors.border.default,
-            backgroundColor: isActive ? colors.accent.primary : undefined,
+            borderStyle: 'rounded',
           }}
           onMouseDown={handleTabClick(tab)}
         >
-          <text fg={isActive ? colors.bg.app : colors.text.muted}>
+          <text fg={isActive ? colors.accent.primary : colors.text.muted}>
             {isActive ? <strong>{displayLabel}</strong> : displayLabel}
           </text>
         </box>
@@ -105,12 +105,19 @@ export function RequestPanel({
         borderColor,
         padding: 1,
         flexGrow: 1,
+        borderStyle: 'rounded',
       }}
       onMouseDown={onFocus}
     >
-      <text fg={colors.accent.primary}>
-        <strong>Request</strong>
-      </text>
+      <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }}>
+        <text
+          fg={colors.accent.primary}
+          bg={colors.bg.app}
+          style={{ paddingLeft: 1, paddingRight: 1 }}
+        >
+          <strong> Request </strong>
+        </text>
+      </box>
 
       <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
         <box
@@ -121,6 +128,8 @@ export function RequestPanel({
             paddingRight: 1,
             paddingTop: 0.5,
             paddingBottom: 0.5,
+            borderStyle: 'heavy',
+            alignItems: 'center',
             backgroundColor:
               colors.methods[method as keyof typeof colors.methods]?.bg ?? colors.bg.panel,
           }}
@@ -150,6 +159,7 @@ export function RequestPanel({
             paddingRight: 1,
             paddingTop: 0.5,
             paddingBottom: 0.5,
+            borderStyle: 'rounded',
           }}
           onMouseDown={(e) => {
             e.stopPropagation();
@@ -175,6 +185,7 @@ export function RequestPanel({
             paddingRight: 2,
             paddingTop: 0.5,
             paddingBottom: 0.5,
+            borderStyle: 'heavy',
           }}
           onMouseDown={(e) => {
             e.stopPropagation();
