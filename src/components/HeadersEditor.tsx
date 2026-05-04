@@ -198,12 +198,12 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
               paddingTop: 0.5,
               paddingBottom: 0.5,
               border: true,
+              borderStyle: 'double',
               borderColor: colors.accent.primary,
-              backgroundColor: colors.accent.primary,
             }}
             onMouseDown={handleAddHeader}
           >
-            <text fg={colors.bg.app}>
+            <text fg={colors.accent.primary}>
               <strong>Add</strong>
             </text>
           </box>

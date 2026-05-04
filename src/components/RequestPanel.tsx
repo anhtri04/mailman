@@ -123,14 +123,13 @@ export function RequestPanel({
         <box
           style={{
             border: true,
-            borderColor: colors.border.default,
             paddingLeft: 1,
             paddingRight: 1,
             paddingTop: 0.5,
             paddingBottom: 0.5,
-            borderStyle: 'heavy',
+            borderStyle: 'double',
             alignItems: 'center',
-            backgroundColor:
+            borderColor:
               colors.methods[method as keyof typeof colors.methods]?.bg ?? colors.bg.panel,
           }}
           onMouseDown={(e) => {
@@ -180,19 +179,18 @@ export function RequestPanel({
             marginLeft: 1,
             border: true,
             borderColor: colors.accent.primary,
-            backgroundColor: colors.accent.primary,
             paddingLeft: 2,
             paddingRight: 2,
             paddingTop: 0.5,
             paddingBottom: 0.5,
-            borderStyle: 'heavy',
+            borderStyle: 'double',
           }}
           onMouseDown={(e) => {
             e.stopPropagation();
             onSend();
           }}
         >
-          <text fg={colors.bg.app}>
+          <text fg={colors.accent.primary}>
             <strong>Send</strong>
           </text>
         </box>

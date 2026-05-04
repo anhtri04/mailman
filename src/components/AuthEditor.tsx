@@ -95,12 +95,10 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                   currentAuth.type === authType.value
                     ? colors.accent.primary
                     : colors.border.default,
-                backgroundColor:
-                  currentAuth.type === authType.value ? colors.accent.primary : undefined,
               }}
               onMouseDown={() => handleTypeChange(authType.value)}
             >
-              <text fg={currentAuth.type === authType.value ? colors.bg.app : colors.text.muted}>
+              <text fg={currentAuth.type === authType.value ? colors.accent.primary : colors.text.muted}>
                 {currentAuth.type === authType.value ? (
                   <strong>{authType.label}</strong>
                 ) : (
@@ -159,11 +157,10 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 paddingBottom: 0.5,
                 border: true,
                 borderColor: location === 'header' ? colors.accent.primary : colors.border.default,
-                backgroundColor: location === 'header' ? colors.accent.primary : undefined,
               }}
               onMouseDown={() => handleLocationChange('header')}
             >
-              <text fg={location === 'header' ? colors.bg.app : colors.text.muted}>
+              <text fg={location === 'header' ? colors.accent.primary : colors.text.muted}>
                 {location === 'header' ? <strong>Header</strong> : 'Header'}
               </text>
             </box>
@@ -175,11 +172,10 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 paddingBottom: 0.5,
                 border: true,
                 borderColor: location === 'query' ? colors.accent.primary : colors.border.default,
-                backgroundColor: location === 'query' ? colors.accent.primary : undefined,
               }}
               onMouseDown={() => handleLocationChange('query')}
             >
-              <text fg={location === 'query' ? colors.bg.app : colors.text.muted}>
+              <text fg={location === 'query' ? colors.accent.primary : colors.text.muted}>
                 {location === 'query' ? <strong>Query</strong> : 'Query'}
               </text>
             </box>
