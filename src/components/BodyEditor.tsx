@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
-import type { TextareaRenderable } from '@opentui/core';
+import type { KeyBinding, TextareaRenderable } from '@opentui/core';
+import { useKeyboard, useRenderer } from '@opentui/react';
 import { colors } from '../theme/colors';
 
 interface BodyEditorProps {
@@ -28,6 +29,36 @@ export function BodyEditor({ body, onBodyChange, focused, detectedContentType }:
   const contentType = detectedContentType ?? detectContentType(body);
   const charCount = body.length;
   const textareaRef = useRef<TextareaRenderable>(null);
+  const selectAllBindings: KeyBinding[] = [{ name: 'a', ctrl: true, action: 'select-all' }];
+  const renderer = useRenderer();
+
+  useKeyboard((key) => {
+    if (key.ctrl && key.name === 'c') {
+      console.log('[DEBUG] Ctrl+C fired', { focused, hasRef: !!textareaRef.current });
+      if (textareaRef.current) {
+        const ev = textareaRef.current.editorView;
+        const evSel = ev.getSelection();
+        const evText = ev.getSelectedText();
+        const rbSel = textareaRef.current.getSelectedText();
+        const hasSel = textareaRef.current.hasSelection();
+        const plainText = textareaRef.current.plainText;
+        console.log('[DEBUG] editorView.getSelection():', evSel);
+        console.log('[DEBUG] editorView.getSelectedText():', JSON.stringify(evText));
+        console.log('[DEBUG] renderable.getSelectedText():', JSON.stringify(rbSel));
+        console.log('[DEBUG] renderable.hasSelection():', hasSel);
+        console.log('[DEBUG] plainText length:', plainText.length);
+        const selection = renderer.getSelection();
+        console.log('[DEBUG] renderer.hasSelection:', renderer.hasSelection);
+        console.log('[DEBUG] renderer.getSelection():', selection);
+        if (selection) {
+          console.log(
+            '[DEBUG] renderer.getSelection().getSelectedText():',
+            JSON.stringify(selection.getSelectedText()),
+          );
+        }
+      }
+    }
+  });
 
   const handleContentChange = useCallback(() => {
     if (textareaRef.current) {
@@ -76,6 +107,7 @@ export function BodyEditor({ body, onBodyChange, focused, detectedContentType }:
             placeholder="Enter request body..."
             focused={focused}
             onContentChange={handleContentChange}
+            keyBindings={selectAllBindings}
             backgroundColor={colors.bg.panel}
             textColor={colors.text.primary}
             placeholderColor={colors.text.dim}
