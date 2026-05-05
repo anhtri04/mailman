@@ -26,7 +26,7 @@ export interface ResponseState {
   time: number;
 }
 
-export type FocusArea = 'request' | 'response' | null;
+export type FocusArea = 'request' | 'response' | 'collections' | null;
 
 export interface AppState {
   focusedArea: FocusArea;

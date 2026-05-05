@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { useFocus } from './hooks';
-import { RequestPanel, ResponsePanel, Modal } from './components';
+import { RequestPanel, ResponsePanel, CollectionPanel, Modal } from './components';
 import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
 import { QueryParamsEditor } from './components/QueryParamsEditor';
@@ -22,6 +22,7 @@ export function App() {
   });
   const [response, setResponse] = useState<ResponseState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCollectionCollapsed, setIsCollectionCollapsed] = useState(false);
   const [activeModal, setActiveModal] = useState<Tab | null>(null);
 
   useKeyboard((key) => {
@@ -107,95 +108,118 @@ export function App() {
   return (
     <box
       style={{
-        flexDirection: 'column',
+        flexDirection: 'row',
         height: '100%',
         backgroundColor: colors.bg.app,
         padding: 1,
+        gap: 1,
       }}
     >
-      <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 1 }}>
-        <text fg={colors.accent.primary}>
-          <strong>Mailman v0.0.1</strong>
-        </text>
-        <text fg={colors.text.muted}>
-          Click panels to focus • Press Ctrl + Q to quit • Press H for help
-        </text>
-      </box>
-
-      <box height="40%" style={{ flexDirection: 'column' }}>
-        <RequestPanel
-          focused={isFocused('request')}
-          onFocus={() => setFocus('request')}
-          url={request.url}
-          onUrlChange={handleUrlChange}
-          method={request.method}
-          onMethodChange={handleMethodChange}
-          onSend={handleSend}
-          headers={request.headers}
-          onHeadersChange={handleHeadersChange}
-          body={request.body}
-          onBodyChange={handleBodyChange}
-          queryParams={queryParams}
-          auth={request.auth}
-          onOpenHeaders={() => setActiveModal('headers')}
-          onOpenBody={() => setActiveModal('body')}
-          onOpenQuery={() => setActiveModal('query')}
-          onOpenAuth={() => setActiveModal('auth')}
+      <box
+        width={isCollectionCollapsed ? '5%' : '20%'}
+        style={{ flexDirection: 'column', height: '100%' }}
+      >
+        <CollectionPanel
+          focused={isFocused('collections')}
+          onFocus={() => setFocus('collections')}
+          isCollapsed={isCollectionCollapsed}
+          onToggleCollapse={() => setIsCollectionCollapsed((prev) => !prev)}
         />
       </box>
 
-      <box height="60%" style={{ flexDirection: 'column', marginTop: 1 }}>
-        <ResponsePanel
-          focused={isFocused('response')}
-          onFocus={() => setFocus('response')}
-          response={response}
-        />
-      </box>
-
-      {isLoading && (
-        <box
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            backgroundColor: colors.bg.panel,
-            border: true,
-            borderColor: colors.accent.primary,
-            padding: 1,
-          }}
-        >
-          <text fg={colors.accent.primary}>Loading...</text>
+      <box
+        style={{
+          flexDirection: 'column',
+          height: '100%',
+          width: isCollectionCollapsed ? '95%' : '80%',
+          backgroundColor: colors.bg.app,
+          padding: 1,
+        }}
+      >
+        <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 1 }}>
+          <text fg={colors.accent.primary}>
+            <strong>Mailman v0.0.1</strong>
+          </text>
+          <text fg={colors.text.muted}>
+            Click panels to focus • Press Ctrl + Q to quit • Press H for help
+          </text>
         </box>
-      )}
 
-      {/* Modal popups for editors - rendered at App level for full screen sizing */}
-      {activeModal === 'headers' && (
-        <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Headers">
-          <HeadersEditor headers={request.headers ?? {}} onHeadersChange={handleHeadersChange} />
-        </Modal>
-      )}
-
-      {activeModal === 'body' && (
-        <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Request Body">
-          <BodyEditor body={request.body ?? ''} onBodyChange={handleBodyChange} focused={true} />
-        </Modal>
-      )}
-
-      {activeModal === 'query' && (
-        <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Query Parameters">
-          <QueryParamsEditor
-            baseUrl={baseUrl}
-            params={queryParams}
-            onParamsChange={handleQueryParamsChange}
+        <box height="40%" style={{ flexDirection: 'column' }}>
+          <RequestPanel
+            focused={isFocused('request')}
+            onFocus={() => setFocus('request')}
+            url={request.url}
+            onUrlChange={handleUrlChange}
+            method={request.method}
+            onMethodChange={handleMethodChange}
+            onSend={handleSend}
+            headers={request.headers}
+            onHeadersChange={handleHeadersChange}
+            body={request.body}
+            onBodyChange={handleBodyChange}
+            queryParams={queryParams}
+            auth={request.auth}
+            onOpenHeaders={() => setActiveModal('headers')}
+            onOpenBody={() => setActiveModal('body')}
+            onOpenQuery={() => setActiveModal('query')}
+            onOpenAuth={() => setActiveModal('auth')}
           />
-        </Modal>
-      )}
+        </box>
 
-      {activeModal === 'auth' && (
-        <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Authentication">
-          <AuthEditor auth={request.auth} onAuthChange={handleAuthChange} />
-        </Modal>
-      )}
+        <box height="60%" style={{ flexDirection: 'column', marginTop: 1 }}>
+          <ResponsePanel
+            focused={isFocused('response')}
+            onFocus={() => setFocus('response')}
+            response={response}
+          />
+        </box>
+
+        {isLoading && (
+          <box
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              backgroundColor: colors.bg.panel,
+              border: true,
+              borderColor: colors.accent.primary,
+              padding: 1,
+            }}
+          >
+            <text fg={colors.accent.primary}>Loading...</text>
+          </box>
+        )}
+
+        {/* Modal popups for editors - rendered at App level for full screen sizing */}
+        {activeModal === 'headers' && (
+          <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Headers">
+            <HeadersEditor headers={request.headers ?? {}} onHeadersChange={handleHeadersChange} />
+          </Modal>
+        )}
+
+        {activeModal === 'body' && (
+          <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Request Body">
+            <BodyEditor body={request.body ?? ''} onBodyChange={handleBodyChange} focused={true} />
+          </Modal>
+        )}
+
+        {activeModal === 'query' && (
+          <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Query Parameters">
+            <QueryParamsEditor
+              baseUrl={baseUrl}
+              params={queryParams}
+              onParamsChange={handleQueryParamsChange}
+            />
+          </Modal>
+        )}
+
+        {activeModal === 'auth' && (
+          <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Authentication">
+            <AuthEditor auth={request.auth} onAuthChange={handleAuthChange} />
+          </Modal>
+        )}
+      </box>
     </box>
   );
 }
