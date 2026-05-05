@@ -8,3 +8,4 @@ export { QueryParamsEditor } from './QueryParamsEditor';
 export { AuthEditor } from './AuthEditor';
 export { SyntaxHighlighter } from './SyntaxHighlighter';
 export { HeadersDisplay } from './HeadersDisplay';
+export { MailmanLogo } from './MailmanLogo';

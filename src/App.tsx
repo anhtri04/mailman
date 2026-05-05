@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { useFocus } from './hooks';
 import { RequestPanel, ResponsePanel, CollectionPanel, Modal } from './components';
@@ -6,14 +6,14 @@ import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
 import { QueryParamsEditor } from './components/QueryParamsEditor';
 import { AuthEditor } from './components/AuthEditor';
-import { sendRequest } from './services/http-client';
+import { sendRequest, loadCollections } from './services';
 import { colors } from './theme/colors';
-import type { RequestOptions, ResponseState, AuthConfig } from './types';
+import type { RequestOptions, ResponseState, AuthConfig, Collection, RequestItem } from './types';
 
 type Tab = 'headers' | 'body' | 'query' | 'auth';
 
 export function App() {
-  const { focusedArea, setFocus, isFocused } = useFocus();
+  const { setFocus, isFocused } = useFocus();
   const [request, setRequest] = useState<RequestOptions>({
     method: 'GET',
     url: '',
@@ -24,6 +24,19 @@ export function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isCollectionCollapsed, setIsCollectionCollapsed] = useState(false);
   const [activeModal, setActiveModal] = useState<Tab | null>(null);
+  const [collections, setCollections] = useState<Collection[]>([]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const loaded = await loadCollections();
+        setCollections(loaded);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error('Failed to load collections:', message);
+      }
+    })();
+  }, []);
 
   useKeyboard((key) => {
     if (key.name === 'escape' && activeModal) {
@@ -105,6 +118,16 @@ export function App() {
     }
   }, [request]);
 
+  const handleLoadRequest = useCallback((item: RequestItem) => {
+    setRequest({
+      method: item.method,
+      url: item.url,
+      headers: item.headers ?? {},
+      body: item.body ?? '',
+      auth: item.auth,
+    });
+  }, []);
+
   return (
     <box
       style={{
@@ -124,6 +147,8 @@ export function App() {
           onFocus={() => setFocus('collections')}
           isCollapsed={isCollectionCollapsed}
           onToggleCollapse={() => setIsCollectionCollapsed((prev) => !prev)}
+          collections={collections}
+          onLoadRequest={handleLoadRequest}
         />
       </box>
 

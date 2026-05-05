@@ -26,6 +26,22 @@ export interface ResponseState {
   time: number;
 }
 
+export interface Collection {
+  id: string;
+  name: string;
+  requests: RequestItem[];
+}
+
+export interface RequestItem {
+  id: string;
+  name: string;
+  method: string;
+  url: string;
+  headers?: Record<string, string>;
+  body?: string;
+  auth?: AuthConfig;
+}
+
 export type FocusArea = 'request' | 'response' | 'collections' | null;
 
 export interface AppState {

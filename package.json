@@ -12,7 +12,8 @@
     "fmt:check": "oxfmt --check",
     "lint": "oxlint --type-aware --type-check",
     "lint:fix": "oxlint --fix",
-    "test": "bun test"
+    "test": "bun test",
+    "seed": "bun run ./scripts/seed-collections.ts"
   },
   "dependencies": {
     "@opentui/core": "^0.1.87",
