@@ -2,7 +2,6 @@ import { useState, useCallback, useMemo } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { colors } from '../theme/colors';
 import type { Collection, RequestItem } from '../types';
-import { fonts } from '@opentui/core';
 
 interface CollectionPanelProps {
   focused: boolean;
@@ -11,6 +10,9 @@ interface CollectionPanelProps {
   onToggleCollapse: () => void;
   collections: Collection[];
   onLoadRequest: (request: RequestItem) => void;
+  onOpenImportModal: () => void;
+  onOpenAddModal: (collectionId: string) => void;
+  onDeleteItem: (collectionId: string, requestId?: string) => void;
 }
 
 type TreeNode =
@@ -24,6 +26,9 @@ export function CollectionPanel({
   onToggleCollapse,
   collections,
   onLoadRequest,
+  onOpenImportModal,
+  onOpenAddModal,
+  onDeleteItem,
 }: CollectionPanelProps) {
   const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -55,6 +60,13 @@ export function CollectionPanel({
   }, [collections, expandedCollections]);
 
   const selectedNode = treeNodes[selectedIndex];
+
+  const selectedCollectionId =
+    selectedNode?.type === 'collection'
+      ? selectedNode.collection.id
+      : selectedNode?.type === 'request'
+        ? selectedNode.collectionId
+        : null;
 
   const handleSelect = useCallback(() => {
     if (!selectedNode) return;
@@ -114,6 +126,67 @@ export function CollectionPanel({
           >
             <strong> Collections </strong>
           </text>
+        )}
+
+        {!isCollapsed && (
+          <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
+            <box
+              style={{
+                border: true,
+                borderColor: colors.border.default,
+                borderStyle: 'rounded',
+                paddingLeft: 1,
+                paddingRight: 1,
+              }}
+              onMouseDown={(e: { stopPropagation: () => void }) => {
+                e.stopPropagation();
+                onFocus();
+                onOpenImportModal();
+              }}
+            >
+              <text fg={colors.accent.primary}>⬆</text>
+            </box>
+
+            <box
+              style={{
+                border: true,
+                borderColor: colors.border.default,
+                borderStyle: 'rounded',
+                paddingLeft: 1,
+                paddingRight: 1,
+              }}
+              onMouseDown={(e: { stopPropagation: () => void }) => {
+                e.stopPropagation();
+                onFocus();
+                if (selectedCollectionId) {
+                  onOpenAddModal(selectedCollectionId);
+                }
+              }}
+            >
+              <text fg={colors.accent.primary}>+</text>
+            </box>
+
+            <box
+              style={{
+                border: true,
+                borderColor: colors.border.default,
+                borderStyle: 'rounded',
+                paddingLeft: 1,
+                paddingRight: 1,
+              }}
+              onMouseDown={(e: { stopPropagation: () => void }) => {
+                e.stopPropagation();
+                onFocus();
+                if (selectedNode?.type === 'collection') {
+                  onDeleteItem(selectedNode.collection.id);
+                } else if (selectedNode?.type === 'request') {
+                  onDeleteItem(selectedNode.collectionId, selectedNode.request.id);
+                }
+              }}
+            >
+              <text fg={colors.syntax.error}>−</text>
+            </box>
+          </box>
         )}
 
         <box
@@ -181,8 +254,6 @@ export function CollectionPanel({
                       style={{
                         width: 4,
                         border: false,
-                        // borderColor: methodColors?.bg ?? '#555555',
-                        // backgroundColor: methodColors?.bg ?? '#555555',
                         paddingLeft: 0,
                         paddingRight: 0,
                         marginRight: 0.5,
@@ -195,7 +266,9 @@ export function CollectionPanel({
                       bg={isSelected && focused ? colors.bg.focusHighlight : 'transparent'}
                     >
                       {' '}
-                      {node.request.name || node.request.url}
+                      {(node.request.name || node.request.url).length > 10
+                        ? (node.request.name || node.request.url).slice(0, 10) + '...'
+                        : node.request.name || node.request.url}
                     </text>
                   </>
                 )}

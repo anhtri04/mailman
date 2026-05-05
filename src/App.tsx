@@ -6,7 +6,14 @@ import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
 import { QueryParamsEditor } from './components/QueryParamsEditor';
 import { AuthEditor } from './components/AuthEditor';
-import { sendRequest, loadCollections } from './services';
+import {
+  sendRequest,
+  loadCollections,
+  addCollection,
+  addRequestToCollection,
+  deleteCollection,
+  deleteRequest,
+} from './services';
 import { colors } from './theme/colors';
 import type { RequestOptions, ResponseState, AuthConfig, Collection, RequestItem } from './types';
 
@@ -25,6 +32,13 @@ export function App() {
   const [isCollectionCollapsed, setIsCollectionCollapsed] = useState(false);
   const [activeModal, setActiveModal] = useState<Tab | null>(null);
   const [collections, setCollections] = useState<Collection[]>([]);
+  const [requestName, setRequestName] = useState<string>('');
+
+  const [collectionModal, setCollectionModal] = useState<'import' | 'add' | null>(null);
+  const [newCollectionName, setNewCollectionName] = useState('');
+  const [newRequestMethod, setNewRequestMethod] = useState('GET');
+  const [newRequestName, setNewRequestName] = useState('');
+  const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -39,8 +53,12 @@ export function App() {
   }, []);
 
   useKeyboard((key) => {
-    if (key.name === 'escape' && activeModal) {
-      setActiveModal(null);
+    if (key.name === 'escape') {
+      if (activeModal) {
+        setActiveModal(null);
+      } else if (collectionModal) {
+        setCollectionModal(null);
+      }
     } else if (key.ctrl && key.name === 'q') {
       const cleanExit = (globalThis as any).__mailmanCleanExit;
       if (cleanExit) cleanExit();
@@ -126,6 +144,17 @@ export function App() {
       body: item.body ?? '',
       auth: item.auth,
     });
+    setRequestName(item.name);
+  }, []);
+
+  const handleDeleteItem = useCallback(async (collectionId: string, requestId?: string) => {
+    if (requestId) {
+      await deleteRequest(collectionId, requestId);
+    } else {
+      await deleteCollection(collectionId);
+    }
+    const updated = await loadCollections();
+    setCollections(updated);
   }, []);
 
   return (
@@ -149,6 +178,17 @@ export function App() {
           onToggleCollapse={() => setIsCollectionCollapsed((prev) => !prev)}
           collections={collections}
           onLoadRequest={handleLoadRequest}
+          onOpenImportModal={() => {
+            setNewCollectionName('');
+            setCollectionModal('import');
+          }}
+          onOpenAddModal={(collectionId: string) => {
+            setActiveCollectionId(collectionId);
+            setNewRequestMethod('GET');
+            setNewRequestName('');
+            setCollectionModal('add');
+          }}
+          onDeleteItem={handleDeleteItem}
         />
       </box>
 
@@ -243,6 +283,163 @@ export function App() {
         {activeModal === 'auth' && (
           <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Authentication">
             <AuthEditor auth={request.auth} onAuthChange={handleAuthChange} />
+          </Modal>
+        )}
+
+        {/* Collection Modals - rendered at App level for full screen sizing */}
+        {collectionModal === 'import' && (
+          <Modal isOpen={true} onClose={() => setCollectionModal(null)} title="New Collection">
+            <box style={{ flexDirection: 'column', gap: 1, padding: 1 }}>
+              <box
+                style={{
+                  border: true,
+                  borderColor: colors.border.default,
+                  borderStyle: 'rounded',
+                  paddingLeft: 1,
+                }}
+              >
+                <input
+                  placeholder="Collection name..."
+                  value={newCollectionName}
+                  onInput={(val: string) => setNewCollectionName(val)}
+                  focused={true}
+                />
+              </box>
+              <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
+                <box
+                  style={{
+                    border: true,
+                    borderColor: colors.accent.primary,
+                    borderStyle: 'rounded',
+                    paddingLeft: 2,
+                    paddingRight: 2,
+                  }}
+                  onMouseDown={() => {
+                    if (newCollectionName.trim()) {
+                      void (async () => {
+                        await addCollection(newCollectionName.trim());
+                        const updated = await loadCollections();
+                        setCollections(updated);
+                      })();
+                      setCollectionModal(null);
+                      setNewCollectionName('');
+                    }
+                  }}
+                >
+                  <text fg={colors.accent.primary}>Create</text>
+                </box>
+                <box
+                  style={{
+                    border: true,
+                    borderColor: colors.border.default,
+                    borderStyle: 'rounded',
+                    paddingLeft: 2,
+                    paddingRight: 2,
+                  }}
+                  onMouseDown={() => {
+                    setCollectionModal(null);
+                    setNewCollectionName('');
+                  }}
+                >
+                  <text fg={colors.text.muted}>Cancel</text>
+                </box>
+              </box>
+            </box>
+          </Modal>
+        )}
+
+        {collectionModal === 'add' && activeCollectionId && (
+          <Modal isOpen={true} onClose={() => setCollectionModal(null)} title="Add Request">
+            <box style={{ flexDirection: 'column', gap: 1, padding: 1 }}>
+              <box style={{ flexDirection: 'row', gap: 1, alignItems: 'center' }}>
+                <text fg={colors.text.muted}>Method:</text>
+                <box
+                  style={{
+                    border: true,
+                    borderColor: colors.border.default,
+                    borderStyle: 'rounded',
+                    paddingLeft: 1,
+                    paddingRight: 1,
+                  }}
+                  onMouseDown={() => {
+                    const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
+                    const idx = METHODS.indexOf(newRequestMethod);
+                    setNewRequestMethod(METHODS[(idx + 1) % METHODS.length]!);
+                  }}
+                >
+                  <text
+                    fg={
+                      colors.methods[newRequestMethod as keyof typeof colors.methods]?.text ??
+                      colors.text.primary
+                    }
+                  >
+                    {newRequestMethod}
+                  </text>
+                </box>
+              </box>
+
+              <box
+                style={{
+                  border: true,
+                  borderColor: colors.border.default,
+                  borderStyle: 'rounded',
+                  paddingLeft: 1,
+                }}
+              >
+                <input
+                  placeholder="Request name..."
+                  value={newRequestName}
+                  onInput={(val: string) => setNewRequestName(val)}
+                  focused={true}
+                />
+              </box>
+
+              <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
+                <box
+                  style={{
+                    border: true,
+                    borderColor: colors.accent.primary,
+                    borderStyle: 'rounded',
+                    paddingLeft: 2,
+                    paddingRight: 2,
+                  }}
+                  onMouseDown={() => {
+                    if (newRequestName.trim() && activeCollectionId) {
+                      void (async () => {
+                        await addRequestToCollection(activeCollectionId, {
+                          method: newRequestMethod,
+                          name: newRequestName.trim(),
+                          url: '',
+                        });
+                        const updated = await loadCollections();
+                        setCollections(updated);
+                      })();
+                      setCollectionModal(null);
+                      setNewRequestName('');
+                      setNewRequestMethod('GET');
+                    }
+                  }}
+                >
+                  <text fg={colors.accent.primary}>Add</text>
+                </box>
+                <box
+                  style={{
+                    border: true,
+                    borderColor: colors.border.default,
+                    borderStyle: 'rounded',
+                    paddingLeft: 2,
+                    paddingRight: 2,
+                  }}
+                  onMouseDown={() => {
+                    setCollectionModal(null);
+                    setNewRequestName('');
+                    setNewRequestMethod('GET');
+                  }}
+                >
+                  <text fg={colors.text.muted}>Cancel</text>
+                </box>
+              </box>
+            </box>
           </Modal>
         )}
       </box>
