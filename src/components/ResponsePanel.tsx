@@ -76,11 +76,10 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
             paddingBottom: 0.5,
             border: true,
             borderColor: isActive ? colors.accent.primary : colors.border.default,
-            backgroundColor: isActive ? colors.accent.primary : undefined,
           }}
           onMouseDown={handleTabClick(tab)}
         >
-          <text fg={isActive ? colors.bg.app : colors.text.muted}>
+          <text fg={isActive ? colors.accent.primary : colors.text.muted}>
             {isActive ? <strong>{label}</strong> : label}
           </text>
         </box>
@@ -122,6 +121,11 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
           <box style={{ flexDirection: 'row', gap: 2 }}>
             <text fg={colors.text.muted}>{contentSize}</text>
             <text fg={colors.text.muted}>{response.time}ms</text>
+            <text fg={getStatusColor(response.status)}>
+              {response.status > 0
+                ? `${response.status} ${response.statusText}`
+                : response.statusText}
+            </text>
           </box>
         )}
       </box>
@@ -129,16 +133,16 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
       <box style={{ flexGrow: 1, marginTop: 1, flexDirection: 'column' }}>
         {response ? (
           <box style={{ flexDirection: 'column', flexGrow: 1 }}>
-            <box style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            {/* <box style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <text fg={getStatusColor(response.status)}>
                 {response.status > 0
                   ? `${response.status} ${response.statusText}`
                   : response.statusText}
               </text>
-            </box>
+            </box> */}
 
             {/* Tabs */}
-            <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
+            <box style={{ flexDirection: 'row', gap: 1 }}>
               {renderTabButton('body', 'Body')}
               {renderTabButton('headers', 'Headers')}
               {renderTabButton('raw', 'Raw')}

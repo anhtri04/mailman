@@ -218,11 +218,10 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
             paddingBottom: 0.5,
             border: true,
             borderColor: showPresets ? colors.accent.primary : colors.border.default,
-            backgroundColor: showPresets ? colors.accent.primary : undefined,
           }}
           onMouseDown={() => setShowPresets(!showPresets)}
         >
-          <text fg={showPresets ? colors.bg.app : colors.text.muted}>
+          <text fg={showPresets ? colors.accent.primary : colors.text.muted}>
             {showPresets ? <strong>Hide Presets</strong> : 'Common Headers'}
           </text>
         </box>

@@ -98,7 +98,9 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
               }}
               onMouseDown={() => handleTypeChange(authType.value)}
             >
-              <text fg={currentAuth.type === authType.value ? colors.accent.primary : colors.text.muted}>
+              <text
+                fg={currentAuth.type === authType.value ? colors.accent.primary : colors.text.muted}
+              >
                 {currentAuth.type === authType.value ? (
                   <strong>{authType.label}</strong>
                 ) : (
