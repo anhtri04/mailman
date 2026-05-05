@@ -6,6 +6,7 @@ import { Modal } from './Modal';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { HeadersDisplay } from './HeadersDisplay';
 import { detectContentType, formatResponseBody } from '../utils/response-formatter';
+import { MailmanLogo } from './MailmanLogo';
 
 type ResponseTab = 'body' | 'headers' | 'raw';
 
@@ -181,7 +182,7 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
             </text>
           </box>
         ) : (
-          <text fg={colors.text.dim}>No response yet. Send a request to see results.</text>
+          <MailmanLogo />
         )}
       </box>
 

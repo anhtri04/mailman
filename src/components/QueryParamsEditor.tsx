@@ -116,6 +116,8 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
                   borderColor: colors.border.default,
                   paddingLeft: 1,
                   paddingRight: 1,
+                  paddingTop: 0.5,
+                  paddingBottom: 0.5,
                 }}
               >
                 <input
@@ -135,6 +137,8 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
                   borderColor: colors.border.default,
                   paddingLeft: 1,
                   paddingRight: 1,
+                  paddingTop: 0.5,
+                  paddingBottom: 0.5,
                 }}
               >
                 <input
@@ -151,6 +155,8 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
                   borderColor: colors.syntax.error,
                   paddingLeft: 1,
                   paddingRight: 1,
+                  paddingTop: 0.5,
+                  paddingBottom: 0.5,
                 }}
                 onMouseDown={() => removeParam(key)}
               >
@@ -169,6 +175,8 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
           borderColor: colors.syntax.success,
           paddingLeft: 2,
           paddingRight: 2,
+          paddingTop: 0.5,
+          paddingBottom: 0.5,
           alignSelf: 'flex-start',
         }}
         onMouseDown={addParam}
@@ -185,6 +193,7 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
             borderColor: colors.bg.selection,
             padding: 1,
             marginTop: 1,
+            marginBottom: 1,
           }}
         >
           <text fg={colors.text.primary}>{fullUrl}</text>
