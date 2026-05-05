@@ -189,6 +189,7 @@ export function App() {
             onOpenBody={() => setActiveModal('body')}
             onOpenQuery={() => setActiveModal('query')}
             onOpenAuth={() => setActiveModal('auth')}
+            requestName={requestName}
           />
         </box>
 

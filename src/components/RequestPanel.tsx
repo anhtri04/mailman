@@ -22,6 +22,7 @@ interface RequestPanelProps {
   onOpenBody: () => void;
   onOpenQuery: () => void;
   onOpenAuth: () => void;
+  requestName?: string;
 }
 
 const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
@@ -44,6 +45,7 @@ export function RequestPanel({
   onOpenBody,
   onOpenQuery,
   onOpenAuth,
+  requestName,
 }: RequestPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab | null>(null);
   const borderColor = focused ? colors.accent.primary : colors.border.default;
@@ -117,6 +119,15 @@ export function RequestPanel({
         >
           <strong> Request </strong>
         </text>
+        {requestName && (
+          <text
+            fg={colors.text.muted}
+            bg={colors.bg.app}
+            style={{ paddingLeft: 1, paddingRight: 1 }}
+          >
+            {requestName}
+          </text>
+        )}
       </box>
 
       <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
