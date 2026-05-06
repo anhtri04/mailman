@@ -14,9 +14,7 @@
     "lint:fix": "oxlint --fix",
     "test": "bun test",
     "seed": "bun run ./scripts/seed-collections.ts",
-    "build:win": "bun build --compile ./index.tsx --outfile dist/mailman-win-x64.exe --target=bun-windows-x64",
-    "build:linux": "bun build --compile ./index.tsx --outfile dist/mailman-linux-x64 --target=bun-linux-x64",
-    "build:mac": "bun build --compile ./index.tsx --outfile dist/mailman-darwin-arm64 --target=bun-darwin-arm64"
+    "build": "bun build --compile ./index.tsx --outfile dist/mailman"
   },
   "dependencies": {
     "@opentui/core": "^0.1.87",
