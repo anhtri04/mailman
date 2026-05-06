@@ -1,124 +1,168 @@
 # Mailman Agent Guidelines
 
-This document provides guidelines for AI agents working on the Mailman codebase.
+Guidelines for AI agents working on the Mailman codebase — a terminal-based HTTP client built with Bun, OpenTUI, and React.
 
 ## Build and Development Commands
 
 ```bash
-# Run the application
-bun run dev
-bun start
-
-# Format code
-bun run fmt        # Format files with oxfmt
-bun run fmt:check  # Check formatting without modifying
-
-# Lint code
-bun run lint       # Run oxlint with type checking
-bun run lint:fix   # Fix linting issues automatically
-
-# Run tests
-bun test           # Run all tests
-bun test --watch   # Watch mode
+bun run dev          # Run the application (bun run ./index.tsx)
+bun start            # Alias for dev
+bun run fmt          # Format files with oxfmt
+bun run fmt:check    # Check formatting without modifying
+bun run lint         # Run oxlint with --type-aware --type-check
+bun run lint:fix     # Auto-fix linting issues
+bun test             # Run all tests
+bun test --watch     # Run tests in watch mode
+bun test src/services/http-client.test.ts   # Run a single test file
+bun test -t "should make GET request"       # Run tests matching a name pattern
 ```
 
-## Code Style Guidelines
+There is no standalone typecheck script — `bun run lint` includes `--type-check`.
 
-### TypeScript Configuration
-- Strict mode enabled with ESNext target
-- React JSX with `@opentui/react` as import source
-- `verbatimModuleSyntax: true` - no `import type` needed for type-only imports
-- `noUncheckedIndexedAccess: true` - always handle undefined on indexed access
+## Project Structure
+
+```
+index.tsx               # Entry point — creates CLI renderer and React root
+src/
+  App.tsx               # Root component, keyboard bindings, modal routing
+  types.ts              # Shared types (RequestOptions, ResponseState, Collection, etc.)
+  components/           # React UI components (PascalCase.tsx)
+    index.ts            # Barrel re-exports all components
+  hooks/                # Custom React hooks (camelCase.ts)
+    index.ts            # Barrel re-exports
+  services/             # Business logic & IO (camelCase.ts)
+    index.ts            # Barrel re-exports
+  theme/                # Theme system — colors, types, ThemeProvider, adapters
+  utils/                # Pure utility functions (camelCase.ts)
+```
+
+## TypeScript Configuration
+
+- **Target**: ESNext with strict mode enabled
+- **JSX**: `react-jsx` with `@opentui/react` as import source
+- **`verbatimModuleSyntax: true`** — you MUST use `import type` for type-only imports:
+  ```typescript
+  import type { RequestOptions } from '../types';   // correct
+  import { RequestOptions } from '../types';          // wrong — will fail
+  ```
+- **`noUncheckedIndexedAccess: true`** — always handle `undefined` on indexed access (e.g. `arr[0]!` or explicit check)
+- **`noImplicitOverride: true`** — use `override` keyword when overriding
+- **`noFallthroughCasesInSwitch: true`** — no implicit fallthrough
+- No separate emit (`noEmit: true`), Bun handles execution directly
+
+## Code Style
 
 ### Imports
-- Use named imports: `import { useState } from 'react'`
-- Single quotes only
-- Group imports: external packages first, then local modules
-- Local imports use relative paths: `import { App } from './src/App'`
+- Named imports only: `import { useState } from 'react'`
+- Single quotes throughout (enforced by oxfmt)
+- Group order: external packages → local modules
+- Type-only imports use `import type`
+- Local paths are relative: `import { App } from './src/App'`
 
-### File Naming
-- React components: PascalCase.tsx (e.g., `RequestPanel.tsx`)
-- Utilities/services: camelCase.ts (e.g., `http-client.ts`, `storage.ts`)
-- Hooks: camelCase.ts or camelCase.tsx if React types needed
+### Formatting
+- oxfmt with `singleQuote: true`; markdown files are ignored
+- No manual formatting — always run `bun run fmt` before committing
 
 ### Naming Conventions
-- Components: PascalCase (`RequestPanel`, `ResponseViewer`)
-- Functions/hooks: camelCase (`sendRequest`, `useKeyboard`)
-- Constants: UPPER_SNAKE_CASE (`MAILMAN_DIR`, `HISTORY_FILE`)
-- Interfaces/Types: PascalCase (`RequestOptions`, `HistoryEntry`)
-- State variables: camelCase with descriptive names (`focusedField`, `isEditing`)
+| Kind | Style | Example |
+|---|---|---|
+| Components | PascalCase | `RequestPanel`, `ResponseViewer` |
+| Functions / hooks | camelCase | `sendRequest`, `useFocus` |
+| Constants | UPPER_SNAKE_CASE | `MAILMAN_DIR`, `DEFAULT_TIMEOUT` |
+| Interfaces / Types | PascalCase | `RequestOptions`, `MailmanColors` |
+| Type aliases (unions) | PascalCase | `AuthType`, `FocusArea` |
+| Files — components | PascalCase.tsx | `AuthEditor.tsx` |
+| Files — utils/services/hooks | camelCase.ts | `http-client.ts`, `useFocus.ts` |
+| Test files | co-located | `AuthEditor.test.tsx` next to `AuthEditor.tsx` |
 
 ### Component Structure
 ```typescript
-// 1. Imports
 import { useState, useCallback } from 'react';
+import type { RequestOptions } from '../types';
 
-// 2. Interfaces
 interface ComponentProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-// 3. Component function
 export function Component({ value, onChange }: ComponentProps) {
-  // Hooks first
   const [state, setState] = useState<string>('');
 
-  // Helper functions
   const handleClick = useCallback(() => {
     // logic
   }, [dependencies]);
 
-  // Return JSX
   return <box>{value}</box>;
 }
 ```
 
-### State Management
-- Use React hooks: `useState`, `useEffect`, `useCallback`, `useKeyboard`
-- Fire-and-forget async functions: prefix with `void` to avoid linter warnings
-- Use `Date.now()` for unique IDs
-- Default values for state initialization
+- Hooks before helpers, helpers before JSX
+- Export components as named exports (never default)
+- Barrel re-exports via `index.ts` in each directory
 
-### Async/Error Handling
-- Use async/await pattern
-- Check errors with `instanceof Error` before accessing `message`
-- Log errors to console, return safe defaults
-- Try-catch blocks should prevent crashes
+### Barrel Exports (index.ts)
+Every module directory has an `index.ts` that re-exports public API:
+```typescript
+export { sendRequest } from './http-client';
+export { loadCollections, addCollection } from './collection';
+```
+
+## React / OpenTUI Patterns
+
+- Use `useKeyboard` from `@opentui/react` for global key bindings
+- Render OpenTUI primitives: `<box>`, `<text>`, `<input>`, `<scrollbox>`
+- Style objects use camelCase CSS-like properties: `flexDirection`, `backgroundColor`
+- Colors come from the theme system — use `useTheme()` hook, not hardcoded values
+- Method colors: `colors.methods.GET.text`, `colors.methods.POST.bg`, etc.
+- `as const` for static color/theme objects
+
+## State Management
+
+- React hooks only: `useState`, `useEffect`, `useCallback`
+- Unique IDs: `Date.now().toString()`
+- Fire-and-forget async: wrap with `void` to suppress linter warnings:
+  ```typescript
+  void (async () => { await doAsyncThing(); })();
+  ```
+- Escape key closes modals; check modal state in `useKeyboard` handler
+
+## Error Handling
 
 ```typescript
 try {
   const result = await fetchData();
   return result;
 } catch (error) {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  console.error('Operation failed:', errorMessage);
+  const message = error instanceof Error ? error.message : String(error);
+  console.error('Operation failed:', message);
   return defaultValue;
 }
 ```
 
-### Formatting
-- oxfmt with single quotes (`'`)
-- Automatic formatting handles indentation and line breaks
-- Markdown files are ignored from formatting
+- Always use async/await (never raw `.then`/`.catch`)
+- Classify errors before surfacing (see `http-client.ts: classifyError`)
+- Never let exceptions crash the app — always catch and return a safe fallback
+- HTTP errors return `ResponseState` with `status: 0` instead of throwing
 
-### OpenTUI/React Patterns
-- Use `useKeyboard` hook for keyboard input
-- Components render OpenTUI elements: `<box>`, `<text>`, `<input>`, `<scrollbox>`
-- Style objects use kebab-case properties
-- Color scheme: `#CC8844` (primary/focus), `#BB7733` (secondary/edit), `#555555` (borders), `#999999` (muted)
-- Focus states use primary color
-- Edit mode uses secondary color
+## Storage / IO
 
-### Storage/IO Operations
-- Use `fs/promises` for async file operations
-- Store data in `~/.mailman` directory
-- Ensure directories exist with `mkdirSync(path, { recursive: true })`
-- Validate loaded data structure before use
-- JSON.stringify with `null, 2` for readable JSON files
+- Use `fs/promises` for async reads/writes (`readFile`, `writeFile`)
+- Use `fs` sync for directory creation: `mkdirSync(path, { recursive: true })`
+- Data stored in `~/.mailman/` directory
+- JSON files: `JSON.stringify(data, null, 2)` for readability
+- Validate loaded JSON before use (check `Array.isArray`, etc.)
 
-### Type Safety
-- Define interfaces for all data structures
-- Use `Record<string, string>` for headers/variables
-- Use discriminated unions for variants
-- Export types when used across modules
+## Testing
+
+- Framework: Bun test runner (`bun:test`)
+- Imports: `import { test, expect, describe, beforeEach, afterEach } from 'bun:test'`
+- Test preload: `bunfig.toml` loads `test-setup.ts` (happy-dom + React act environment)
+- Test files are co-located next to source: `Foo.tsx` → `Foo.test.tsx`
+- For hooks: test module structure and simulate logic without React runtime
+- For services: mock `globalThis.fetch` with `beforeEach`/`afterEach` cleanup
+
+## Linting Rules
+
+- Run `bun run lint` before committing — it includes type checking
+- Run `bun run fmt:check` to verify formatting
+- Fix automatically with `bun run lint:fix` and `bun run fmt`
