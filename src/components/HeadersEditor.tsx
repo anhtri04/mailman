@@ -114,6 +114,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
         <strong>Headers</strong>
       </text>
 
+      <scrollbox style={{ flexGrow: 1 }}>
       <box style={{ flexDirection: 'column', gap: 1 }}>
         <scrollbox
           style={{ flexDirection: 'column', gap: 1, maxHeight: 10, justifyContent: 'flex-start' }}
@@ -144,6 +145,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
                   paddingRight: 1,
                   border: true,
                   borderColor: colors.border.default,
+                  marginRight: 1,
                 }}
                 onMouseDown={() => handleRemoveHeader(index)}
               >
@@ -201,6 +203,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
               border: true,
               borderStyle: 'double',
               borderColor: colors.accent.primary,
+              marginRight: 1,
             }}
             onMouseDown={handleAddHeader}
           >
@@ -264,6 +267,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
           <em>No headers set. Add headers above or use presets.</em>
         </text>
       )}
+      </scrollbox>
     </box>
   );
 }

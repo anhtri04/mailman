@@ -144,7 +144,7 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
             </box> */}
 
             {/* Tabs */}
-            <box style={{ flexDirection: 'row', gap: 1 }}>
+            <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1 }}>
               {renderTabButton('body', 'Body')}
               {renderTabButton('headers', 'Headers')}
               {renderTabButton('raw', 'Raw')}

@@ -80,6 +80,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
         <strong>Authentication</strong>
       </text>
 
+      <scrollbox style={{ flexGrow: 1 }}>
       {/* Auth Type Selector */}
       <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
         <text fg={colors.text.muted}>Auth Type:</text>
@@ -251,6 +252,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
           <em>No authentication configured. Requests will be sent without auth headers.</em>
         </text>
       )}
+      </scrollbox>
     </box>
   );
 }

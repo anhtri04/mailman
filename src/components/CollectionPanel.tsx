@@ -139,6 +139,8 @@ export function CollectionPanel({
                 borderStyle: 'rounded',
                 paddingLeft: 1,
                 paddingRight: 1,
+                paddingTop: 0.5,
+                paddingBottom: 0.5,
               }}
               onMouseDown={(e: { stopPropagation: () => void }) => {
                 e.stopPropagation();
@@ -156,6 +158,8 @@ export function CollectionPanel({
                 borderStyle: 'rounded',
                 paddingLeft: 1,
                 paddingRight: 1,
+                paddingTop: 0.5,
+                paddingBottom: 0.5,
               }}
               onMouseDown={(e: { stopPropagation: () => void }) => {
                 e.stopPropagation();
@@ -175,6 +179,8 @@ export function CollectionPanel({
                 borderStyle: 'rounded',
                 paddingLeft: 1,
                 paddingRight: 1,
+                paddingTop: 0.5,
+                paddingBottom: 0.5,
               }}
               onMouseDown={(e: { stopPropagation: () => void }) => {
                 e.stopPropagation();
@@ -199,6 +205,8 @@ export function CollectionPanel({
             marginTop: 1,
             paddingLeft: 1,
             paddingRight: 1,
+            paddingTop: 0.5,
+            paddingBottom: 0.5,
           }}
           onMouseDown={(e: { stopPropagation: () => void }) => {
             e.stopPropagation();
@@ -211,6 +219,7 @@ export function CollectionPanel({
 
       {!isCollapsed && (
         <box style={{ flexDirection: 'column', flexGrow: 1, gap: 0, overflow: 'hidden' }}>
+          <scrollbox style={{ flexGrow: 1 }}>
           {treeNodes.map((node) => {
             const isSelected = node.index === selectedIndex;
             const isCollection = node.type === 'collection';
@@ -282,6 +291,7 @@ export function CollectionPanel({
               No collections yet
             </text>
           )}
+          </scrollbox>
         </box>
       )}
     </box>
