@@ -166,3 +166,7 @@ try {
 - Run `bun run lint` before committing — it includes type checking
 - Run `bun run fmt:check` to verify formatting
 - Fix automatically with `bun run lint:fix` and `bun run fmt`
+
+## Gotchas Mistakes
+
+- When using <scrollbox>, don't put flexDirection: 'column' into its properties, this can cause broken responsiveness, with the list a scrollbar being treated as 2 seperate objects in a flex column axis. Instead, add this properties to a <box> object within it.

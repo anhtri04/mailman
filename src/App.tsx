@@ -8,6 +8,7 @@ import {
   Modal,
   ResponseModal,
   WelcomePanel,
+  CatalogPanel,
 } from './components';
 import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
@@ -52,6 +53,7 @@ export function App() {
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
 
   const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
@@ -80,6 +82,10 @@ export function App() {
         setShowThemeSelector(false);
         return;
       }
+      if (showHelp) {
+        setShowHelp(false);
+        return;
+      }
       if (showResponseModal) {
         setShowResponseModal(false);
         return;
@@ -92,8 +98,24 @@ export function App() {
     } else if (key.ctrl && key.name === 'q') {
       const cleanExit = (globalThis as any).__mailmanCleanExit;
       if (cleanExit) cleanExit();
+    } else if (key.ctrl && key.name === 'g') {
+      if (
+        !showHelp &&
+        !showThemeSelector &&
+        !activeModal &&
+        !collectionModal &&
+        !showResponseModal
+      ) {
+        setShowHelp(true);
+      }
     } else if (key.ctrl && key.name === 't') {
-      if (!showThemeSelector && !activeModal && !collectionModal && !showResponseModal) {
+      if (
+        !showThemeSelector &&
+        !showHelp &&
+        !activeModal &&
+        !collectionModal &&
+        !showResponseModal
+      ) {
         setShowThemeSelector(true);
       }
     } else if (key.ctrl && key.name === 's') {
@@ -269,7 +291,7 @@ export function App() {
             <strong>Mailman v0.1.0</strong>
           </text>
           <text fg={colors.text.muted}>
-            Ctrl+Q to quit • Ctrl+T for theme • Ctrl+S to save • H for help
+            Ctrl+Q to quit • Ctrl+T for theme • Ctrl+S to save • Ctrl+G for help
           </text>
         </box>
 
@@ -525,6 +547,12 @@ export function App() {
         {/* Response Expanded Modal - rendered at App level for full screen sizing */}
         {showResponseModal && response && (
           <ResponseModal response={response} onClose={() => setShowResponseModal(false)} />
+        )}
+        {/* Catalog Help Modal */}
+        {showHelp && (
+          <Modal isOpen={true} onClose={() => setShowHelp(false)} title="Help">
+            <CatalogPanel onClose={() => setShowHelp(false)} />
+          </Modal>
         )}
         {/* Theme Selector Modal */}
         <ThemeSelector isOpen={showThemeSelector} onClose={() => setShowThemeSelector(false)} />
