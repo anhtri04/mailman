@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useKeyboard } from '@opentui/react';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeProvider';
 import type { Collection, RequestItem } from '../types';
 
 interface CollectionPanelProps {
@@ -30,6 +30,7 @@ export function CollectionPanel({
   onOpenAddModal,
   onDeleteItem,
 }: CollectionPanelProps) {
+  const { colors } = useTheme();
   const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -117,17 +118,18 @@ export function CollectionPanel({
       }}
       onMouseDown={onFocus}
     >
-      <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }}>
         {!isCollapsed && (
-          <text
-            fg={colors.accent.primary}
-            bg={colors.bg.app}
-            style={{ paddingLeft: 1, paddingRight: 1 }}
-          >
-            <strong> Collections </strong>
-          </text>
+          <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }}>
+            <text
+              fg={colors.accent.primary}
+              bg={colors.bg.app}
+              style={{ paddingLeft: 1, paddingRight: 1 }}
+            >
+              <strong> Collections </strong>
+            </text>
+          </box>
         )}
-
+      <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }}>
         {!isCollapsed && (
           <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
             <box

@@ -6,6 +6,8 @@ import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
 import { QueryParamsEditor } from './components/QueryParamsEditor';
 import { AuthEditor } from './components/AuthEditor';
+import { ThemeSelector } from './components/ThemeSelector';
+import { useTheme } from './theme/ThemeProvider';
 import {
   sendRequest,
   loadCollections,
@@ -14,13 +16,13 @@ import {
   deleteCollection,
   deleteRequest,
 } from './services';
-import { colors } from './theme/colors';
 import type { RequestOptions, ResponseState, AuthConfig, Collection, RequestItem } from './types';
 
 type Tab = 'headers' | 'body' | 'query' | 'auth';
 
 export function App() {
   const { setFocus, isFocused } = useFocus();
+  const { colors } = useTheme();
   const [request, setRequest] = useState<RequestOptions>({
     method: 'GET',
     url: '',
@@ -40,6 +42,8 @@ export function App() {
   const [newRequestName, setNewRequestName] = useState('');
   const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null);
 
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
+
   useEffect(() => {
     void (async () => {
       try {
@@ -54,6 +58,10 @@ export function App() {
 
   useKeyboard((key) => {
     if (key.name === 'escape') {
+      if (showThemeSelector) {
+        setShowThemeSelector(false);
+        return;
+      }
       if (activeModal) {
         setActiveModal(null);
       } else if (collectionModal) {
@@ -62,6 +70,10 @@ export function App() {
     } else if (key.ctrl && key.name === 'q') {
       const cleanExit = (globalThis as any).__mailmanCleanExit;
       if (cleanExit) cleanExit();
+    } else if (key.ctrl && key.name === 't') {
+      if (!showThemeSelector && !activeModal && !collectionModal) {
+        setShowThemeSelector(true);
+      }
     }
   });
 
@@ -206,7 +218,7 @@ export function App() {
             <strong>Mailman v0.0.1</strong>
           </text>
           <text fg={colors.text.muted}>
-            Click panels to focus • Press Ctrl + Q to quit • Press H for help
+            Click panels to focus • Ctrl+Q to quit • Ctrl+T for theme • H for help
           </text>
         </box>
 
@@ -442,6 +454,11 @@ export function App() {
             </box>
           </Modal>
         )}
+        {/* Theme Selector Modal */}
+        <ThemeSelector
+          isOpen={showThemeSelector}
+          onClose={() => setShowThemeSelector(false)}
+        />
       </box>
     </box>
   );

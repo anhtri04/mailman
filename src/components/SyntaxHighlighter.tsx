@@ -1,6 +1,6 @@
 // Syntax highlighter component for JSON, XML, and text content
 import { useMemo } from 'react';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeProvider';
 import {
   parseJsonForHighlighting,
   getTokenColor,
@@ -28,106 +28,108 @@ function highlightJson(body: string): HighlightedSegment[] {
   }));
 }
 
-function highlightXml(body: string): HighlightedSegment[] {
-  const formatted = formatXml(body);
-  const segments: HighlightedSegment[] = [];
-  let i = 0;
+export function SyntaxHighlighter({ code, language }: SyntaxHighlighterProps) {
+  const { colors } = useTheme();
 
-  while (i < formatted.length) {
-    const char = formatted[i];
-    if (char === undefined) break;
+  function highlightXml(body: string): HighlightedSegment[] {
+    const formatted = formatXml(body);
+    const segments: HighlightedSegment[] = [];
+    let i = 0;
 
-    // Tag detection
-    if (char === '<') {
-      // Find end of tag
-      let tagContent = '<';
-      i++;
-      while (i < formatted.length && formatted[i] !== '>') {
-        const tagChar = formatted[i];
-        if (tagChar !== undefined) {
-          tagContent += tagChar;
-        }
+    while (i < formatted.length) {
+      const char = formatted[i];
+      if (char === undefined) break;
+
+      // Tag detection
+      if (char === '<') {
+        // Find end of tag
+        let tagContent = '<';
         i++;
-      }
-      if (i < formatted.length) {
-        const closing = formatted[i];
-        if (closing === '>') {
-          tagContent += '>';
+        while (i < formatted.length && formatted[i] !== '>') {
+          const tagChar = formatted[i];
+          if (tagChar !== undefined) {
+            tagContent += tagChar;
+          }
           i++;
         }
-      }
+        if (i < formatted.length) {
+          const closing = formatted[i];
+          if (closing === '>') {
+            tagContent += '>';
+            i++;
+          }
+        }
 
-      // Tag color based on type
-      let color: string = colors.text.primary as string; // Default brackets
-      if (tagContent.startsWith('</')) {
-        color = colors.accent.primary as string; // Closing tag
-      } else if (tagContent.startsWith('<!--')) {
-        color = colors.text.muted as string; // Comment
-      } else if (tagContent.startsWith('<!')) {
-        color = colors.text.muted as string; // DOCTYPE
-      } else if (tagContent.startsWith('<?')) {
-        color = colors.text.muted as string; // Processing instruction
-      } else {
-        color = colors.accent.primary as string; // Opening tag
-      }
+        // Tag color based on type
+        let color: string = colors.text.primary as string; // Default brackets
+        if (tagContent.startsWith('</')) {
+          color = colors.accent.primary as string; // Closing tag
+        } else if (tagContent.startsWith('<!--')) {
+          color = colors.text.muted as string; // Comment
+        } else if (tagContent.startsWith('<!')) {
+          color = colors.text.muted as string; // DOCTYPE
+        } else if (tagContent.startsWith('<?')) {
+          color = colors.text.muted as string; // Processing instruction
+        } else {
+          color = colors.accent.primary as string; // Opening tag
+        }
 
-      segments.push({ text: tagContent, color });
-    } else if (char === '"') {
-      // String attribute value
-      let value = '"';
-      i++;
-      while (i < formatted.length && formatted[i] !== '"') {
-        const strChar = formatted[i];
-        if (strChar !== undefined) {
-          if (strChar === '\\' && i + 1 < formatted.length) {
-            const nextChar = formatted[i + 1];
-            if (nextChar !== undefined) {
-              value += strChar + nextChar;
-              i += 2;
+        segments.push({ text: tagContent, color });
+      } else if (char === '"') {
+        // String attribute value
+        let value = '"';
+        i++;
+        while (i < formatted.length && formatted[i] !== '"') {
+          const strChar = formatted[i];
+          if (strChar !== undefined) {
+            if (strChar === '\\' && i + 1 < formatted.length) {
+              const nextChar = formatted[i + 1];
+              if (nextChar !== undefined) {
+                value += strChar + nextChar;
+                i += 2;
+              } else {
+                value += strChar;
+                i++;
+              }
             } else {
               value += strChar;
               i++;
             }
           } else {
-            value += strChar;
             i++;
           }
-        } else {
+        }
+        if (i < formatted.length) {
+          const closingQuote = formatted[i];
+          if (closingQuote === '"') {
+            value += '"';
+            i++;
+          }
+        }
+        segments.push({ text: value, color: colors.syntax.success });
+      } else {
+        // Regular text content
+        let text = '';
+        while (i < formatted.length && formatted[i] !== '<' && formatted[i] !== '"') {
+          const textChar = formatted[i];
+          if (textChar !== undefined) {
+            text += textChar;
+          }
           i++;
         }
-      }
-      if (i < formatted.length) {
-        const closingQuote = formatted[i];
-        if (closingQuote === '"') {
-          value += '"';
-          i++;
+        if (text) {
+          segments.push({ text, color: colors.text.primary });
         }
-      }
-      segments.push({ text: value, color: colors.syntax.success });
-    } else {
-      // Regular text content
-      let text = '';
-      while (i < formatted.length && formatted[i] !== '<' && formatted[i] !== '"') {
-        const textChar = formatted[i];
-        if (textChar !== undefined) {
-          text += textChar;
-        }
-        i++;
-      }
-      if (text) {
-        segments.push({ text, color: colors.text.primary });
       }
     }
+
+    return segments;
   }
 
-  return segments;
-}
+  function highlightPlainText(body: string): HighlightedSegment[] {
+    return [{ text: body, color: colors.text.primary }];
+  }
 
-function highlightPlainText(body: string): HighlightedSegment[] {
-  return [{ text: body, color: colors.text.primary }];
-}
-
-export function SyntaxHighlighter({ code, language }: SyntaxHighlighterProps) {
   const segments = useMemo(() => {
     switch (language) {
       case 'json':

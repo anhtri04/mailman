@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeProvider';
 import type { AuthConfig, AuthType } from '../types';
 
 interface AuthEditorProps {
@@ -14,6 +14,7 @@ const AUTH_TYPES: { value: AuthType; label: string }[] = [
 ];
 
 export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
+  const { colors } = useTheme();
   const currentAuth = auth ?? { type: 'none' as AuthType };
   const [token, setToken] = useState(currentAuth.token ?? '');
   const [apiKey, setApiKey] = useState(currentAuth.key ?? '');

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeProvider';
 
 interface ModalProps {
   isOpen: boolean;
@@ -14,6 +14,7 @@ interface ModalProps {
  * This modal is used for:
  * - Request editors (Headers, Body, Query)
  * - Response expanded view
+ * - Other pop up panels (import/export, collection settings, etc.)
  *
  * Keyboard handling:
  * - Escape key should be handled by the parent component and call onClose()
@@ -29,6 +30,8 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   if (!isOpen) {
     return null;
   }
+
+  const { colors } = useTheme();
 
   return (
     <box

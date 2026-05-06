@@ -1,4 +1,4 @@
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeProvider';
 
 const LOGO_LINES = [
   '███╗   ███╗ █████╗ ██╗██╗     ███╗   ███╗ █████╗ ███╗   ██╗',
@@ -10,6 +10,7 @@ const LOGO_LINES = [
 ];
 
 export function MailmanLogo() {
+  const { colors } = useTheme();
   return (
     <box
       style={{

@@ -8,3 +8,4 @@ export {
   deleteRequest,
   updateCollectionName,
 } from './collection';
+export { loadPreferences, savePreferences } from './preferences';

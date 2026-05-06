@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useKeyboard } from '@opentui/react';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeProvider';
 
 interface QueryParamsEditorProps {
   baseUrl: string;
@@ -9,6 +9,7 @@ interface QueryParamsEditorProps {
 }
 
 export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryParamsEditorProps) {
+  const { colors } = useTheme();
   // Parse base URL to separate path from query params
   const { cleanUrl, existingParams } = useMemo(() => {
     const urlParts = baseUrl.split('?');

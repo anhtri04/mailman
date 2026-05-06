@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeProvider';
 import type { AuthConfig } from '../types';
 
 type Tab = 'headers' | 'body' | 'query' | 'auth';
@@ -47,6 +47,7 @@ export function RequestPanel({
   onOpenAuth,
   requestName,
 }: RequestPanelProps) {
+  const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab | null>(null);
   const borderColor = focused ? colors.accent.primary : colors.border.default;
 

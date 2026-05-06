@@ -1,12 +1,13 @@
 // Headers display component for showing HTTP response headers
 import { useMemo } from 'react';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeProvider';
 
 interface HeadersDisplayProps {
   headers: Record<string, string>;
 }
 
 export function HeadersDisplay({ headers }: HeadersDisplayProps) {
+  const { colors } = useTheme();
   const sortedHeaders = useMemo(() => {
     return Object.entries(headers).sort(([keyA], [keyB]) =>
       keyA.toLowerCase().localeCompare(keyB.toLowerCase()),

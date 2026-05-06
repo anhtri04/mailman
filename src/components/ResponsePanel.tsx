@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useKeyboard } from '@opentui/react';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeProvider';
 import type { ResponseState } from '../types';
 import { Modal } from './Modal';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
@@ -19,6 +19,7 @@ interface ResponsePanelProps {
 const TABS: ResponseTab[] = ['body', 'headers', 'raw'];
 
 export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps) {
+  const { colors } = useTheme();
   const borderColor = focused ? colors.accent.primary : colors.border.default;
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<ResponseTab>('body');

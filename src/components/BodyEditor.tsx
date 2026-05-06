@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react';
 import type { KeyBinding, TextareaRenderable } from '@opentui/core';
 import { useKeyboard, useRenderer } from '@opentui/react';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeProvider';
 
 interface BodyEditorProps {
   body: string;
@@ -25,6 +25,7 @@ function detectContentType(body: string): string {
 }
 
 export function BodyEditor({ body, onBodyChange, focused, detectedContentType }: BodyEditorProps) {
+  const { colors } = useTheme();
   const borderColor = focused ? colors.accent.primary : colors.border.default;
   const contentType = detectedContentType ?? detectContentType(body);
   const charCount = body.length;

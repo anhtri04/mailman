@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeProvider';
 
 interface HeadersEditorProps {
   headers: Record<string, string>;
@@ -38,6 +38,7 @@ function serializeHeaders(entries: HeaderEntry[]): Record<string, string> {
 }
 
 export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) {
+  const { colors } = useTheme();
   const [entries, setEntries] = useState<HeaderEntry[]>(() => parseHeaders(headers));
   const [newKey, setNewKey] = useState('');
   const [newValue, setNewValue] = useState('');
