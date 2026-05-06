@@ -6,6 +6,7 @@ export {
   addRequestToCollection,
   deleteCollection,
   deleteRequest,
+  updateRequest,
   updateCollectionName,
 } from './collection';
 export { loadPreferences, savePreferences } from './preferences';

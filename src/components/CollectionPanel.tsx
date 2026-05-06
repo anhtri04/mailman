@@ -9,7 +9,7 @@ interface CollectionPanelProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   collections: Collection[];
-  onLoadRequest: (request: RequestItem) => void;
+  onLoadRequest: (request: RequestItem, collectionId: string) => void;
   onSelectCollection?: (collectionId: string | null) => void;
   onOpenImportModal: () => void;
   onOpenAddModal: (collectionId: string) => void;
@@ -76,7 +76,7 @@ export function CollectionPanel({
     if (selectedNode.type === 'collection') {
       toggleCollection(selectedNode.collection.id);
     } else {
-      onLoadRequest(selectedNode.request);
+      onLoadRequest(selectedNode.request, selectedNode.collectionId);
     }
   }, [selectedNode, toggleCollection, onLoadRequest, onSelectCollection]);
 
@@ -254,7 +254,7 @@ export function CollectionPanel({
                     if (isCollection) {
                       toggleCollection(node.collection.id);
                     } else {
-                      onLoadRequest(node.request);
+                      onLoadRequest(node.request, node.collectionId);
                     }
                   }}
                 >

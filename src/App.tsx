@@ -20,6 +20,7 @@ import {
   loadCollections,
   addCollection,
   addRequestToCollection,
+  updateRequest,
   deleteCollection,
   deleteRequest,
 } from './services';
@@ -52,6 +53,7 @@ export function App() {
 
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showResponseModal, setShowResponseModal] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
   useEffect(() => {
     void (async () => {
@@ -64,6 +66,13 @@ export function App() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (saveStatus !== 'idle') {
+      const timer = setTimeout(() => setSaveStatus('idle'), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [saveStatus]);
 
   useKeyboard((key) => {
     if (key.name === 'escape') {
@@ -86,6 +95,27 @@ export function App() {
     } else if (key.ctrl && key.name === 't') {
       if (!showThemeSelector && !activeModal && !collectionModal && !showResponseModal) {
         setShowThemeSelector(true);
+      }
+    } else if (key.ctrl && key.name === 's') {
+      if (activeRequestId && activeCollectionId) {
+        void (async () => {
+          try {
+            await updateRequest(activeCollectionId, activeRequestId, {
+              method: request.method,
+              url: request.url,
+              headers: request.headers,
+              body: request.body,
+              auth: request.auth,
+            });
+            const updated = await loadCollections();
+            setCollections(updated);
+            setSaveStatus('saved');
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.error('Failed to save request:', message);
+            setSaveStatus('error');
+          }
+        })();
       }
     }
   });
@@ -161,7 +191,7 @@ export function App() {
     }
   }, [request]);
 
-  const handleLoadRequest = useCallback((item: RequestItem) => {
+  const handleLoadRequest = useCallback((item: RequestItem, collectionId: string) => {
     setRequest({
       method: item.method,
       url: item.url,
@@ -171,7 +201,7 @@ export function App() {
     });
     setRequestName(item.name);
     setActiveRequestId(item.id);
-    setActiveCollectionId(null);
+    setActiveCollectionId(collectionId);   // Note: this keep the Ctrl+S save functionality working by ensuring the correct collection is active when a request is loaded, however, this can cause the conflict of display collection details in the WelcomePanel when a request is loaded from there. A more robust solution would be to separate the concept of "active collection" for display purposes and "current collection" for request loading/saving, but this is a simpler fix for now. It's working correctly as of now, but may need to be revisited if we add more features around collections that rely on activeCollectionId for display logic.
   }, []);
 
   const handleSelectCollection = useCallback((id: string | null) => {
@@ -239,7 +269,7 @@ export function App() {
             <strong>Mailman v0.0.1</strong>
           </text>
           <text fg={colors.text.muted}>
-            Click panels to focus • Ctrl+Q to quit • Ctrl+T for theme • H for help
+            Click panels to focus • Ctrl+Q to quit • Ctrl+T for theme • Ctrl+S to save • H for help
           </text>
         </box>
 
@@ -265,6 +295,7 @@ export function App() {
                 onOpenQuery={() => setActiveModal('query')}
                 onOpenAuth={() => setActiveModal('auth')}
                 requestName={requestName}
+                saveStatus={saveStatus}
               />
             </box>
 

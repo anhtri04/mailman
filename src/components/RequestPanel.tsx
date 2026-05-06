@@ -23,6 +23,7 @@ interface RequestPanelProps {
   onOpenQuery: () => void;
   onOpenAuth: () => void;
   requestName?: string;
+  saveStatus?: 'idle' | 'saved' | 'error';
 }
 
 const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
@@ -46,6 +47,7 @@ export function RequestPanel({
   onOpenQuery,
   onOpenAuth,
   requestName,
+  saveStatus = 'idle',
 }: RequestPanelProps) {
   const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab | null>(null);
@@ -120,15 +122,27 @@ export function RequestPanel({
         >
           <strong> Request </strong>
         </text>
-        {requestName && (
-          <text
-            fg={colors.text.muted}
-            bg={colors.bg.app}
-            style={{ paddingLeft: 1, paddingRight: 1 }}
-          >
-            {requestName}
-          </text>
-        )}
+        <box style={{ flexDirection: 'row', gap: 1 }}>
+          {requestName && (
+            <text
+              fg={colors.text.muted}
+              bg={colors.bg.app}
+              style={{ paddingLeft: 1, paddingRight: 1 }}
+            >
+              {requestName}
+            </text>
+          )}
+          {saveStatus === 'saved' && (
+            <text fg="#44cc88" bg={colors.bg.app} style={{ paddingLeft: 1, paddingRight: 1 }}>
+              Saved ✓
+            </text>
+          )}
+          {saveStatus === 'error' && (
+            <text fg="#cc4444" bg={colors.bg.app} style={{ paddingLeft: 1, paddingRight: 1 }}>
+              Save failed
+            </text>
+          )}
+        </box>
       </box>
 
       <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>

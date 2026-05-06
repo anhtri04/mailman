@@ -61,27 +61,27 @@ export function WelcomePanel({ collection }: WelcomePanelProps) {
         justifyContent: 'center',
       }}
     >
-      <MailmanLogo />    
+      <MailmanLogo />
 
       <box style={{ flexDirection: 'row', gap: 10, width: '60%', justifyContent: 'space-between' }}>
-
         <box style={{ flexDirection: 'column', gap: 1, justifyContent: 'flex-start' }}>
-            <text fg={colors.text.muted} style={{ marginTop: 1, marginBottom: 1 }}>
+          <text fg={colors.text.muted} style={{ marginTop: 1, marginBottom: 1 }}>
             Getting started:
-            </text>
-            <text fg={colors.text.primary}>  ↑ / ↓  Navigate collections</text>
-            <text fg={colors.text.primary}>  Enter  Open a collection or request</text>
-            <text fg={colors.text.primary}>  Tab    Switch between panels</text>
-            <text fg={colors.text.primary}>  Esc    Close modals / go back</text>
+          </text>
+          <text fg={colors.text.primary}> ↑ / ↓ Navigate collections</text>
+          <text fg={colors.text.primary}> Enter Open a collection or request</text>
+          <text fg={colors.text.primary}> Tab Switch between panels</text>
+          <text fg={colors.text.primary}> Esc Close modals / go back</text>
         </box>
 
         <box style={{ flexDirection: 'column', gap: 1, justifyContent: 'flex-start' }}>
-            <text fg={colors.text.muted} style={{ marginTop: 1, marginBottom: 1 }}>
+          <text fg={colors.text.muted} style={{ marginTop: 1, marginBottom: 1 }}>
             Global shortcuts:
-            </text>
-            <text fg={colors.text.primary}>  Ctrl+Q  Quit application</text>
-            <text fg={colors.text.primary}>  Ctrl+T  Change theme</text>
-            <text fg={colors.text.primary}>  Space   Expand response (when focused)</text>
+          </text>
+          <text fg={colors.text.primary}> Ctrl+Q Quit application</text>
+          <text fg={colors.text.primary}> Ctrl+T Change theme</text>
+          <text fg={colors.text.primary}> Ctrl+S Save changes</text>
+          <text fg={colors.text.primary}> Space Expand response (when focused)</text>
         </box>
       </box>
 

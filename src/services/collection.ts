@@ -74,6 +74,20 @@ export async function deleteRequest(collectionId: string, requestId: string): Pr
   await saveCollections(collections);
 }
 
+export async function updateRequest(
+  collectionId: string,
+  requestId: string,
+  updates: Partial<Omit<RequestItem, 'id'>>,
+): Promise<void> {
+  const collections = await loadCollections();
+  const collection = collections.find((c) => c.id === collectionId);
+  if (!collection) throw new Error(`Collection not found: ${collectionId}`);
+  const request = collection.requests.find((r) => r.id === requestId);
+  if (!request) throw new Error(`Request not found: ${requestId}`);
+  Object.assign(request, updates);
+  await saveCollections(collections);
+}
+
 export async function updateCollectionName(collectionId: string, name: string): Promise<void> {
   const collections = await loadCollections();
   const collection = collections.find((c) => c.id === collectionId);
