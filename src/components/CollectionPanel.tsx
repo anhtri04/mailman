@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../theme/ThemeProvider';
 import type { Collection, RequestItem } from '../types';
@@ -10,6 +10,7 @@ interface CollectionPanelProps {
   onToggleCollapse: () => void;
   collections: Collection[];
   onLoadRequest: (request: RequestItem) => void;
+  onSelectCollection?: (collectionId: string | null) => void;
   onOpenImportModal: () => void;
   onOpenAddModal: (collectionId: string) => void;
   onDeleteItem: (collectionId: string, requestId?: string) => void;
@@ -26,13 +27,14 @@ export function CollectionPanel({
   onToggleCollapse,
   collections,
   onLoadRequest,
+  onSelectCollection,
   onOpenImportModal,
   onOpenAddModal,
   onDeleteItem,
 }: CollectionPanelProps) {
   const { colors } = useTheme();
   const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
 
   const toggleCollection = useCallback((id: string) => {
     setExpandedCollections((prev) => {
@@ -76,14 +78,22 @@ export function CollectionPanel({
     } else {
       onLoadRequest(selectedNode.request);
     }
-  }, [selectedNode, toggleCollection, onLoadRequest]);
+  }, [selectedNode, toggleCollection, onLoadRequest, onSelectCollection]);
+
+  useEffect(() => {
+    if (!selectedNode) {
+      onSelectCollection?.(null);
+    } else if (selectedNode.type === 'collection') {
+      onSelectCollection?.(selectedNode.collection.id);
+    }
+  }, [selectedNode, onSelectCollection]);
 
   useKeyboard((key) => {
     if (!focused) return;
     if (isCollapsed) return;
 
     if (key.name === 'up') {
-      setSelectedIndex((prev) => Math.max(0, prev - 1));
+      setSelectedIndex((prev) => Math.max(-1, prev - 1));
     } else if (key.name === 'down') {
       setSelectedIndex((prev) => Math.min(treeNodes.length - 1, prev + 1));
     } else if (key.name === 'right' || key.name === 'return' || key.name === 'enter') {

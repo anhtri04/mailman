@@ -1,7 +1,14 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { useFocus } from './hooks';
-import { RequestPanel, ResponsePanel, CollectionPanel, Modal, ResponseModal } from './components';
+import {
+  RequestPanel,
+  ResponsePanel,
+  CollectionPanel,
+  Modal,
+  ResponseModal,
+  WelcomePanel,
+} from './components';
 import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
 import { QueryParamsEditor } from './components/QueryParamsEditor';
@@ -41,6 +48,7 @@ export function App() {
   const [newRequestMethod, setNewRequestMethod] = useState('GET');
   const [newRequestName, setNewRequestName] = useState('');
   const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null);
+  const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
 
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showResponseModal, setShowResponseModal] = useState(false);
@@ -162,6 +170,13 @@ export function App() {
       auth: item.auth,
     });
     setRequestName(item.name);
+    setActiveRequestId(item.id);
+    setActiveCollectionId(null);
+  }, []);
+
+  const handleSelectCollection = useCallback((id: string | null) => {
+    setActiveCollectionId(id);
+    setActiveRequestId(null);
   }, []);
 
   const handleDeleteItem = useCallback(async (collectionId: string, requestId?: string) => {
@@ -195,6 +210,7 @@ export function App() {
           onToggleCollapse={() => setIsCollectionCollapsed((prev) => !prev)}
           collections={collections}
           onLoadRequest={handleLoadRequest}
+          onSelectCollection={handleSelectCollection}
           onOpenImportModal={() => {
             setNewCollectionName('');
             setCollectionModal('import');
@@ -227,38 +243,52 @@ export function App() {
           </text>
         </box>
 
-        <box height="40%" style={{ flexDirection: 'column' }}>
-          <RequestPanel
-            focused={isFocused('request')}
-            onFocus={() => setFocus('request')}
-            url={request.url}
-            onUrlChange={handleUrlChange}
-            method={request.method}
-            onMethodChange={handleMethodChange}
-            onSend={handleSend}
-            headers={request.headers}
-            onHeadersChange={handleHeadersChange}
-            body={request.body}
-            onBodyChange={handleBodyChange}
-            queryParams={queryParams}
-            auth={request.auth}
-            onOpenHeaders={() => setActiveModal('headers')}
-            onOpenBody={() => setActiveModal('body')}
-            onOpenQuery={() => setActiveModal('query')}
-            onOpenAuth={() => setActiveModal('auth')}
-            requestName={requestName}
-          />
-        </box>
+        {activeRequestId ? (
+          <>
+            <box height="40%" style={{ flexDirection: 'column' }}>
+              <RequestPanel
+                focused={isFocused('request')}
+                onFocus={() => setFocus('request')}
+                url={request.url}
+                onUrlChange={handleUrlChange}
+                method={request.method}
+                onMethodChange={handleMethodChange}
+                onSend={handleSend}
+                headers={request.headers}
+                onHeadersChange={handleHeadersChange}
+                body={request.body}
+                onBodyChange={handleBodyChange}
+                queryParams={queryParams}
+                auth={request.auth}
+                onOpenHeaders={() => setActiveModal('headers')}
+                onOpenBody={() => setActiveModal('body')}
+                onOpenQuery={() => setActiveModal('query')}
+                onOpenAuth={() => setActiveModal('auth')}
+                requestName={requestName}
+              />
+            </box>
 
-        <box height="60%" style={{ flexDirection: 'column', marginTop: 1 }}>
-          <ResponsePanel
-            focused={isFocused('response')}
-            onFocus={() => setFocus('response')}
-            response={response}
-            isExpanded={showResponseModal}
-            onToggleExpand={setShowResponseModal}
-          />
-        </box>
+            <box height="60%" style={{ flexDirection: 'column', marginTop: 1 }}>
+              <ResponsePanel
+                focused={isFocused('response')}
+                onFocus={() => setFocus('response')}
+                response={response}
+                isExpanded={showResponseModal}
+                onToggleExpand={setShowResponseModal}
+              />
+            </box>
+          </>
+        ) : (
+          <box style={{ flexDirection: 'column', flexGrow: 1 }}>
+            <WelcomePanel
+              collection={
+                activeCollectionId
+                  ? collections.find((c) => c.id === activeCollectionId)
+                  : undefined
+              }
+            />
+          </box>
+        )}
 
         {isLoading && (
           <box
