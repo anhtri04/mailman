@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { useFocus } from './hooks';
-import { RequestPanel, ResponsePanel, CollectionPanel, Modal } from './components';
+import { RequestPanel, ResponsePanel, CollectionPanel, Modal, ResponseModal } from './components';
 import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
 import { QueryParamsEditor } from './components/QueryParamsEditor';
@@ -43,6 +43,7 @@ export function App() {
   const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null);
 
   const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const [showResponseModal, setShowResponseModal] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -62,6 +63,10 @@ export function App() {
         setShowThemeSelector(false);
         return;
       }
+      if (showResponseModal) {
+        setShowResponseModal(false);
+        return;
+      }
       if (activeModal) {
         setActiveModal(null);
       } else if (collectionModal) {
@@ -71,7 +76,7 @@ export function App() {
       const cleanExit = (globalThis as any).__mailmanCleanExit;
       if (cleanExit) cleanExit();
     } else if (key.ctrl && key.name === 't') {
-      if (!showThemeSelector && !activeModal && !collectionModal) {
+      if (!showThemeSelector && !activeModal && !collectionModal && !showResponseModal) {
         setShowThemeSelector(true);
       }
     }
@@ -250,6 +255,8 @@ export function App() {
             focused={isFocused('response')}
             onFocus={() => setFocus('response')}
             response={response}
+            isExpanded={showResponseModal}
+            onToggleExpand={setShowResponseModal}
           />
         </box>
 
@@ -454,11 +461,12 @@ export function App() {
             </box>
           </Modal>
         )}
+        {/* Response Expanded Modal - rendered at App level for full screen sizing */}
+        {showResponseModal && response && (
+          <ResponseModal response={response} onClose={() => setShowResponseModal(false)} />
+        )}
         {/* Theme Selector Modal */}
-        <ThemeSelector
-          isOpen={showThemeSelector}
-          onClose={() => setShowThemeSelector(false)}
-        />
+        <ThemeSelector isOpen={showThemeSelector} onClose={() => setShowThemeSelector(false)} />
       </box>
     </box>
   );

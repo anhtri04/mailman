@@ -10,7 +10,13 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
 }
 
 function rgbToHex(r: number, g: number, b: number): string {
-  return `#${[r, g, b].map((c) => Math.max(0, Math.min(255, Math.round(c))).toString(16).padStart(2, '0')).join('')}`;
+  return `#${[r, g, b]
+    .map((c) =>
+      Math.max(0, Math.min(255, Math.round(c)))
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('')}`;
 }
 
 function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
@@ -27,7 +33,7 @@ function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: n
   if (delta !== 0) {
     s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min);
     if (max === rNorm) {
-      h = ((gNorm - bNorm) / delta) + (gNorm < bNorm ? 6 : 0);
+      h = (gNorm - bNorm) / delta + (gNorm < bNorm ? 6 : 0);
     } else if (max === gNorm) {
       h = (bNorm - rNorm) / delta + 2;
     } else {
@@ -43,7 +49,7 @@ function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: n
   const sNorm = s / 100;
   const lNorm = l / 100;
   const c = sNorm * (1 - Math.abs(2 * lNorm - 1));
-  const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
   const m = lNorm - c / 2;
   let r1 = 0;
   let g1 = 0;
@@ -79,7 +85,11 @@ function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: n
 export function adjustLightness(hex: string, amount: number): string {
   const { r, g, b } = hexToRgb(hex);
   const { h, s, l } = rgbToHsl(r, g, b);
-  return rgbToHex(hslToRgb(h, s * 100, l + amount).r, hslToRgb(h, s * 100, l + amount).g, hslToRgb(h, s * 100, l + amount).b);
+  return rgbToHex(
+    hslToRgb(h, s * 100, l + amount).r,
+    hslToRgb(h, s * 100, l + amount).g,
+    hslToRgb(h, s * 100, l + amount).b,
+  );
 }
 
 export function adjustAlpha(hex: string, alpha: number): string {

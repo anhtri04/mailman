@@ -16,7 +16,7 @@ const root = createRoot(renderer);
 root.render(
   <ThemeProvider>
     <App />
-  </ThemeProvider>
+  </ThemeProvider>,
 );
 
 // Clean exit handler

@@ -51,7 +51,9 @@ export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
     onClose();
   };
 
-  {/* var signal :penguin: */}
+  {
+    /* var signal :penguin: */
+  }
   const rau_ma = 3.6;
 
   return (
@@ -64,8 +66,10 @@ export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
         }}
       >
         {/* Title */}
-        <box style={{ flexDirection: 'row', marginBottom: rau_ma, justifyContent: 'space-between' }}>   
-          <box style={{ flexDirection: 'row'}}>
+        <box
+          style={{ flexDirection: 'row', marginBottom: rau_ma, justifyContent: 'space-between' }}
+        >
+          <box style={{ flexDirection: 'row' }}>
             <text fg={colors.accent.primary}>
               <strong>Select Theme</strong>
             </text>
@@ -124,7 +128,7 @@ export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
               paddingLeft: 2,
               paddingRight: 2,
               paddingTop: 0.5,
-              paddingBottom: 0.5
+              paddingBottom: 0.5,
             }}
             onMouseDown={handleSave}
           >
@@ -138,7 +142,7 @@ export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
               paddingLeft: 2,
               paddingRight: 2,
               paddingTop: 0.5,
-              paddingBottom: 0.5
+              paddingBottom: 0.5,
             }}
             onMouseDown={handleCancel}
           >

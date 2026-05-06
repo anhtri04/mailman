@@ -2,7 +2,6 @@ import { useState, useMemo, useCallback } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../theme/ThemeProvider';
 import type { ResponseState } from '../types';
-import { Modal } from './Modal';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { HeadersDisplay } from './HeadersDisplay';
 import { detectContentType, formatResponseBody } from '../utils/response-formatter';
@@ -14,14 +13,21 @@ interface ResponsePanelProps {
   focused: boolean;
   onFocus: () => void;
   response: ResponseState | null;
+  isExpanded: boolean;
+  onToggleExpand: (expanded: boolean) => void;
 }
 
 const TABS: ResponseTab[] = ['body', 'headers', 'raw'];
 
-export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps) {
+export function ResponsePanel({
+  focused,
+  onFocus,
+  response,
+  isExpanded,
+  onToggleExpand,
+}: ResponsePanelProps) {
   const { colors } = useTheme();
   const borderColor = focused ? colors.accent.primary : colors.border.default;
-  const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<ResponseTab>('body');
 
   const contentType = useMemo(() => {
@@ -44,10 +50,10 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
 
   useKeyboard((key) => {
     if (key.name === 'space' && response && !isExpanded) {
-      setIsExpanded(true);
+      onToggleExpand(true);
     } else if (key.name === 'escape' && isExpanded) {
-      setIsExpanded(false);
-    } else if (focused && key.name === 'tab') {
+      onToggleExpand(false);
+    } else if (focused && key.name === 'tab' && !isExpanded) {
       // Cycle through tabs
       const currentIndex = TABS.indexOf(activeTab);
       const nextIndex = (currentIndex + 1) % TABS.length;
@@ -186,48 +192,6 @@ export function ResponsePanel({ focused, onFocus, response }: ResponsePanelProps
           <MailmanLogo />
         )}
       </box>
-
-      {isExpanded && response && (
-        <Modal
-          isOpen={true}
-          onClose={() => setIsExpanded(false)}
-          title={`Response - ${response.status} ${response.statusText}`}
-        >
-          <box style={{ flexDirection: 'column', flexGrow: 1 }}>
-            <box style={{ flexDirection: 'row', gap: 2, marginBottom: 1 }}>
-              <text fg={colors.text.muted}>{contentSize}</text>
-              <text fg={colors.text.muted}>{response.time}ms</text>
-              <text fg={colors.text.muted}>• Press ESC to close</text>
-            </box>
-
-            {/* Tabs in modal */}
-            <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1 }}>
-              {renderTabButton('body', 'Body')}
-              {renderTabButton('headers', 'Headers')}
-              {renderTabButton('raw', 'Raw')}
-            </box>
-
-            <scrollbox style={{ flexGrow: 1 }}>
-              {activeTab === 'body' && (
-                <SyntaxHighlighter
-                  code={formattedBody}
-                  language={
-                    contentType === 'json' || contentType === 'xml' || contentType === 'html'
-                      ? contentType
-                      : 'text'
-                  }
-                />
-              )}
-
-              {activeTab === 'headers' && response.headers && (
-                <HeadersDisplay headers={response.headers} />
-              )}
-
-              {activeTab === 'raw' && <text fg={colors.text.primary}>{response.body}</text>}
-            </scrollbox>
-          </box>
-        </Modal>
-      )}
     </box>
   );
 }

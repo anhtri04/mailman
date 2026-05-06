@@ -115,158 +115,159 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
       </text>
 
       <scrollbox style={{ flexGrow: 1 }}>
-      <box style={{ flexDirection: 'column', gap: 1 }}>
-        <scrollbox
-          style={{ flexDirection: 'column', gap: 1, maxHeight: 10, justifyContent: 'flex-start' }}
-        >
-          {entries.map((entry, index) => (
-            <box key={`${entry.key}-${index}`} style={{ flexDirection: 'row', gap: 1 }}>
-              <box style={{ flexGrow: 1, border: true, borderColor: colors.border.default }}>
-                <input
-                  value={entry.key}
-                  onInput={(value) => handleUpdateEntry(index, 'key', value)}
-                  placeholder="Header name..."
-                  backgroundColor={colors.bg.panel}
-                  textColor={colors.text.primary}
-                />
+        <box style={{ flexDirection: 'column', gap: 1 }}>
+          <scrollbox
+            style={{ flexDirection: 'column', gap: 1, maxHeight: 10, justifyContent: 'flex-start' }}
+          >
+            {entries.map((entry, index) => (
+              <box key={`${entry.key}-${index}`} style={{ flexDirection: 'row', gap: 1 }}>
+                <box style={{ flexGrow: 1, border: true, borderColor: colors.border.default }}>
+                  <input
+                    value={entry.key}
+                    onInput={(value) => handleUpdateEntry(index, 'key', value)}
+                    placeholder="Header name..."
+                    backgroundColor={colors.bg.panel}
+                    textColor={colors.text.primary}
+                  />
+                </box>
+                <box style={{ flexGrow: 2, border: true, borderColor: colors.border.default }}>
+                  <input
+                    value={entry.value}
+                    onInput={(value) => handleUpdateEntry(index, 'value', value)}
+                    placeholder="Header value..."
+                    backgroundColor={colors.bg.panel}
+                    textColor={colors.text.primary}
+                  />
+                </box>
+                <box
+                  style={{
+                    paddingLeft: 1,
+                    paddingRight: 1,
+                    border: true,
+                    borderColor: colors.border.default,
+                    marginRight: 1,
+                  }}
+                  onMouseDown={() => handleRemoveHeader(index)}
+                >
+                  <text fg={colors.syntax.error}>✕</text>
+                </box>
               </box>
-              <box style={{ flexGrow: 2, border: true, borderColor: colors.border.default }}>
-                <input
-                  value={entry.value}
-                  onInput={(value) => handleUpdateEntry(index, 'value', value)}
-                  placeholder="Header value..."
-                  backgroundColor={colors.bg.panel}
-                  textColor={colors.text.primary}
-                />
-              </box>
-              <box
-                style={{
-                  paddingLeft: 1,
-                  paddingRight: 1,
-                  border: true,
-                  borderColor: colors.border.default,
-                  marginRight: 1,
-                }}
-                onMouseDown={() => handleRemoveHeader(index)}
-              >
-                <text fg={colors.syntax.error}>✕</text>
-              </box>
-            </box>
-          ))}
-        </scrollbox>
-      </box>
+            ))}
+          </scrollbox>
+        </box>
 
-      <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
-        <box style={{ flexDirection: 'row', gap: 1 }}>
-          <box
-            style={{
-              flexGrow: 1,
-              paddingTop: 0.5,
-              paddingBottom: 0.5,
-              border: true,
-              borderColor: focusedField === 'key' ? colors.accent.primary : colors.border.default,
-            }}
-          >
-            <input
-              value={newKey}
-              onInput={setNewKey}
-              placeholder="New header name..."
-              focused={focusedField === 'key'}
-              backgroundColor={colors.bg.panel}
-              textColor={colors.text.primary}
-            />
+        <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
+          <box style={{ flexDirection: 'row', gap: 1 }}>
+            <box
+              style={{
+                flexGrow: 1,
+                paddingTop: 0.5,
+                paddingBottom: 0.5,
+                border: true,
+                borderColor: focusedField === 'key' ? colors.accent.primary : colors.border.default,
+              }}
+            >
+              <input
+                value={newKey}
+                onInput={setNewKey}
+                placeholder="New header name..."
+                focused={focusedField === 'key'}
+                backgroundColor={colors.bg.panel}
+                textColor={colors.text.primary}
+              />
+            </box>
+            <box
+              style={{
+                flexGrow: 2,
+                paddingTop: 0.5,
+                paddingBottom: 0.5,
+                border: true,
+                borderColor:
+                  focusedField === 'value' ? colors.accent.primary : colors.border.default,
+              }}
+            >
+              <input
+                value={newValue}
+                onInput={setNewValue}
+                placeholder="Header value..."
+                focused={focusedField === 'value'}
+                backgroundColor={colors.bg.panel}
+                textColor={colors.text.primary}
+              />
+            </box>
+            <box
+              style={{
+                paddingLeft: 2,
+                paddingRight: 2,
+                paddingTop: 0.5,
+                paddingBottom: 0.5,
+                border: true,
+                borderStyle: 'double',
+                borderColor: colors.accent.primary,
+                marginRight: 1,
+              }}
+              onMouseDown={handleAddHeader}
+            >
+              <text fg={colors.accent.primary}>
+                <strong>Add</strong>
+              </text>
+            </box>
           </box>
+
           <box
             style={{
-              flexGrow: 2,
-              paddingTop: 0.5,
-              paddingBottom: 0.5,
-              border: true,
-              borderColor: focusedField === 'value' ? colors.accent.primary : colors.border.default,
-            }}
-          >
-            <input
-              value={newValue}
-              onInput={setNewValue}
-              placeholder="Header value..."
-              focused={focusedField === 'value'}
-              backgroundColor={colors.bg.panel}
-              textColor={colors.text.primary}
-            />
-          </box>
-          <box
-            style={{
+              alignSelf: 'flex-start',
               paddingLeft: 2,
               paddingRight: 2,
               paddingTop: 0.5,
               paddingBottom: 0.5,
               border: true,
-              borderStyle: 'double',
-              borderColor: colors.accent.primary,
-              marginRight: 1,
+              borderColor: showPresets ? colors.accent.primary : colors.border.default,
             }}
-            onMouseDown={handleAddHeader}
+            onMouseDown={() => setShowPresets(!showPresets)}
           >
-            <text fg={colors.accent.primary}>
-              <strong>Add</strong>
+            <text fg={showPresets ? colors.accent.primary : colors.text.muted}>
+              {showPresets ? <strong>Hide Presets</strong> : 'Common Headers'}
             </text>
           </box>
-        </box>
 
-        <box
-          style={{
-            alignSelf: 'flex-start',
-            paddingLeft: 2,
-            paddingRight: 2,
-            paddingTop: 0.5,
-            paddingBottom: 0.5,
-            border: true,
-            borderColor: showPresets ? colors.accent.primary : colors.border.default,
-          }}
-          onMouseDown={() => setShowPresets(!showPresets)}
-        >
-          <text fg={showPresets ? colors.accent.primary : colors.text.muted}>
-            {showPresets ? <strong>Hide Presets</strong> : 'Common Headers'}
-          </text>
-        </box>
-
-        {showPresets && (
-          <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
-            <text fg={colors.text.muted}>Click to add:</text>
-            <box style={{ flexDirection: 'column', gap: 1 }}>
-              {Object.entries(HEADER_PRESETS).map(([headerName, values]) => (
-                <box key={headerName} style={{ flexDirection: 'column', gap: 1 }}>
-                  <text fg={colors.accent.primary}>{headerName}:</text>
-                  <box style={{ flexDirection: 'row', gap: 1, flexWrap: 'wrap' }}>
-                    {values.map((value) => (
-                      <box
-                        key={value}
-                        style={{
-                          paddingLeft: 1,
-                          paddingRight: 1,
-                          paddingTop: 0.5,
-                          paddingBottom: 0.5,
-                          border: true,
-                          borderColor: colors.border.default,
-                        }}
-                        onMouseDown={() => handlePresetSelect(headerName, value)}
-                      >
-                        <text fg={colors.text.primary}>{value}</text>
-                      </box>
-                    ))}
+          {showPresets && (
+            <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
+              <text fg={colors.text.muted}>Click to add:</text>
+              <box style={{ flexDirection: 'column', gap: 1 }}>
+                {Object.entries(HEADER_PRESETS).map(([headerName, values]) => (
+                  <box key={headerName} style={{ flexDirection: 'column', gap: 1 }}>
+                    <text fg={colors.accent.primary}>{headerName}:</text>
+                    <box style={{ flexDirection: 'row', gap: 1, flexWrap: 'wrap' }}>
+                      {values.map((value) => (
+                        <box
+                          key={value}
+                          style={{
+                            paddingLeft: 1,
+                            paddingRight: 1,
+                            paddingTop: 0.5,
+                            paddingBottom: 0.5,
+                            border: true,
+                            borderColor: colors.border.default,
+                          }}
+                          onMouseDown={() => handlePresetSelect(headerName, value)}
+                        >
+                          <text fg={colors.text.primary}>{value}</text>
+                        </box>
+                      ))}
+                    </box>
                   </box>
-                </box>
-              ))}
+                ))}
+              </box>
             </box>
-          </box>
-        )}
-      </box>
+          )}
+        </box>
 
-      {entries.length === 0 && (
-        <text fg={colors.text.dim}>
-          <em>No headers set. Add headers above or use presets.</em>
-        </text>
-      )}
+        {entries.length === 0 && (
+          <text fg={colors.text.dim}>
+            <em>No headers set. Add headers above or use presets.</em>
+          </text>
+        )}
       </scrollbox>
     </box>
   );

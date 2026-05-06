@@ -118,17 +118,17 @@ export function CollectionPanel({
       }}
       onMouseDown={onFocus}
     >
-        {!isCollapsed && (
-          <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }}>
-            <text
-              fg={colors.accent.primary}
-              bg={colors.bg.app}
-              style={{ paddingLeft: 1, paddingRight: 1 }}
-            >
-              <strong> Collections </strong>
-            </text>
-          </box>
-        )}
+      {!isCollapsed && (
+        <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }}>
+          <text
+            fg={colors.accent.primary}
+            bg={colors.bg.app}
+            style={{ paddingLeft: 1, paddingRight: 1 }}
+          >
+            <strong> Collections </strong>
+          </text>
+        </box>
+      )}
       <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }}>
         {!isCollapsed && (
           <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
@@ -220,77 +220,80 @@ export function CollectionPanel({
       {!isCollapsed && (
         <box style={{ flexDirection: 'column', flexGrow: 1, gap: 0, overflow: 'hidden' }}>
           <scrollbox style={{ flexGrow: 1 }}>
-          {treeNodes.map((node) => {
-            const isSelected = node.index === selectedIndex;
-            const isCollection = node.type === 'collection';
-            const methodColors = !isCollection
-              ? colors.methods[node.request.method.toUpperCase() as keyof typeof colors.methods]
-              : null;
+            {treeNodes.map((node) => {
+              const isSelected = node.index === selectedIndex;
+              const isCollection = node.type === 'collection';
+              const methodColors = !isCollection
+                ? colors.methods[node.request.method.toUpperCase() as keyof typeof colors.methods]
+                : null;
 
-            return (
-              <box
-                key={isCollection ? node.collection.id : `${node.collectionId}-${node.request.id}`}
-                style={{
-                  flexDirection: 'row',
-                  paddingLeft: isCollection ? 0 : 2,
-                  backgroundColor: isSelected && focused ? colors.bg.focusHighlight : 'transparent',
-                }}
-                onMouseDown={() => {
-                  setSelectedIndex(node.index);
-                  onFocus();
-                  if (isCollection) {
-                    toggleCollection(node.collection.id);
-                  } else {
-                    onLoadRequest(node.request);
+              return (
+                <box
+                  key={
+                    isCollection ? node.collection.id : `${node.collectionId}-${node.request.id}`
                   }
-                }}
-              >
-                <text fg={isSelected ? colors.accent.primary : colors.text.muted}>
-                  {isCollection
-                    ? expandedCollections.has(node.collection.id)
-                      ? '▼ '
-                      : '▶ '
-                    : '  '}
-                </text>
-                {isCollection ? (
-                  <text
-                    fg={isSelected ? colors.accent.text : colors.text.primary}
-                    bg={isSelected && focused ? colors.bg.focusHighlight : 'transparent'}
-                  >
-                    <strong>{node.collection.name}</strong>
+                  style={{
+                    flexDirection: 'row',
+                    paddingLeft: isCollection ? 0 : 2,
+                    backgroundColor:
+                      isSelected && focused ? colors.bg.focusHighlight : 'transparent',
+                  }}
+                  onMouseDown={() => {
+                    setSelectedIndex(node.index);
+                    onFocus();
+                    if (isCollection) {
+                      toggleCollection(node.collection.id);
+                    } else {
+                      onLoadRequest(node.request);
+                    }
+                  }}
+                >
+                  <text fg={isSelected ? colors.accent.primary : colors.text.muted}>
+                    {isCollection
+                      ? expandedCollections.has(node.collection.id)
+                        ? '▼ '
+                        : '▶ '
+                      : '  '}
                   </text>
-                ) : (
-                  <>
-                    <box
-                      style={{
-                        width: 4,
-                        border: false,
-                        paddingLeft: 0,
-                        paddingRight: 0,
-                        marginRight: 0.5,
-                      }}
-                    >
-                      <text fg={methodColors?.text ?? '#ffffff'}>{node.request.method}</text>
-                    </box>
+                  {isCollection ? (
                     <text
-                      fg={colors.text.primary}
+                      fg={isSelected ? colors.accent.text : colors.text.primary}
                       bg={isSelected && focused ? colors.bg.focusHighlight : 'transparent'}
                     >
-                      {' '}
-                      {(node.request.name || node.request.url).length > 10
-                        ? (node.request.name || node.request.url).slice(0, 10) + '...'
-                        : node.request.name || node.request.url}
+                      <strong>{node.collection.name}</strong>
                     </text>
-                  </>
-                )}
-              </box>
-            );
-          })}
-          {treeNodes.length === 0 && (
-            <text fg={colors.text.dim} style={{ paddingLeft: 1 }}>
-              No collections yet
-            </text>
-          )}
+                  ) : (
+                    <>
+                      <box
+                        style={{
+                          width: 4,
+                          border: false,
+                          paddingLeft: 0,
+                          paddingRight: 0,
+                          marginRight: 0.5,
+                        }}
+                      >
+                        <text fg={methodColors?.text ?? '#ffffff'}>{node.request.method}</text>
+                      </box>
+                      <text
+                        fg={colors.text.primary}
+                        bg={isSelected && focused ? colors.bg.focusHighlight : 'transparent'}
+                      >
+                        {' '}
+                        {(node.request.name || node.request.url).length > 10
+                          ? (node.request.name || node.request.url).slice(0, 10) + '...'
+                          : node.request.name || node.request.url}
+                      </text>
+                    </>
+                  )}
+                </box>
+              );
+            })}
+            {treeNodes.length === 0 && (
+              <text fg={colors.text.dim} style={{ paddingLeft: 1 }}>
+                No collections yet
+              </text>
+            )}
           </scrollbox>
         </box>
       )}

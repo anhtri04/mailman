@@ -9,3 +9,4 @@ export { AuthEditor } from './AuthEditor';
 export { SyntaxHighlighter } from './SyntaxHighlighter';
 export { HeadersDisplay } from './HeadersDisplay';
 export { MailmanLogo } from './MailmanLogo';
+export { ResponseModal } from './ResponseModal';
