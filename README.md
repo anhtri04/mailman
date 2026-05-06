@@ -1,21 +1,28 @@
 # Mailman
 
-A terminal-based HTTP client built with Bun and OpenTUI.
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/anhtri04/mailman)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6.svg)](https://www.typescriptlang.org/)
+[![Bun](https://img.shields.io/badge/Runtime-Bun-000000?logo=bun)](https://bun.sh)
+
+A terminal-based HTTP client built with [Bun](https://bun.sh) and [OpenTUI](https://opentui.org).
 
 ![mailman.png](mailman.png)
 
 ## Features
 
-- **Interactive TUI**: Full terminal user interface with mouse and keyboard support
-- **HTTP Methods**: Support for GET, POST, PUT, DELETE, PATCH
-- **Request Components**:
+- **Interactive TUI** — Full terminal user interface with mouse and keyboard support
+- **HTTP Methods** — GET, POST, PUT, DELETE, PATCH
+- **Request Configuration**
   - Headers editor with common presets
   - Request body editor with content type selection
-  - Query parameter builder with URL preview
-  - **Authentication**: Bearer token and API key (header or query)
-- **Response Viewer**: Syntax-highlighted JSON, XML, HTML with raw view
-- **Method Badges**: Color-coded HTTP methods for easy identification
-- **Keyboard Shortcuts**: Efficient navigation without mouse
+  - Query parameter builder with live URL preview
+  - Authentication: Bearer token and API key (header or query)
+- **Response Viewer** — Syntax-highlighted JSON, XML, HTML with raw view
+- **Collections** — Organize requests into collections with full CRUD support
+- **Theme System** — 37 built-in themes with live preview (Ctrl+T)
+- **Keyboard Shortcuts** — Efficient navigation without leaving the keyboard
+- **Persistent Storage** — Collections and preferences saved to `~/.mailman/`
 
 ## Quick Start
 
@@ -23,143 +30,100 @@ A terminal-based HTTP client built with Bun and OpenTUI.
 # Install dependencies
 bun install
 
-# Run in development mode
+# Run the application
 bun dev
-
-# Or run directly
-bun start
 ```
 
 ## Usage
 
 ### Navigation
 
-- **Click** on panels to focus
-- **Tab** key to switch between response tabs
-- **Space** to expand response in full-screen modal
-- **Escape** to close modals
-
-### Keyboard Shortcuts
-
 | Key | Action |
 |-----|--------|
-| `Tab` | Switch response view (Body/Headers/Raw) |
-| `Space` | Expand response to full screen |
-| `Escape` | Close modal / Go back |
+| `Tab` | Switch response view (Body / Headers / Raw) |
+| `Space` | Expand response to full-screen modal |
+| `Escape` | Close modal / go back |
 | `Ctrl+Q` | Quit application |
+| `Ctrl+T` | Open theme selector |
+| `Ctrl+S` | Save current request to its collection |
 
 ### Request Panel
 
-1. **Method**: Click the method badge to cycle through HTTP methods
-2. **URL**: Type the request URL
-3. **Tabs**:
-   - **Headers**: Add/edit request headers with preset suggestions
-   - **Body**: Edit request body (shown for POST/PUT/PATCH)
-   - **Query**: Build query parameters with live URL preview
-   - **Auth**: Configure authentication (None, Bearer Token, or API Key)
+1. **Method** — Click the method badge to cycle through HTTP methods
+2. **URL** — Type the request URL
+3. **Tabs** — Click to open editors:
+   - **Headers** — Add/edit request headers with preset suggestions
+   - **Body** — Edit request body (shown for POST/PUT/PATCH)
+   - **Query** — Build query parameters with live URL preview
+   - **Auth** — Configure authentication (None, Bearer Token, or API Key)
 
-Each tab shows a ● indicator when it contains data.
+Each tab shows a `●` indicator when it contains data.
 
 ### Authentication
 
-Three authentication modes are supported:
+| Mode | Behavior |
+|------|----------|
+| **No Auth** | Send requests without authentication |
+| **Bearer Token** | Adds `Authorization: Bearer <token>` header |
+| **API Key (Header)** | Adds a custom header (e.g. `X-API-Key: <value>`) |
+| **API Key (Query)** | Appends to URL (e.g. `?api_key=<value>`) |
 
-1. **No Auth**: Send requests without authentication
-2. **Bearer Token**: Add `Authorization: Bearer <token>` header
-3. **API Key**: 
-   - Header: Add custom header (e.g., `X-API-Key: <value>`)
-   - Query: Append to URL (e.g., `?api_key=<value>`)
+### Collections
+
+- Click the **Import** button to create a new collection
+- Click a collection to select it, then click **Add** to create a request
+- Click a request to load it into the request panel
+- Click **Delete** to remove a collection or request
+- Press `Ctrl+S` to save changes to a loaded request
 
 ### Response Panel
 
-- **Status Code**: Color-coded (green=2xx, yellow=3xx, orange=4xx, red=5xx)
-- **Response Time**: Displayed in milliseconds
-- **Content Size**: Human-readable size (B, KB, MB)
-- **Tabs**:
-  - **Body**: Syntax-highlighted content (JSON, XML, HTML)
-  - **Headers**: Response headers list
-  - **Raw**: Plain text view
+- **Status Code** — Color-coded (green = 2xx, yellow = 3xx, orange = 4xx, red = 5xx)
+- **Response Time** — Displayed in milliseconds
+- **Content Size** — Human-readable size (B, KB, MB)
+- **Tabs** — Body (syntax-highlighted), Headers, Raw
 
 ## Development
 
 ```bash
-# Install dependencies
-bun install
-
-# Run in development mode
-bun dev
-
-# Format code
-bun run fmt
-
-# Check formatting
-bun run fmt:check
-
-# Lint code
-bun run lint
-
-# Run tests
-bun test
-
-# Run tests in watch mode
-bun test --watch
+bun install          # Install dependencies
+bun dev              # Run the application
+bun test             # Run all tests
+bun test --watch     # Run tests in watch mode
+bun test src/services/http-client.test.ts   # Run a single test file
+bun test -t "should make GET request"       # Run tests by name pattern
+bun run fmt          # Format code with oxfmt
+bun run fmt:check    # Check formatting without modifying
+bun run lint         # Lint with oxlint (includes type checking)
+bun run lint:fix     # Auto-fix linting issues
+bun run seed         # Load example collections into ~/.mailman/
 ```
 
 ## Architecture
 
-- **Runtime:** Bun
-- **UI Framework:** OpenTUI React reconciler
-- **Language:** TypeScript with strict mode
-- **Testing:** Bun test runner
-- **Formatting:** oxfmt
-- **Linting:** oxlint
+| Layer | Technology |
+|-------|-----------|
+| Runtime | [Bun](https://bun.sh) |
+| UI Framework | [OpenTUI](https://opentui.org) React reconciler |
+| Language | TypeScript (strict mode) |
+| Testing | Bun test runner |
+| Formatting | oxfmt |
+| Linting | oxlint |
 
 ## Project Structure
 
 ```
-mailman/
-├── src/                  # Source code
-│   ├── components/       # React components
-│   │   ├── App.tsx              # Main application component
-│   │   ├── RequestPanel.tsx     # Request configuration panel
-│   │   ├── ResponsePanel.tsx    # Response display panel
-│   │   ├── HeadersEditor.tsx    # Headers editor modal
-│   │   ├── BodyEditor.tsx       # Body editor modal
-│   │   ├── QueryParamsEditor.tsx # Query params builder
-│   │   ├── AuthEditor.tsx       # Authentication editor
-│   │   ├── HeadersDisplay.tsx   # Response headers display
-│   │   ├── SyntaxHighlighter.tsx # Code syntax highlighting
-│   │   └── Modal.tsx            # Reusable modal component
-│   ├── services/         # Business logic
-│   │   └── http-client.ts       # HTTP request handling
-│   ├── hooks/            # Custom React hooks
-│   │   └── useFocus.ts          # Focus management
-│   ├── theme/            # Theming
-│   │   └── colors.ts            # Color palette
-│   ├── types.ts          # TypeScript type definitions
-│   └── utils/            # Utility functions
-│       └── response-formatter.ts
-├── index.tsx             # Entry point
-├── package.json          # Dependencies and scripts
-├── tsconfig.json         # TypeScript configuration
-└── AGENTS.md             # Agent guidelines
+index.tsx                 # Entry point
+src/
+  App.tsx                 # Root component, keyboard bindings, modal routing
+  types.ts                # Shared type definitions
+  components/             # React UI components (PascalCase.tsx)
+  hooks/                  # Custom React hooks (camelCase.ts)
+  services/               # Business logic & IO (camelCase.ts)
+  theme/                  # Theme system — colors, types, ThemeProvider
+  utils/                  # Pure utility functions (camelCase.ts)
 ```
-
-## Color Theme
-
-Mailman uses a dark purple-accented theme:
-
-- **Backgrounds**: Deep dark grays (#1a1a1e, #141418, #111114)
-- **Accent**: Purple (#3C3489) for buttons and active elements
-- **Text**: Warm off-white (#c9c7be) with muted variants
-- **Method Badges**: Color-coded by HTTP method
-  - GET: Green (#7db87d)
-  - POST: Yellow (#c9a060)
-  - PUT: Blue (#6094c0)
-  - DELETE: Red (#d47070)
-  - PATCH: Purple (#8a7ed4)
-- **Status Codes**: Success/error colors matching syntax highlighting
 
 ## License
 
-MIT
+[MIT](LICENSE)

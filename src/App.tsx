@@ -201,7 +201,7 @@ export function App() {
     });
     setRequestName(item.name);
     setActiveRequestId(item.id);
-    setActiveCollectionId(collectionId);   // Note: this keep the Ctrl+S save functionality working by ensuring the correct collection is active when a request is loaded, however, this can cause the conflict of display collection details in the WelcomePanel when a request is loaded from there. A more robust solution would be to separate the concept of "active collection" for display purposes and "current collection" for request loading/saving, but this is a simpler fix for now. It's working correctly as of now, but may need to be revisited if we add more features around collections that rely on activeCollectionId for display logic.
+    setActiveCollectionId(collectionId); // Note: this keep the Ctrl+S save functionality working by ensuring the correct collection is active when a request is loaded, however, this can cause the conflict of display collection details in the WelcomePanel when a request is loaded from there. A more robust solution would be to separate the concept of "active collection" for display purposes and "current collection" for request loading/saving, but this is a simpler fix for now. It's working correctly as of now, but may need to be revisited if we add more features around collections that rely on activeCollectionId for display logic.
   }, []);
 
   const handleSelectCollection = useCallback((id: string | null) => {
@@ -266,10 +266,10 @@ export function App() {
       >
         <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 1 }}>
           <text fg={colors.accent.primary}>
-            <strong>Mailman v0.0.1</strong>
+            <strong>Mailman v0.1.0</strong>
           </text>
           <text fg={colors.text.muted}>
-            Click panels to focus • Ctrl+Q to quit • Ctrl+T for theme • Ctrl+S to save • H for help
+            Ctrl+Q to quit • Ctrl+T for theme • Ctrl+S to save • H for help
           </text>
         </box>
 

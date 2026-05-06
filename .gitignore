@@ -28,5 +28,7 @@ logs/
 # Test coverage
 coverage/
 
-# Docs
+# External projects
+opencode/
+.opencode/
 docs/
