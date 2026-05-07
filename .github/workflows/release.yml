@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write # Required for build attestation
+  attestations: write # Required for build attestation
 
 jobs:
   build:
@@ -32,7 +34,35 @@ jobs:
 
       - run: bun install
 
-      - run: bun build --compile ./index.tsx --outfile dist/${{ matrix.artifact }} --target=${{ matrix.target }}
+      # Attach realistic metadata to the Windows .exe (reduces generic/untrusted appearance)
+      # Requires a resources.rc in your repo root; see AGENTS.md for an example.
+      - if: runner.os == 'Windows'
+        name: Apply Windows version metadata
+        shell: pwsh
+        run: |
+          if (Test-Path resources.rc) {
+            New-Item -ItemType Directory -Force -Path dist | Out-Null
+            # Assume rc.exe is in PATH via Visual Studio or Windows SDK
+            rc.exe /fo dist\resources.res resources.rc
+            bun build --compile ./index.tsx --outfile "dist\${{ matrix.artifact }}" --target=${{ matrix.target }} --windows-resources=dist\resources.res
+          } else {
+            bun build --compile ./index.tsx --outfile "dist\${{ matrix.artifact }}" --target=${{ matrix.target }}
+          }
+
+      - if: runner.os != 'Windows'
+        run: bun build --compile ./index.tsx --outfile "dist/${{ matrix.artifact }}" --target=${{ matrix.target }}
+
+      # (Optional) Sign Windows .exe with a code-signing certificate.
+      # Requires: 1) Certificate stored as a GitHub Secret, 2) signtool.exe available.
+      # Uncomment and configure once you have a certificate.
+      # - if: runner.os == 'Windows'
+      #   name: Sign Windows executable
+      #   shell: pwsh
+      #   run: |
+      #     $certBytes = [Convert]::FromBase64String("${{ secrets.WIN_CERT_BASE64 }}")
+      #     [IO.File]::WriteAllBytes("cert.pfx", $certBytes)
+      #     signtool sign /f cert.pfx /p "${{ secrets.WIN_CERT_PASSWORD }}" /tr http://timestamp.digicert.com /td sha256 /fd sha256 "dist\${{ matrix.artifact }}"
+      #     Remove-Item cert.pfx
 
       - uses: actions/upload-artifact@v4
         with:
@@ -43,15 +73,32 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/download-artifact@v4
         with:
           path: dist
+          pattern: mailman-*
+
+      - name: Flatten dist directory
+        run: mv dist/mailman-*/* dist/ && rmdir dist/mailman-*
 
       - name: Substitute version in release notes
         run: sed -i 's/\${{ github.ref_name }}/${{ github.ref_name }}/g' RELEASE.md
+
+      - name: Generate SHA256 checksums
+        run: sha256sum dist/* > dist/SHA256SUMS.txt
+
+      - name: Build attestation for all artifacts
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: dist/*
 
       - name: Create release
         uses: softprops/action-gh-release@v2
