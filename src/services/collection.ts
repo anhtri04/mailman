@@ -2,7 +2,7 @@ import { mkdirSync, existsSync } from 'fs';
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { homedir } from 'os';
-import type { Collection, RequestItem } from '../types';
+import type { Collection, Protocol, RequestItem } from '../types';
 
 const MAILMAN_DIR = join(homedir(), '.mailman');
 const COLLECTIONS_FILE = join(MAILMAN_DIR, 'collections.json');
@@ -32,11 +32,15 @@ export async function saveCollections(collections: Collection[]): Promise<void> 
   await writeFile(COLLECTIONS_FILE, JSON.stringify(collections, null, 2), 'utf-8');
 }
 
-export async function addCollection(name: string): Promise<Collection> {
+export async function addCollection(
+  name: string,
+  protocol: Protocol = 'rest',
+): Promise<Collection> {
   const collections = await loadCollections();
   const newCollection: Collection = {
     id: Date.now().toString(),
     name,
+    protocol,
     requests: [],
   };
   collections.push(newCollection);

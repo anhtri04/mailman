@@ -1,5 +1,7 @@
 // Request and response types for the HTTP client
 
+export type Protocol = 'rest' | 'graphql';
+
 export type AuthType = 'none' | 'bearer' | 'api-key';
 
 export interface AuthConfig {
@@ -29,6 +31,7 @@ export interface ResponseState {
 export interface Collection {
   id: string;
   name: string;
+  protocol: Protocol;
   requests: RequestItem[];
 }
 

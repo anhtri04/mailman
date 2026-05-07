@@ -9,6 +9,8 @@ import {
   ResponseModal,
   WelcomePanel,
   CatalogPanel,
+  GraphQLRequestPanel,
+  GraphQLResponsePanel,
 } from './components';
 import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
@@ -25,7 +27,14 @@ import {
   deleteCollection,
   deleteRequest,
 } from './services';
-import type { RequestOptions, ResponseState, AuthConfig, Collection, RequestItem } from './types';
+import type {
+  RequestOptions,
+  ResponseState,
+  AuthConfig,
+  Collection,
+  RequestItem,
+  Protocol,
+} from './types';
 
 type Tab = 'headers' | 'body' | 'query' | 'auth';
 
@@ -47,6 +56,7 @@ export function App() {
 
   const [collectionModal, setCollectionModal] = useState<'import' | 'add' | null>(null);
   const [newCollectionName, setNewCollectionName] = useState('');
+  const [newCollectionProtocol, setNewCollectionProtocol] = useState<Protocol>('rest');
   const [newRequestMethod, setNewRequestMethod] = useState('GET');
   const [newRequestName, setNewRequestName] = useState('');
   const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null);
@@ -56,6 +66,11 @@ export function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
+
+  const activeCollection = activeCollectionId
+    ? collections.find((c) => c.id === activeCollectionId)
+    : undefined;
+  const currentProtocol = activeCollection?.protocol ?? 'rest';
 
   useEffect(() => {
     void (async () => {
@@ -296,41 +311,58 @@ export function App() {
         </box>
 
         {activeRequestId ? (
-          <>
-            <box height="40%" style={{ flexDirection: 'column' }}>
-              <RequestPanel
-                focused={isFocused('request')}
-                onFocus={() => setFocus('request')}
-                url={request.url}
-                onUrlChange={handleUrlChange}
-                method={request.method}
-                onMethodChange={handleMethodChange}
-                onSend={handleSend}
-                headers={request.headers}
-                onHeadersChange={handleHeadersChange}
-                body={request.body}
-                onBodyChange={handleBodyChange}
-                queryParams={queryParams}
-                auth={request.auth}
-                onOpenHeaders={() => setActiveModal('headers')}
-                onOpenBody={() => setActiveModal('body')}
-                onOpenQuery={() => setActiveModal('query')}
-                onOpenAuth={() => setActiveModal('auth')}
-                requestName={requestName}
-                saveStatus={saveStatus}
-              />
+          currentProtocol === 'graphql' ? (
+            <box style={{ flexDirection: 'row', height: '100%' }}>
+              <box width="50%" style={{ flexDirection: 'column' }}>
+                <GraphQLRequestPanel
+                  focused={isFocused('request')}
+                  onFocus={() => setFocus('request')}
+                />
+              </box>
+              <box width="50%" style={{ flexDirection: 'column' }}>
+                <GraphQLResponsePanel
+                  focused={isFocused('response')}
+                  onFocus={() => setFocus('response')}
+                />
+              </box>
             </box>
+          ) : (
+            <>
+              <box height="40%" style={{ flexDirection: 'column' }}>
+                <RequestPanel
+                  focused={isFocused('request')}
+                  onFocus={() => setFocus('request')}
+                  url={request.url}
+                  onUrlChange={handleUrlChange}
+                  method={request.method}
+                  onMethodChange={handleMethodChange}
+                  onSend={handleSend}
+                  headers={request.headers}
+                  onHeadersChange={handleHeadersChange}
+                  body={request.body}
+                  onBodyChange={handleBodyChange}
+                  queryParams={queryParams}
+                  auth={request.auth}
+                  onOpenHeaders={() => setActiveModal('headers')}
+                  onOpenBody={() => setActiveModal('body')}
+                  onOpenQuery={() => setActiveModal('query')}
+                  onOpenAuth={() => setActiveModal('auth')}
+                  requestName={requestName}
+                  saveStatus={saveStatus}
+                />
+              </box>
 
-            <box height="60%" style={{ flexDirection: 'column', marginTop: 1 }}>
-              <ResponsePanel
-                focused={isFocused('response')}
-                onFocus={() => setFocus('response')}
-                response={response}
-                isExpanded={showResponseModal}
-                onToggleExpand={setShowResponseModal}
-              />
-            </box>
-          </>
+              <box height="60%" style={{ flexDirection: 'column', marginTop: 1 }}>
+                <ResponsePanel
+                  focused={isFocused('response')}
+                  onFocus={() => setFocus('response')}
+                  response={response}
+                  isExpanded={showResponseModal}
+                  onToggleExpand={setShowResponseModal}
+                />
+              </box>
+            </>
+          )
         ) : (
           <box style={{ flexDirection: 'column', flexGrow: 1 }}>
             <WelcomePanel
@@ -392,6 +424,51 @@ export function App() {
         {collectionModal === 'import' && (
           <Modal isOpen={true} onClose={() => setCollectionModal(null)} title="New Collection">
             <box style={{ flexDirection: 'column', gap: 1, padding: 1 }}>
+              <box style={{ flexDirection: 'row', gap: 1 }}>
+                <box
+                  style={{
+                    border: true,
+                    borderColor:
+                      newCollectionProtocol === 'rest'
+                        ? colors.accent.primary
+                        : colors.border.default,
+                    paddingLeft: 2,
+                    paddingRight: 2,
+                  }}
+                  onMouseDown={() => setNewCollectionProtocol('rest')}
+                >
+                  <text
+                    fg={
+                      newCollectionProtocol === 'rest' ? colors.accent.primary : colors.text.muted
+                    }
+                  >
+                    REST
+                  </text>
+                </box>
+                <box
+                  style={{
+                    border: true,
+                    borderColor:
+                      newCollectionProtocol === 'graphql'
+                        ? colors.accent.primary
+                        : colors.border.default,
+                    paddingLeft: 2,
+                    paddingRight: 2,
+                  }}
+                  onMouseDown={() => setNewCollectionProtocol('graphql')}
+                >
+                  <text
+                    fg={
+                      newCollectionProtocol === 'graphql'
+                        ? colors.accent.primary
+                        : colors.text.muted
+                    }
+                  >
+                    GRAPHQL
+                  </text>
+                </box>
+              </box>
+
               <box
                 style={{
                   border: true,
@@ -419,12 +496,13 @@ export function App() {
                   onMouseDown={() => {
                     if (newCollectionName.trim()) {
                       void (async () => {
-                        await addCollection(newCollectionName.trim());
+                        await addCollection(newCollectionName.trim(), newCollectionProtocol);
                         const updated = await loadCollections();
                         setCollections(updated);
                       })();
                       setCollectionModal(null);
                       setNewCollectionName('');
+                      setNewCollectionProtocol('rest');
                     }
                   }}
                 >
@@ -441,6 +519,7 @@ export function App() {
                   onMouseDown={() => {
                     setCollectionModal(null);
                     setNewCollectionName('');
+                    setNewCollectionProtocol('rest');
                   }}
                 >
                   <text fg={colors.text.muted}>Cancel</text>
@@ -455,29 +534,33 @@ export function App() {
             <box style={{ flexDirection: 'column', gap: 1, padding: 1 }}>
               <box style={{ flexDirection: 'row', gap: 1, alignItems: 'center' }}>
                 <text fg={colors.text.muted}>Method:</text>
-                <box
-                  style={{
-                    border: true,
-                    borderColor: colors.border.default,
-                    borderStyle: 'rounded',
-                    paddingLeft: 1,
-                    paddingRight: 1,
-                  }}
-                  onMouseDown={() => {
-                    const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
-                    const idx = METHODS.indexOf(newRequestMethod);
-                    setNewRequestMethod(METHODS[(idx + 1) % METHODS.length]!);
-                  }}
-                >
-                  <text
-                    fg={
-                      colors.methods[newRequestMethod as keyof typeof colors.methods]?.text ??
-                      colors.text.primary
-                    }
+                {activeCollection?.protocol === 'graphql' ? (
+                  <text fg={colors.accent.primary}>GRAPHQL</text>
+                ) : (
+                  <box
+                    style={{
+                      border: true,
+                      borderColor: colors.border.default,
+                      borderStyle: 'rounded',
+                      paddingLeft: 1,
+                      paddingRight: 1,
+                    }}
+                    onMouseDown={() => {
+                      const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
+                      const idx = METHODS.indexOf(newRequestMethod);
+                      setNewRequestMethod(METHODS[(idx + 1) % METHODS.length]!);
+                    }}
                   >
-                    {newRequestMethod}
-                  </text>
-                </box>
+                    <text
+                      fg={
+                        colors.methods[newRequestMethod as keyof typeof colors.methods]?.text ??
+                        colors.text.primary
+                      }
+                    >
+                      {newRequestMethod}
+                    </text>
+                  </box>
+                )}
               </box>
 
               <box

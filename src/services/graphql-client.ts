@@ -1,0 +1,54 @@
+import type { AuthConfig } from '../types';
+import { applyAuthToRequest, executeHttpRequest } from './http-shared';
+
+export interface GraphQLRequestOptions {
+  url: string;
+  query: string;
+  variables?: string;
+  operationName?: string;
+  headers?: Record<string, string>;
+  auth?: AuthConfig;
+}
+
+export async function sendGraphQLRequest(
+  options: GraphQLRequestOptions,
+  timeoutMs?: number,
+): Promise<{
+  status: number;
+  statusText: string;
+  body: string;
+  headers: Record<string, string>;
+  time: number;
+}> {
+  const payload: Record<string, unknown> = {
+    query: options.query,
+  };
+
+  if (options.variables?.trim()) {
+    try {
+      payload.variables = JSON.parse(options.variables);
+    } catch {
+      payload.variables = options.variables;
+    }
+  }
+
+  if (options.operationName?.trim()) {
+    payload.operationName = options.operationName.trim();
+  }
+
+  const { url, headers } = applyAuthToRequest({
+    url: options.url,
+    headers: { 'Content-Type': 'application/json', ...options.headers },
+    auth: options.auth,
+  });
+
+  return executeHttpRequest(
+    {
+      url,
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    },
+    timeoutMs,
+  );
+}

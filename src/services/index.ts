@@ -1,3 +1,4 @@
+export { sendGraphQLRequest } from './graphql-client';
 export { sendRequest } from './http-client';
 export {
   loadCollections,

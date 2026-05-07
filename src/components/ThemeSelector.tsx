@@ -78,7 +78,7 @@ export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
             </text>
           </box>
           <text fg={colors.text.muted} style={{ marginLeft: 2 }}>
-            esc
+            [esc]
           </text>
         </box>
 
