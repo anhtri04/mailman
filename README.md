@@ -1,9 +1,13 @@
-# Mailman
+<h1 align="center">Mailman</h1>
+
+<div align="center">
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/anhtri04/mailman)
+[![Version](https://img.shields.io/badge/version-0.1.3-blue.svg)](https://github.com/anhtri04/mailman)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6.svg)](https://www.typescriptlang.org/)
 [![Bun](https://img.shields.io/badge/Runtime-Bun-000000?logo=bun)](https://bun.sh)
+
+</div>
 
 A terminal-based HTTP client built with [Bun](https://bun.sh) and [OpenTUI](https://opentui.org).
 
@@ -45,6 +49,7 @@ bun dev
 | `Escape` | Close modal / go back |
 | `Ctrl+Q` | Quit application |
 | `Ctrl+T` | Open theme selector |
+| `Ctrl+G` | Open Catalog panel |
 | `Ctrl+S` | Save current request to its collection |
 
 ### Request Panel

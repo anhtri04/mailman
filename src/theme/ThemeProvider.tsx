@@ -1,12 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { readdirSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { themes as ALL_THEMES } from './themes';
 import { adaptTheme } from './theme-adapter';
 import { loadPreferences, savePreferences } from '../services/preferences';
 import { colors as defaultColors } from './colors';
 import type { MailmanColors, OpencodeTheme } from './types';
-
-const THEMES_DIR = join(import.meta.dir, './themes');
 
 interface ThemeContextValue {
   colors: MailmanColors;
@@ -21,13 +18,9 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function loadThemes(): OpencodeTheme[] {
   try {
-    const files = readdirSync(THEMES_DIR).filter((f) => f.endsWith('.json'));
-    const themes = files.map((file) => {
-      const data = readFileSync(join(THEMES_DIR, file), 'utf-8');
-      return JSON.parse(data) as OpencodeTheme;
-    });
-    themes.sort((a, b) => a.name.localeCompare(b.name));
-    return themes;
+    const sorted = [...ALL_THEMES];
+    sorted.sort((a, b) => a.name.localeCompare(b.name));
+    return sorted;
   } catch (error) {
     console.error('Failed to load themes:', error instanceof Error ? error.message : String(error));
     return [];

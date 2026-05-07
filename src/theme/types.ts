@@ -2,7 +2,8 @@ export interface OpencodeThemePalette {
   neutral: string;
   ink: string;
   primary: string;
-  accent: string;
+  accent?: string;
+  interactive?: string;
   success: string;
   warning: string;
   error: string;

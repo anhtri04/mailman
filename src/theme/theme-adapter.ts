@@ -3,6 +3,7 @@ import type { MailmanColors, OpencodeTheme } from './types';
 
 export function adaptTheme(theme: OpencodeTheme): MailmanColors {
   const p = theme.dark.palette;
+  const accent = p.accent ?? p.interactive ?? p.primary;
 
   return {
     bg: {
@@ -26,14 +27,14 @@ export function adaptTheme(theme: OpencodeTheme): MailmanColors {
     accent: {
       primary: p.primary,
       text: adjustLightness(p.primary, 15),
-      hover: p.accent,
+      hover: accent,
     },
     syntax: {
       success: p.success,
       warning: p.warning,
       error: p.error,
       info: p.info,
-      patch: p.diffAdd ?? p.accent,
+      patch: p.diffAdd ?? accent,
       punctuation: adjustLightness(p.ink, -25),
     },
     methods: {
@@ -41,7 +42,7 @@ export function adaptTheme(theme: OpencodeTheme): MailmanColors {
       POST: { bg: adjustLightness(p.warning, -35), text: p.warning },
       PUT: { bg: adjustLightness(p.info, -35), text: p.info },
       DELETE: { bg: adjustLightness(p.error, -35), text: p.error },
-      PATCH: { bg: adjustLightness(p.accent, -35), text: p.accent },
+      PATCH: { bg: adjustLightness(accent, -35), text: accent },
     },
   };
 }
