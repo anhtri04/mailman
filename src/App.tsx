@@ -20,6 +20,7 @@ import { ThemeSelector } from './components/ThemeSelector';
 import { useTheme } from './theme/ThemeProvider';
 import {
   sendRequest,
+  sendGraphQLRequest,
   loadCollections,
   addCollection,
   addRequestToCollection,
@@ -47,7 +48,20 @@ export function App() {
     headers: {},
     body: '',
   });
+  const [graphqlRequest, setGraphqlRequest] = useState<{
+    url: string;
+    query: string;
+    variables: string;
+    headers: Record<string, string>;
+    auth?: AuthConfig;
+  }>({
+    url: '',
+    query: '',
+    variables: '',
+    headers: {},
+  });
   const [response, setResponse] = useState<ResponseState | null>(null);
+  const [graphqlResponse, setGraphqlResponse] = useState<ResponseState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCollectionCollapsed, setIsCollectionCollapsed] = useState(false);
   const [activeModal, setActiveModal] = useState<Tab | null>(null);
@@ -137,13 +151,25 @@ export function App() {
       if (activeRequestId && activeCollectionId) {
         void (async () => {
           try {
-            await updateRequest(activeCollectionId, activeRequestId, {
-              method: request.method,
-              url: request.url,
-              headers: request.headers,
-              body: request.body,
-              auth: request.auth,
-            });
+            await updateRequest(
+              activeCollectionId,
+              activeRequestId,
+              currentProtocol === 'graphql'
+                ? {
+                    method: 'POST',
+                    url: graphqlRequest.url,
+                    headers: graphqlRequest.headers,
+                    body: graphqlRequest.query,
+                    auth: graphqlRequest.auth,
+                  }
+                : {
+                    method: request.method,
+                    url: request.url,
+                    headers: request.headers,
+                    body: request.body,
+                    auth: request.auth,
+                  },
+            );
             const updated = await loadCollections();
             setCollections(updated);
             setSaveStatus('saved');
@@ -176,6 +202,49 @@ export function App() {
   const handleAuthChange = useCallback((auth: AuthConfig) => {
     setRequest((prev) => ({ ...prev, auth }));
   }, []);
+
+  // GraphQL state handlers
+  const handleGraphqlUrlChange = useCallback((url: string) => {
+    setGraphqlRequest((prev) => ({ ...prev, url }));
+  }, []);
+
+  const handleGraphqlQueryChange = useCallback((query: string) => {
+    setGraphqlRequest((prev) => ({ ...prev, query }));
+  }, []);
+
+  const handleGraphqlVariablesChange = useCallback((variables: string) => {
+    setGraphqlRequest((prev) => ({ ...prev, variables }));
+  }, []);
+
+  const handleGraphqlHeadersChange = useCallback((headers: Record<string, string>) => {
+    setGraphqlRequest((prev) => ({ ...prev, headers }));
+  }, []);
+
+  const handleGraphqlAuthChange = useCallback((auth: AuthConfig) => {
+    setGraphqlRequest((prev) => ({ ...prev, auth }));
+  }, []);
+
+  const handleGraphqlSend = useCallback(async () => {
+    if (!graphqlRequest.url) return;
+
+    setIsLoading(true);
+
+    try {
+      const result = await sendGraphQLRequest(graphqlRequest);
+      setGraphqlResponse(result);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setGraphqlResponse({
+        status: 0,
+        statusText: 'ERROR',
+        body: `Error: ${errorMessage}`,
+        headers: {},
+        time: 0,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [graphqlRequest]);
 
   // Extract base URL without query params for QueryParamsEditor
   const baseUrl = request.url.split('?')[0] ?? request.url;
@@ -229,16 +298,26 @@ export function App() {
   }, [request]);
 
   const handleLoadRequest = useCallback((item: RequestItem, collectionId: string) => {
-    setRequest({
-      method: item.method,
-      url: item.url,
-      headers: item.headers ?? {},
-      body: item.body ?? '',
-      auth: item.auth,
-    });
+    if (activeCollection && currentProtocol === 'graphql') {
+      setGraphqlRequest({
+        url: item.url,
+        query: item.body ?? '',
+        variables: '',
+        headers: item.headers ?? {},
+        auth: item.auth,
+      });
+    } else {
+      setRequest({
+        method: item.method,
+        url: item.url,
+        headers: item.headers ?? {},
+        body: item.body ?? '',
+        auth: item.auth,
+      });
+    }
     setRequestName(item.name);
     setActiveRequestId(item.id);
-    setActiveCollectionId(collectionId); // Note: this keep the Ctrl+S save functionality working by ensuring the correct collection is active when a request is loaded, however, this can cause the conflict of display collection details in the WelcomePanel when a request is loaded from there. A more robust solution would be to separate the concept of "active collection" for display purposes and "current collection" for request loading/saving, but this is a simpler fix for now. It's working correctly as of now, but may need to be revisited if we add more features around collections that rely on activeCollectionId for display logic.
+    setActiveCollectionId(collectionId);
   }, []);
 
   const handleSelectCollection = useCallback((id: string | null) => {
@@ -317,12 +396,30 @@ export function App() {
                 <GraphQLRequestPanel
                   focused={isFocused('request')}
                   onFocus={() => setFocus('request')}
+                  url={graphqlRequest.url}
+                  onUrlChange={handleGraphqlUrlChange}
+                  query={graphqlRequest.query}
+                  onQueryChange={handleGraphqlQueryChange}
+                  variables={graphqlRequest.variables}
+                  onVariablesChange={handleGraphqlVariablesChange}
+                  headers={graphqlRequest.headers}
+                  onHeadersChange={handleGraphqlHeadersChange}
+                  auth={graphqlRequest.auth}
+                  onAuthChange={handleGraphqlAuthChange}
+                  onSend={handleGraphqlSend}
+                  onOpenHeaders={() => setActiveModal('headers')}
+                  onOpenAuth={() => setActiveModal('auth')}
+                  requestName={requestName}
+                  saveStatus={saveStatus}
                 />
               </box>
               <box width="50%" style={{ flexDirection: 'column' }}>
                 <GraphQLResponsePanel
                   focused={isFocused('response')}
                   onFocus={() => setFocus('response')}
+                  response={graphqlResponse}
+                  isExpanded={showResponseModal}
+                  onToggleExpand={setShowResponseModal}
                 />
               </box>
             </box>
@@ -394,7 +491,14 @@ export function App() {
         {/* Modal popups for editors - rendered at App level for full screen sizing */}
         {activeModal === 'headers' && (
           <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Headers">
-            <HeadersEditor headers={request.headers ?? {}} onHeadersChange={handleHeadersChange} />
+            <HeadersEditor
+              headers={
+                currentProtocol === 'graphql' ? graphqlRequest.headers : (request.headers ?? {})
+              }
+              onHeadersChange={
+                currentProtocol === 'graphql' ? handleGraphqlHeadersChange : handleHeadersChange
+              }
+            />
           </Modal>
         )}
 
@@ -416,7 +520,12 @@ export function App() {
 
         {activeModal === 'auth' && (
           <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Authentication">
-            <AuthEditor auth={request.auth} onAuthChange={handleAuthChange} />
+            <AuthEditor
+              auth={currentProtocol === 'graphql' ? graphqlRequest.auth : request.auth}
+              onAuthChange={
+                currentProtocol === 'graphql' ? handleGraphqlAuthChange : handleAuthChange
+              }
+            />
           </Modal>
         )}
 
