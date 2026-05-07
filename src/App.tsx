@@ -160,6 +160,7 @@ export function App() {
                     url: graphqlRequest.url,
                     headers: graphqlRequest.headers,
                     body: graphqlRequest.query,
+                    variables: graphqlRequest.variables,
                     auth: graphqlRequest.auth,
                   }
                 : {
@@ -297,28 +298,32 @@ export function App() {
     }
   }, [request]);
 
-  const handleLoadRequest = useCallback((item: RequestItem, collectionId: string) => {
-    if (activeCollection && currentProtocol === 'graphql') {
-      setGraphqlRequest({
-        url: item.url,
-        query: item.body ?? '',
-        variables: '',
-        headers: item.headers ?? {},
-        auth: item.auth,
-      });
-    } else {
-      setRequest({
-        method: item.method,
-        url: item.url,
-        headers: item.headers ?? {},
-        body: item.body ?? '',
-        auth: item.auth,
-      });
-    }
-    setRequestName(item.name);
-    setActiveRequestId(item.id);
-    setActiveCollectionId(collectionId);
-  }, []);
+  const handleLoadRequest = useCallback(
+    (item: RequestItem, collectionId: string) => {
+      const collection = collections.find((c) => c.id === collectionId);
+      if (collection?.protocol === 'graphql') {
+        setGraphqlRequest({
+          url: item.url,
+          query: item.body ?? '',
+          variables: item.variables ?? '',
+          headers: item.headers ?? {},
+          auth: item.auth,
+        });
+      } else {
+        setRequest({
+          method: item.method,
+          url: item.url,
+          headers: item.headers ?? {},
+          body: item.body ?? '',
+          auth: item.auth,
+        });
+      }
+      setRequestName(item.name);
+      setActiveRequestId(item.id);
+      setActiveCollectionId(collectionId);
+    },
+    [collections],
+  );
 
   const handleSelectCollection = useCallback((id: string | null) => {
     setActiveCollectionId(id);
@@ -377,7 +382,7 @@ export function App() {
           height: '100%',
           width: isCollectionCollapsed ? '95%' : '80%',
           backgroundColor: colors.bg.app,
-          padding: 1,
+          // padding: 1,
         }}
       >
         <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 1 }}>
@@ -425,7 +430,7 @@ export function App() {
             </box>
           ) : (
             <>
-              <box height="40%" style={{ flexDirection: 'column' }}>
+              <box height="35%" style={{ flexDirection: 'column' }}>
                 <RequestPanel
                   focused={isFocused('request')}
                   onFocus={() => setFocus('request')}
@@ -449,7 +454,7 @@ export function App() {
                 />
               </box>
 
-              <box height="60%" style={{ flexDirection: 'column', marginTop: 1 }}>
+              <box height="65%" style={{ flexDirection: 'column', marginTop: 1 }}>
                 <ResponsePanel
                   focused={isFocused('response')}
                   onFocus={() => setFocus('response')}

@@ -42,6 +42,7 @@ export interface RequestItem {
   url: string;
   headers?: Record<string, string>;
   body?: string;
+  variables?: string;
   auth?: AuthConfig;
 }
 
