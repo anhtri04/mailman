@@ -143,7 +143,7 @@ export function GraphQLResponsePanel({
           bg={colors.bg.app}
           style={{ paddingLeft: 1, paddingRight: 1 }}
         >
-          <strong> GraphQL Response </strong>
+          <strong> Response </strong>
         </text>
         {response && (
           <box style={{ flexDirection: 'row', gap: 2 }}>

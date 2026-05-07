@@ -3,7 +3,7 @@ import type { TextareaRenderable } from '@opentui/core';
 import { useTheme } from '../theme/ThemeProvider';
 import type { AuthConfig } from '../types';
 
-type Tab = 'variables' | 'headers' | 'auth';
+type Tab = 'headers' | 'auth';
 
 interface GraphQLRequestPanelProps {
   focused: boolean;
@@ -123,7 +123,7 @@ export function GraphQLRequestPanel({
           bg={colors.bg.app}
           style={{ paddingLeft: 1, paddingRight: 1 }}
         >
-          <strong> GraphQL Request </strong>
+          <strong> Request </strong>
         </text>
         <box style={{ flexDirection: 'row', gap: 1 }}>
           {requestName && (
@@ -173,6 +173,33 @@ export function GraphQLRequestPanel({
         </box>
       </box>
 
+      <box style={{ flexDirection: 'row', gap: 1, justifyContent: 'space-between', marginTop: 1 }}>
+        <box style={{ flexDirection: 'row' }} >
+          {renderTabButton('headers', 'Headers', hasHeaders)}
+          {renderTabButton('auth', 'Auth', hasAuth)}
+        </box>
+        <box
+          style={{
+            marginLeft: 1,
+            border: true,
+            borderColor: colors.accent.primary,
+            paddingLeft: 2,
+            paddingRight: 2,
+            paddingTop: 0.5,
+            paddingBottom: 0.5,
+            borderStyle: 'double',
+          }}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            onSend();
+          }}
+        >
+          <text fg={colors.accent.primary}>
+            <strong>Send</strong>
+          </text>
+        </box>
+      </box>
+
       <box style={{ flexDirection: 'column', flexGrow: 1, marginTop: 1 }}>
         <text fg={colors.accent.primary}>
           <strong>Query</strong>
@@ -201,60 +228,31 @@ export function GraphQLRequestPanel({
         </box>
       </box>
 
-      {activeTab === 'variables' && (
-        <box style={{ flexDirection: 'column', height: '30%', marginTop: 1 }}>
-          <text fg={colors.accent.primary}>
-            <strong>Variables</strong>
-          </text>
-          <box
-            style={{
-              flexGrow: 1,
-              border: true,
-              borderColor: focused ? colors.accent.primary : colors.border.default,
-              backgroundColor: colors.bg.panel,
-              marginTop: 0.5,
-            }}
-          >
-            <scrollbox style={{ flexGrow: 1 }}>
-              <textarea
-                ref={variablesRef}
-                placeholder='{"id": "123"}'
-                initialValue={variables}
-                focused={focused}
-                onContentChange={handleVariablesChange}
-                backgroundColor={colors.bg.panel}
-                textColor={colors.text.primary}
-                placeholderColor={colors.text.dim}
-              />
-            </scrollbox>
-          </box>
-        </box>
-      )}
-
-      <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
-        {renderTabButton('variables', 'Variables', hasVariables)}
-        {renderTabButton('headers', 'Headers', hasHeaders)}
-        {renderTabButton('auth', 'Auth', hasAuth)}
-
+      <box style={{ flexDirection: 'column', height: '60%' }}>
+        <text fg={colors.accent.primary}>
+          <strong>Variables</strong>
+        </text>
         <box
           style={{
-            marginLeft: 1,
+            flexGrow: 1,
             border: true,
-            borderColor: colors.accent.primary,
-            paddingLeft: 2,
-            paddingRight: 2,
-            paddingTop: 0.5,
-            paddingBottom: 0.5,
-            borderStyle: 'double',
-          }}
-          onMouseDown={(e) => {
-            e.stopPropagation();
-            onSend();
+            borderColor: focused ? colors.accent.primary : colors.border.default,
+            backgroundColor: colors.bg.panel,
+            marginTop: 0.5,
           }}
         >
-          <text fg={colors.accent.primary}>
-            <strong>Send</strong>
-          </text>
+          <scrollbox style={{ flexGrow: 1 }}>
+            <textarea
+              ref={variablesRef}
+              placeholder='Ex: {"id": "123"}'
+              initialValue={variables}
+              focused={focused}
+              onContentChange={handleVariablesChange}
+              backgroundColor={colors.bg.panel}
+              textColor={colors.text.primary}
+              placeholderColor={colors.text.dim}
+            />
+          </scrollbox>
         </box>
       </box>
     </box>
