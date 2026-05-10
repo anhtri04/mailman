@@ -82,15 +82,14 @@ export function BodyEditor({ body, onBodyChange, focused, detectedContentType }:
       <box
         style={{
           flexDirection: 'row',
-          justifyContent: 'space-between',
+          justifyContent: 'flex-end',
           alignItems: 'center',
           marginBottom: 1,
         }}
       >
-        <text fg={colors.accent.primary}>
-          <strong>Body</strong>
+        <text fg={colors.text.muted}>
+          {contentType}
         </text>
-        <text fg={colors.text.muted}>{contentType}</text>
       </box>
 
       <box

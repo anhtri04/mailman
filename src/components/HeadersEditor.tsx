@@ -110,9 +110,6 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
 
   return (
     <box style={{ flexDirection: 'column', gap: 1, flexGrow: 1, height: '100%' }}>
-      <text fg={colors.accent.primary}>
-        <strong>Headers</strong>
-      </text>
 
       <scrollbox style={{ flexGrow: 1 }}>
         <box style={{ flexDirection: 'column', gap: 1 }}>

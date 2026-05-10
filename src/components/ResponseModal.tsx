@@ -69,7 +69,6 @@ export function ResponseModal({ response, onClose }: ResponseModalProps) {
         <box style={{ flexDirection: 'row', gap: 2, marginBottom: 1 }}>
           <text fg={colors.text.muted}>{contentSize}</text>
           <text fg={colors.text.muted}>{response.time}ms</text>
-          <text fg={colors.text.muted}>• Press ESC to close</text>
         </box>
 
         <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1 }}>

@@ -9,9 +9,6 @@ export function CatalogPanel({ onClose }: CatalogPanelProps) {
 
   return (
     <box style={{ flexDirection: 'column', height: '100%', gap: 1 }}>
-      <text fg={colors.accent.primary} style={{ marginBottom: 1 }}>
-        <strong>Mailman Help & Usage Guide</strong>
-      </text>
       <scrollbox style={{ flexGrow: 1, marginBottom: -1 }}>
         <box style={{ flexDirection: 'column', gap: 1 }}>
           <box style={{ flexDirection: 'column', gap: 1 }}>

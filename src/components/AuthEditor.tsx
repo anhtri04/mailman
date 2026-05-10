@@ -76,9 +76,6 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
 
   return (
     <box style={{ flexDirection: 'column', gap: 1, flexGrow: 1, height: '100%' }}>
-      <text fg={colors.accent.primary}>
-        <strong>Authentication</strong>
-      </text>
 
       <scrollbox style={{ flexGrow: 1 }}>
         {/* Auth Type Selector */}

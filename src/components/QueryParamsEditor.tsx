@@ -91,16 +91,13 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
     <box
       style={{
         flexDirection: 'column',
-        border: true,
-        borderColor: colors.border.default,
+        // border: false,
+        // borderColor: colors.border.default,
         padding: 1,
         flexGrow: 1,
         height: '100%',
       }}
     >
-      <text fg={colors.accent.primary}>
-        <strong>Query Parameters</strong>
-      </text>
 
       {/* Params List */}
       <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>

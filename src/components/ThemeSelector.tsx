@@ -57,7 +57,12 @@ export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
   const rau_ma = 3.6;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleCancel} title="Select Theme">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleCancel}
+      title="Select Theme"
+      subtitle={`${themes.length} themes`}
+    >
       <box
         style={{
           flexDirection: 'column',
@@ -65,23 +70,6 @@ export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
           backgroundColor: colors.bg.panel,
         }}
       >
-        {/* Title */}
-        <box
-          style={{ flexDirection: 'row', marginBottom: rau_ma, justifyContent: 'space-between' }}
-        >
-          <box style={{ flexDirection: 'row' }}>
-            <text fg={colors.accent.primary}>
-              <strong>Select Theme</strong>
-            </text>
-            <text fg={colors.text.muted} style={{ marginLeft: 2 }}>
-              {themes.length} themes
-            </text>
-          </box>
-          <text fg={colors.text.muted} style={{ marginLeft: 2 }}>
-            [esc]
-          </text>
-        </box>
-
         {/* Theme list */}
         <scrollbox style={{ flexGrow: 1 }}>
           {themes.map((theme) => {

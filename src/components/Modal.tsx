@@ -5,6 +5,7 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
+  subtitle?: string;
   children: ReactNode;
 }
 
@@ -25,7 +26,7 @@ interface ModalProps {
  * - Dark background (colors.bg.panel)
  * - Centered on screen at 80% width/height
  */
-export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+export function Modal({ isOpen, onClose, title, subtitle, children }: ModalProps) {
   // Don't render if modal is closed
   if (!isOpen) {
     return null;
@@ -49,11 +50,21 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
     >
       <box style={{ flexDirection: 'column', height: '100%' }}>
         {/* Title bar */}
-        {/* <box style={{ flexDirection: 'row', marginBottom: 1 }}>
-          <text fg={colors.accent.primary}>
-            <strong>{title}</strong>
+        <box style={{ flexDirection: 'row', marginBottom: 1, justifyContent: 'space-between' }}>
+          <box style={{ flexDirection: 'row' }}>
+            <text fg={colors.accent.primary}>
+              <strong>{title}</strong>
+            </text>
+            {subtitle && (
+              <text fg={colors.text.muted} style={{ marginLeft: 2 }}>
+                {subtitle}
+              </text>
+            )}
+          </box>
+          <text fg={colors.text.muted} style={{ marginLeft: 2 }}>
+            [esc]
           </text>
-        </box> */}
+        </box>
         {children}
 
         {/* Scrollable content area */}

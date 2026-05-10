@@ -174,7 +174,7 @@ export function GraphQLRequestPanel({
       </box>
 
       <box style={{ flexDirection: 'row', gap: 1, justifyContent: 'space-between', marginTop: 1 }}>
-        <box style={{ flexDirection: 'row' }} >
+        <box style={{ flexDirection: 'row' }}>
           {renderTabButton('headers', 'Headers', hasHeaders)}
           {renderTabButton('auth', 'Auth', hasAuth)}
         </box>
