@@ -13,12 +13,15 @@ export async function sendRequest(
 }> {
   const { url, headers } = applyAuthToRequest(options);
 
+  // GET and HEAD requests should not include a body
+  const shouldExcludeBody = options.method === 'GET' || options.method === 'HEAD';
+
   return executeHttpRequest(
     {
       url,
       method: options.method,
       headers,
-      body: options.body,
+      body: shouldExcludeBody ? undefined : options.body,
     },
     timeoutMs,
   );
