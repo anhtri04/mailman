@@ -63,8 +63,8 @@ export function App() {
     variables: '',
     headers: {},
   });
-  const [response, setResponse] = useState<ResponseState | null>(null);
-  const [graphqlResponse, setGraphqlResponse] = useState<ResponseState | null>(null);
+  const [restResponses, setRestResponses] = useState<Record<string, ResponseState>>({});
+  const [graphqlResponses, setGraphqlResponses] = useState<Record<string, ResponseState>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isCollectionCollapsed, setIsCollectionCollapsed] = useState(false);
   const [activeModal, setActiveModal] = useState<Tab | null>(null);
@@ -80,6 +80,9 @@ export function App() {
   const [newRequestName, setNewRequestName] = useState('');
   const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
+
+  const currentResponse = activeRequestId ? (restResponses[activeRequestId] ?? null) : null;
+  const currentGraphqlResponse = activeRequestId ? (graphqlResponses[activeRequestId] ?? null) : null;
 
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -231,26 +234,29 @@ export function App() {
   }, []);
 
   const handleGraphqlSend = useCallback(async () => {
-    if (!graphqlRequest.url) return;
+    if (!graphqlRequest.url || !activeRequestId) return;
 
     setIsLoading(true);
 
     try {
       const result = await sendGraphQLRequest(graphqlRequest);
-      setGraphqlResponse(result);
+      setGraphqlResponses((prev) => ({ ...prev, [activeRequestId]: result }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      setGraphqlResponse({
-        status: 0,
-        statusText: 'ERROR',
-        body: `Error: ${errorMessage}`,
-        headers: {},
-        time: 0,
-      });
+      setGraphqlResponses((prev) => ({
+        ...prev,
+        [activeRequestId]: {
+          status: 0,
+          statusText: 'ERROR',
+          body: `Error: ${errorMessage}`,
+          headers: {},
+          time: 0,
+        },
+      }));
     } finally {
       setIsLoading(false);
     }
-  }, [graphqlRequest]);
+  }, [graphqlRequest, activeRequestId]);
 
   // Extract base URL without query params for QueryParamsEditor
   const baseUrl = request.url.split('?')[0] ?? request.url;
@@ -282,26 +288,29 @@ export function App() {
   );
 
   const handleSend = useCallback(async () => {
-    if (!request.url) return;
+    if (!request.url || !activeRequestId) return;
 
     setIsLoading(true);
 
     try {
       const result = await sendRequest(request);
-      setResponse(result);
+      setRestResponses((prev) => ({ ...prev, [activeRequestId]: result }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      setResponse({
-        status: 0,
-        statusText: 'ERROR',
-        body: `Error: ${errorMessage}`,
-        headers: {},
-        time: 0,
-      });
+      setRestResponses((prev) => ({
+        ...prev,
+        [activeRequestId]: {
+          status: 0,
+          statusText: 'ERROR',
+          body: `Error: ${errorMessage}`,
+          headers: {},
+          time: 0,
+        },
+      }));
     } finally {
       setIsLoading(false);
     }
-  }, [request]);
+  }, [request, activeRequestId]);
 
   const handleLoadRequest = useCallback(
     (item: RequestItem, collectionId: string) => {
@@ -403,7 +412,7 @@ export function App() {
 
         {activeRequestId ? (
           currentProtocol === 'graphql' ? (
-            <box style={{ flexDirection: 'row', height: '100%' }}>
+            <box style={{ flexDirection: 'row', height: '100%' }} key={activeRequestId}>
               <box width="50%" style={{ flexDirection: 'column' }}>
                 <GraphQLRequestPanel
                   focused={isFocused('request')}
@@ -429,7 +438,7 @@ export function App() {
                 <GraphQLResponsePanel
                   focused={isFocused('response')}
                   onFocus={() => setFocus('response')}
-                  response={graphqlResponse}
+                  response={currentGraphqlResponse}
                   isExpanded={showResponseModal}
                   onToggleExpand={setShowResponseModal}
                 />
@@ -465,7 +474,7 @@ export function App() {
                 <ResponsePanel
                   focused={isFocused('response')}
                   onFocus={() => setFocus('response')}
-                  response={response}
+                  response={currentResponse}
                   isExpanded={showResponseModal}
                   onToggleExpand={setShowResponseModal}
                 />
@@ -825,8 +834,8 @@ export function App() {
           </Modal>
         )}
         {/* Response Expanded Modal - rendered at App level for full screen sizing */}
-        {showResponseModal && response && (
-          <ResponseModal response={response} onClose={() => setShowResponseModal(false)} />
+        {showResponseModal && currentResponse && (
+          <ResponseModal response={currentResponse} onClose={() => setShowResponseModal(false)} />
         )}
         {/* Catalog Help Modal */}
         {showHelp && (
