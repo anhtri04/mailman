@@ -13,4 +13,5 @@ export { HeadersDisplay } from './HeadersDisplay';
 export { MailmanLogo } from './MailmanLogo';
 export { ResponseModal } from './ResponseModal';
 export { WelcomePanel } from './WelcomePanel';
+export { FileBrowser } from './FileBrowser';
 export { CatalogPanel } from './CatalogPanel';

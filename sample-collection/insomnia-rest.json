@@ -1,0 +1,172 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-01-01T00:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v9.0.0",
+  "resources": [
+    {
+      "_id": "wrk_rest_sample",
+      "parentId": null,
+      "type": "workspace",
+      "name": "Sample REST Workspace",
+      "description": "A sample Insomnia workspace demonstrating REST API requests"
+    },
+    {
+      "_id": "env_base",
+      "parentId": "wrk_rest_sample",
+      "type": "environment",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "https://jsonplaceholder.typicode.com",
+        "auth_url": "https://reqres.in/api"
+      }
+    },
+    {
+      "_id": "fld_users",
+      "parentId": "wrk_rest_sample",
+      "type": "request_group",
+      "name": "Users",
+      "description": "User management endpoints"
+    },
+    {
+      "_id": "req_get_all_users",
+      "parentId": "fld_users",
+      "type": "request",
+      "name": "Get All Users",
+      "method": "GET",
+      "url": "{{ base_url }}/users",
+      "headers": [
+        { "name": "Accept", "value": "application/json" }
+      ]
+    },
+    {
+      "_id": "req_get_user_by_id",
+      "parentId": "fld_users",
+      "type": "request",
+      "name": "Get User by ID",
+      "method": "GET",
+      "url": "{{ base_url }}/users/1",
+      "headers": [
+        { "name": "Accept", "value": "application/json" }
+      ]
+    },
+    {
+      "_id": "req_create_user",
+      "parentId": "fld_users",
+      "type": "request",
+      "name": "Create User",
+      "method": "POST",
+      "url": "{{ base_url }}/users",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Accept", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"name\": \"John Doe\",\n\t\"username\": \"johndoe\",\n\t\"email\": \"john@example.com\"\n}"
+      }
+    },
+    {
+      "_id": "req_update_user",
+      "parentId": "fld_users",
+      "type": "request",
+      "name": "Update User",
+      "method": "PUT",
+      "url": "{{ base_url }}/users/1",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"name\": \"Jane Doe\",\n\t\"username\": \"janedoe\",\n\t\"email\": \"jane@example.com\"\n}"
+      }
+    },
+    {
+      "_id": "req_delete_user",
+      "parentId": "fld_users",
+      "type": "request",
+      "name": "Delete User",
+      "method": "DELETE",
+      "url": "{{ base_url }}/users/1"
+    },
+    {
+      "_id": "fld_posts",
+      "parentId": "wrk_rest_sample",
+      "type": "request_group",
+      "name": "Posts",
+      "description": "Blog post endpoints"
+    },
+    {
+      "_id": "req_get_all_posts",
+      "parentId": "fld_posts",
+      "type": "request",
+      "name": "Get All Posts",
+      "method": "GET",
+      "url": "{{ base_url }}/posts"
+    },
+    {
+      "_id": "req_get_posts_params",
+      "parentId": "fld_posts",
+      "type": "request",
+      "name": "Get Posts with Query Params",
+      "method": "GET",
+      "url": "{{ base_url }}/posts",
+      "parameters": [
+        { "name": "userId", "value": "1" },
+        { "name": "_limit", "value": "5" }
+      ]
+    },
+    {
+      "_id": "req_create_post",
+      "parentId": "fld_posts",
+      "type": "request",
+      "name": "Create Post",
+      "method": "POST",
+      "url": "{{ base_url }}/posts",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"title\": \"My New Post\",\n\t\"body\": \"This is the body of my new post.\",\n\t\"userId\": 1\n}"
+      }
+    },
+    {
+      "_id": "fld_auth",
+      "parentId": "wrk_rest_sample",
+      "type": "request_group",
+      "name": "Auth",
+      "description": "Authentication endpoints"
+    },
+    {
+      "_id": "req_login",
+      "parentId": "fld_auth",
+      "type": "request",
+      "name": "Login",
+      "method": "POST",
+      "url": "{{ auth_url }}/login",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"email\": \"eve.holt@reqres.in\",\n\t\"password\": \"cityslicka\"\n}"
+      }
+    },
+    {
+      "_id": "req_register",
+      "parentId": "fld_auth",
+      "type": "request",
+      "name": "Register",
+      "method": "POST",
+      "url": "{{ auth_url }}/register",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"email\": \"eve.holt@reqres.in\",\n\t\"password\": \"pistol\"\n}"
+      }
+    }
+  ]
+}

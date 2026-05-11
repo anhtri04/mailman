@@ -98,7 +98,6 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
         height: '100%',
       }}
     >
-
       {/* Params List */}
       <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
         {paramsArray.length === 0 ? (

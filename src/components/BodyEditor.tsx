@@ -87,9 +87,7 @@ export function BodyEditor({ body, onBodyChange, focused, detectedContentType }:
           marginBottom: 1,
         }}
       >
-        <text fg={colors.text.muted}>
-          {contentType}
-        </text>
+        <text fg={colors.text.muted}>{contentType}</text>
       </box>
 
       <box

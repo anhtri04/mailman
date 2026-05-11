@@ -10,4 +10,5 @@ export {
   updateRequest,
   updateCollectionName,
 } from './collection';
+export { importCollectionsFromFile } from './import';
 export { loadPreferences, savePreferences } from './preferences';

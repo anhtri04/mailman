@@ -11,6 +11,7 @@ import {
   CatalogPanel,
   GraphQLRequestPanel,
   GraphQLResponsePanel,
+  FileBrowser,
 } from './components';
 import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
@@ -22,11 +23,13 @@ import {
   sendRequest,
   sendGraphQLRequest,
   loadCollections,
+  saveCollections,
   addCollection,
   addRequestToCollection,
   updateRequest,
   deleteCollection,
   deleteRequest,
+  importCollectionsFromFile,
 } from './services';
 import type {
   RequestOptions,
@@ -69,6 +72,8 @@ export function App() {
   const [requestName, setRequestName] = useState<string>('');
 
   const [collectionModal, setCollectionModal] = useState<'import' | 'add' | null>(null);
+  const [collectionModalMode, setCollectionModalMode] = useState<'new' | 'import'>('new');
+  const [importError, setImportError] = useState<string | null>(null);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [newCollectionProtocol, setNewCollectionProtocol] = useState<Protocol>('rest');
   const [newRequestMethod, setNewRequestMethod] = useState('GET');
@@ -355,7 +360,7 @@ export function App() {
         style={{ flexDirection: 'column', height: '100%' }}
       >
         <CollectionPanel
-          focused={isFocused('collections')}
+          focused={isFocused('collections') && !collectionModal && !activeModal}
           onFocus={() => setFocus('collections')}
           isCollapsed={isCollectionCollapsed}
           onToggleCollapse={() => setIsCollectionCollapsed((prev) => !prev)}
@@ -363,7 +368,9 @@ export function App() {
           onLoadRequest={handleLoadRequest}
           onSelectCollection={handleSelectCollection}
           onOpenImportModal={() => {
+            setFocus(null);
             setNewCollectionName('');
+            setCollectionModalMode('new');
             setCollectionModal('import');
           }}
           onOpenAddModal={(collectionId: string) => {
@@ -536,109 +543,183 @@ export function App() {
 
         {/* Collection Modals - rendered at App level for full screen sizing */}
         {collectionModal === 'import' && (
-          <Modal isOpen={true} onClose={() => setCollectionModal(null)} title="New Collection">
-            <box style={{ flexDirection: 'column', gap: 1, padding: 1 }}>
+          <Modal
+            isOpen={true}
+            onClose={() => {
+              setCollectionModal(null);
+              setImportError(null);
+            }}
+            title="Collection"
+          >
+            <box style={{ flexDirection: 'column', gap: 1, padding: 1, height: '100%' }}>
               <box style={{ flexDirection: 'row', gap: 1 }}>
                 <box
                   style={{
                     border: true,
                     borderColor:
-                      newCollectionProtocol === 'rest'
-                        ? colors.accent.primary
-                        : colors.border.default,
+                      collectionModalMode === 'new' ? colors.accent.primary : colors.border.default,
                     paddingLeft: 2,
                     paddingRight: 2,
                   }}
-                  onMouseDown={() => setNewCollectionProtocol('rest')}
+                  onMouseDown={() => setCollectionModalMode('new')}
                 >
                   <text
-                    fg={
-                      newCollectionProtocol === 'rest' ? colors.accent.primary : colors.text.muted
-                    }
+                    fg={collectionModalMode === 'new' ? colors.accent.primary : colors.text.muted}
                   >
-                    REST
+                    New
                   </text>
                 </box>
                 <box
                   style={{
                     border: true,
                     borderColor:
-                      newCollectionProtocol === 'graphql'
+                      collectionModalMode === 'import'
                         ? colors.accent.primary
                         : colors.border.default,
                     paddingLeft: 2,
                     paddingRight: 2,
                   }}
-                  onMouseDown={() => setNewCollectionProtocol('graphql')}
+                  onMouseDown={() => setCollectionModalMode('import')}
                 >
                   <text
                     fg={
-                      newCollectionProtocol === 'graphql'
-                        ? colors.accent.primary
-                        : colors.text.muted
+                      collectionModalMode === 'import' ? colors.accent.primary : colors.text.muted
                     }
                   >
-                    GRAPHQL
+                    Import
                   </text>
                 </box>
               </box>
 
-              <box
-                style={{
-                  border: true,
-                  borderColor: colors.border.default,
-                  borderStyle: 'rounded',
-                  paddingLeft: 1,
-                }}
-              >
-                <input
-                  placeholder="Collection name..."
-                  value={newCollectionName}
-                  onInput={(val: string) => setNewCollectionName(val)}
-                  focused={true}
+              {collectionModalMode === 'new' ? (
+                <box style={{ flexDirection: 'column', gap: 1 }}>
+                  <box style={{ flexDirection: 'row', gap: 1 }}>
+                    <box
+                      style={{
+                        border: true,
+                        borderColor:
+                          newCollectionProtocol === 'rest'
+                            ? colors.accent.primary
+                            : colors.border.default,
+                        paddingLeft: 2,
+                        paddingRight: 2,
+                      }}
+                      onMouseDown={() => setNewCollectionProtocol('rest')}
+                    >
+                      <text
+                        fg={
+                          newCollectionProtocol === 'rest'
+                            ? colors.accent.primary
+                            : colors.text.muted
+                        }
+                      >
+                        REST
+                      </text>
+                    </box>
+                    <box
+                      style={{
+                        border: true,
+                        borderColor:
+                          newCollectionProtocol === 'graphql'
+                            ? colors.accent.primary
+                            : colors.border.default,
+                        paddingLeft: 2,
+                        paddingRight: 2,
+                      }}
+                      onMouseDown={() => setNewCollectionProtocol('graphql')}
+                    >
+                      <text
+                        fg={
+                          newCollectionProtocol === 'graphql'
+                            ? colors.accent.primary
+                            : colors.text.muted
+                        }
+                      >
+                        GRAPHQL
+                      </text>
+                    </box>
+                  </box>
+
+                  <box
+                    style={{
+                      border: true,
+                      borderColor: colors.border.default,
+                      borderStyle: 'rounded',
+                      paddingLeft: 1,
+                    }}
+                  >
+                    <input
+                      placeholder="Collection name..."
+                      value={newCollectionName}
+                      onInput={(val: string) => setNewCollectionName(val)}
+                      focused={true}
+                    />
+                  </box>
+                  <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
+                    <box
+                      style={{
+                        border: true,
+                        borderColor: colors.accent.primary,
+                        borderStyle: 'rounded',
+                        paddingLeft: 2,
+                        paddingRight: 2,
+                      }}
+                      onMouseDown={() => {
+                        if (newCollectionName.trim()) {
+                          void (async () => {
+                            await addCollection(newCollectionName.trim(), newCollectionProtocol);
+                            const updated = await loadCollections();
+                            setCollections(updated);
+                          })();
+                          setCollectionModal(null);
+                          setNewCollectionName('');
+                          setNewCollectionProtocol('rest');
+                        }
+                      }}
+                    >
+                      <text fg={colors.accent.primary}>Create</text>
+                    </box>
+                    <box
+                      style={{
+                        border: true,
+                        borderColor: colors.border.default,
+                        borderStyle: 'rounded',
+                        paddingLeft: 2,
+                        paddingRight: 2,
+                      }}
+                      onMouseDown={() => {
+                        setCollectionModal(null);
+                        setNewCollectionName('');
+                        setNewCollectionProtocol('rest');
+                      }}
+                    >
+                      <text fg={colors.text.muted}>Cancel</text>
+                    </box>
+                  </box>
+                </box>
+              ) : (
+                <FileBrowser
+                  startPath="~"
+                  fileFilter={(item) => item.isDirectory || item.name.endsWith('.json')}
+                  onSelectFile={(path) => {
+                    void (async () => {
+                      try {
+                        const imported = await importCollectionsFromFile(path);
+                        if (!imported.length) throw new Error('No collections found');
+                        const existing = await loadCollections();
+                        await saveCollections([...existing, ...imported]);
+                        setCollections(await loadCollections());
+                        setCollectionModal(null);
+                        setImportError(null);
+                      } catch (e) {
+                        setImportError(e instanceof Error ? e.message : String(e));
+                      }
+                    })();
+                  }}
+                  onCancel={() => setCollectionModal(null)}
                 />
-              </box>
-              <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
-                <box
-                  style={{
-                    border: true,
-                    borderColor: colors.accent.primary,
-                    borderStyle: 'rounded',
-                    paddingLeft: 2,
-                    paddingRight: 2,
-                  }}
-                  onMouseDown={() => {
-                    if (newCollectionName.trim()) {
-                      void (async () => {
-                        await addCollection(newCollectionName.trim(), newCollectionProtocol);
-                        const updated = await loadCollections();
-                        setCollections(updated);
-                      })();
-                      setCollectionModal(null);
-                      setNewCollectionName('');
-                      setNewCollectionProtocol('rest');
-                    }
-                  }}
-                >
-                  <text fg={colors.accent.primary}>Create</text>
-                </box>
-                <box
-                  style={{
-                    border: true,
-                    borderColor: colors.border.default,
-                    borderStyle: 'rounded',
-                    paddingLeft: 2,
-                    paddingRight: 2,
-                  }}
-                  onMouseDown={() => {
-                    setCollectionModal(null);
-                    setNewCollectionName('');
-                    setNewCollectionProtocol('rest');
-                  }}
-                >
-                  <text fg={colors.text.muted}>Cancel</text>
-                </box>
-              </box>
+              )}
+              {importError && <text fg={colors.syntax.error}>{importError}</text>}
             </box>
           </Modal>
         )}

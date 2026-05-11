@@ -1,0 +1,120 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-01-01T00:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v9.0.0",
+  "resources": [
+    {
+      "_id": "wrk_graphql_sample",
+      "parentId": null,
+      "type": "workspace",
+      "name": "Sample GraphQL Workspace",
+      "description": "A sample Insomnia workspace demonstrating GraphQL queries and mutations"
+    },
+    {
+      "_id": "env_graphql_base",
+      "parentId": "wrk_graphql_sample",
+      "type": "environment",
+      "name": "Base Environment",
+      "data": {
+        "spacex_url": "https://spacex-production.up.railway.app/",
+        "rickmorty_url": "https://rickandmortyapi.com/graphql"
+      }
+    },
+    {
+      "_id": "fld_spacex",
+      "parentId": "wrk_graphql_sample",
+      "type": "request_group",
+      "name": "SpaceX",
+      "description": "SpaceX GraphQL API queries"
+    },
+    {
+      "_id": "req_spacex_past_launches",
+      "parentId": "fld_spacex",
+      "type": "request",
+      "name": "Get Past Launches",
+      "method": "POST",
+      "url": "{{ spacex_url }}",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/graphql",
+        "text": "query PastLaunches($limit: Int!) {\n  launchesPast(limit: $limit) {\n    mission_name\n    launch_date_local\n    rocket {\n      rocket_name\n    }\n    links {\n      video_link\n      article_link\n    }\n  }\n}"
+      },
+      "parameters": [],
+      "graphql": {
+        "query": "query PastLaunches($limit: Int!) {\n  launchesPast(limit: $limit) {\n    mission_name\n    launch_date_local\n    rocket {\n      rocket_name\n    }\n    links {\n      video_link\n      article_link\n    }\n  }\n}",
+        "variables": "{\n  \"limit\": 10\n}",
+        "operationName": "PastLaunches"
+      }
+    },
+    {
+      "_id": "req_spacex_ships",
+      "parentId": "fld_spacex",
+      "type": "request",
+      "name": "Get Ships",
+      "method": "POST",
+      "url": "{{ spacex_url }}",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/graphql",
+        "text": "query Ships {\n  ships {\n    id\n    name\n    type\n    home_port\n    year_built\n    status\n  }\n}"
+      },
+      "graphql": {
+        "query": "query Ships {\n  ships {\n    id\n    name\n    type\n    home_port\n    year_built\n    status\n  }\n}",
+        "variables": "",
+        "operationName": "Ships"
+      }
+    },
+    {
+      "_id": "fld_rickmorty",
+      "parentId": "wrk_graphql_sample",
+      "type": "request_group",
+      "name": "Rick and Morty",
+      "description": "Rick and Morty GraphQL API queries"
+    },
+    {
+      "_id": "req_rickmorty_character",
+      "parentId": "fld_rickmorty",
+      "type": "request",
+      "name": "Get Character",
+      "method": "POST",
+      "url": "{{ rickmorty_url }}",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/graphql",
+        "text": "query GetCharacter($id: ID!) {\n  character(id: $id) {\n    id\n    name\n    status\n    species\n    gender\n    origin {\n      name\n    }\n    location {\n      name\n    }\n    episode {\n      name\n      episode\n    }\n  }\n}"
+      },
+      "graphql": {
+        "query": "query GetCharacter($id: ID!) {\n  character(id: $id) {\n    id\n    name\n    status\n    species\n    gender\n    origin {\n      name\n    }\n    location {\n      name\n    }\n    episode {\n      name\n      episode\n    }\n  }\n}",
+        "variables": "{\n  \"id\": \"1\"\n}",
+        "operationName": "GetCharacter"
+      }
+    },
+    {
+      "_id": "req_rickmorty_all_characters",
+      "parentId": "fld_rickmorty",
+      "type": "request",
+      "name": "Get All Characters",
+      "method": "POST",
+      "url": "{{ rickmorty_url }}",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/graphql",
+        "text": "query AllCharacters($page: Int) {\n  characters(page: $page) {\n    info {\n      count\n      pages\n      next\n    }\n    results {\n      id\n      name\n      status\n      image\n    }\n  }\n}"
+      },
+      "graphql": {
+        "query": "query AllCharacters($page: Int) {\n  characters(page: $page) {\n    info {\n      count\n      pages\n      next\n    }\n    results {\n      id\n      name\n      status\n      image\n    }\n  }\n}",
+        "variables": "{\n  \"page\": 1\n}",
+        "operationName": "AllCharacters"
+      }
+    }
+  ]
+}

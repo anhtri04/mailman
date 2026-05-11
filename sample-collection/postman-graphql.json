@@ -1,0 +1,109 @@
+{
+  "info": {
+    "name": "Sample GraphQL Collection",
+    "description": "A sample collection demonstrating GraphQL queries and mutations against public GraphQL APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "SpaceX",
+      "description": "SpaceX GraphQL API queries (spacex-production.up.railway.app)",
+      "item": [
+        {
+          "name": "Get Past Launches",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query PastLaunches($limit: Int!) {\n  launchesPast(limit: $limit) {\n    mission_name\n    launch_date_local\n    rocket {\n      rocket_name\n    }\n    links {\n      video_link\n      article_link\n    }\n  }\n}",
+                "variables": "{\n  \"limit\": 10\n}"
+              }
+            },
+            "url": {
+              "raw": "https://spacex-production.up.railway.app/",
+              "protocol": "https",
+              "host": ["spacex-production", "up", "railway", "app"],
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "Get Ships",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Ships {\n  ships {\n    id\n    name\n    type\n    home_port\n    year_built\n    status\n  }\n}",
+                "variables": ""
+              }
+            },
+            "url": {
+              "raw": "https://spacex-production.up.railway.app/",
+              "protocol": "https",
+              "host": ["spacex-production", "up", "railway", "app"],
+              "path": [""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rick and Morty",
+      "description": "Rick and Morty GraphQL API (rickandmortyapi.com/graphql)",
+      "item": [
+        {
+          "name": "Get Character",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query GetCharacter($id: ID!) {\n  character(id: $id) {\n    id\n    name\n    status\n    species\n    gender\n    origin {\n      name\n    }\n    location {\n      name\n    }\n    episode {\n      name\n      episode\n    }\n  }\n}",
+                "variables": "{\n  \"id\": \"1\"\n}"
+              }
+            },
+            "url": {
+              "raw": "https://rickandmortyapi.com/graphql",
+              "protocol": "https",
+              "host": ["rickandmortyapi", "com"],
+              "path": ["graphql"]
+            }
+          }
+        },
+        {
+          "name": "Get All Characters",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query AllCharacters($page: Int) {\n  characters(page: $page) {\n    info {\n      count\n      pages\n      next\n    }\n    results {\n      id\n      name\n      status\n      image\n    }\n  }\n}",
+                "variables": "{\n  \"page\": 1\n}"
+              }
+            },
+            "url": {
+              "raw": "https://rickandmortyapi.com/graphql",
+              "protocol": "https",
+              "host": ["rickandmortyapi", "com"],
+              "path": ["graphql"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
