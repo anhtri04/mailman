@@ -31,6 +31,7 @@ import {
   deleteRequest,
   importCollectionsFromFile,
 } from './services';
+import { parseCurl } from './utils/curlUtility';
 import type {
   RequestOptions,
   ResponseState,
@@ -78,11 +79,14 @@ export function App() {
   const [newCollectionProtocol, setNewCollectionProtocol] = useState<Protocol>('rest');
   const [newRequestMethod, setNewRequestMethod] = useState('GET');
   const [newRequestName, setNewRequestName] = useState('');
+  const [curlText, setCurlText] = useState('');
   const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
 
   const currentResponse = activeRequestId ? (restResponses[activeRequestId] ?? null) : null;
-  const currentGraphqlResponse = activeRequestId ? (graphqlResponses[activeRequestId] ?? null) : null;
+  const currentGraphqlResponse = activeRequestId
+    ? (graphqlResponses[activeRequestId] ?? null)
+    : null;
 
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -386,6 +390,7 @@ export function App() {
             setActiveCollectionId(collectionId);
             setNewRequestMethod('GET');
             setNewRequestName('');
+            setCurlText('');
             setCollectionModal('add');
           }}
           onDeleteItem={handleDeleteItem}
@@ -403,7 +408,7 @@ export function App() {
       >
         <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 1 }}>
           <text fg={colors.accent.primary}>
-            <strong>Mailman v0.1.0</strong>
+            <strong>Mailman v0.1.5</strong>
           </text>
           <text fg={colors.text.muted}>
             Ctrl+Q to quit • Ctrl+T for theme • Ctrl+S to save • Ctrl+G for help
@@ -574,7 +579,7 @@ export function App() {
                 >
                   <text
                     fg={collectionModalMode === 'new' ? colors.accent.primary : colors.text.muted}
-                    style={{paddingTop: 0.5, paddingBottom: 0.5}}
+                    style={{ paddingTop: 0.5, paddingBottom: 0.5 }}
                   >
                     New
                   </text>
@@ -595,7 +600,7 @@ export function App() {
                     fg={
                       collectionModalMode === 'import' ? colors.accent.primary : colors.text.muted
                     }
-                    style={{paddingTop: 0.5, paddingBottom: 0.5}}
+                    style={{ paddingTop: 0.5, paddingBottom: 0.5 }}
                   >
                     Import
                   </text>
@@ -785,6 +790,23 @@ export function App() {
                 />
               </box>
 
+              <text fg={colors.text.muted}>Quick Curl (Optional):</text>
+              <box
+                style={{
+                  border: true,
+                  borderColor: colors.border.default,
+                  borderStyle: 'rounded',
+                  paddingLeft: 1,
+                  height: 6,
+                }}
+              >
+                <input
+                  placeholder={`curl -X GET https://api.example.com -H "Accept: application/json"`}
+                  value={curlText}
+                  onInput={(val: string) => setCurlText(val)}
+                />
+              </box>
+
               <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
                 <box
                   style={{
@@ -796,11 +818,39 @@ export function App() {
                   }}
                   onMouseDown={() => {
                     if (newRequestName.trim() && activeCollectionId) {
+                      let method = newRequestMethod;
+                      let url = '';
+                      let headers: Record<string, string> | undefined;
+                      let body: string | undefined;
+                      let variables: string | undefined;
+
+                      if (curlText.trim()) {
+                        try {
+                          const parsed = parseCurl(curlText.trim());
+                          method = parsed.method;
+                          url = parsed.url;
+                          if (Object.keys(parsed.headers).length > 0) {
+                            headers = parsed.headers;
+                          }
+                          if (parsed.protocol === 'graphql') {
+                            body = parsed.query;
+                            variables = parsed.variables || undefined;
+                          } else if (parsed.body) {
+                            body = parsed.body;
+                          }
+                        } catch {
+                          // parsing failed, falls through to use manual method
+                        }
+                      }
+
                       void (async () => {
                         await addRequestToCollection(activeCollectionId, {
-                          method: newRequestMethod,
+                          method,
                           name: newRequestName.trim(),
-                          url: '',
+                          url,
+                          headers,
+                          body,
+                          variables,
                         });
                         const updated = await loadCollections();
                         setCollections(updated);
@@ -808,6 +858,7 @@ export function App() {
                       setCollectionModal(null);
                       setNewRequestName('');
                       setNewRequestMethod('GET');
+                      setCurlText('');
                     }
                   }}
                 >
@@ -825,6 +876,7 @@ export function App() {
                     setCollectionModal(null);
                     setNewRequestName('');
                     setNewRequestMethod('GET');
+                    setCurlText('');
                   }}
                 >
                   <text fg={colors.text.muted}>Cancel</text>

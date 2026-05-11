@@ -13,9 +13,7 @@
           "name": "Get All Users",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" }
-            ],
+            "header": [{ "key": "Accept", "value": "application/json" }],
             "url": {
               "raw": "https://jsonplaceholder.typicode.com/users",
               "protocol": "https",
@@ -28,9 +26,7 @@
           "name": "Get User by ID",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" }
-            ],
+            "header": [{ "key": "Accept", "value": "application/json" }],
             "url": {
               "raw": "https://jsonplaceholder.typicode.com/users/1",
               "protocol": "https",
@@ -63,9 +59,7 @@
           "name": "Update User",
           "request": {
             "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Jane Doe\",\n  \"username\": \"janedoe\",\n  \"email\": \"jane@example.com\"\n}"
@@ -128,9 +122,7 @@
           "name": "Create Post",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"My New Post\",\n  \"body\": \"This is the body of my new post.\",\n  \"userId\": 1\n}"
@@ -153,9 +145,7 @@
           "name": "Login",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"eve.holt@reqres.in\",\n  \"password\": \"cityslicka\"\n}"
@@ -172,9 +162,7 @@
           "name": "Register",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"eve.holt@reqres.in\",\n  \"password\": \"pistol\"\n}"

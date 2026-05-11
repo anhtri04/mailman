@@ -294,7 +294,9 @@ export function CollectionPanel({
                           marginRight: 0.5,
                         }}
                       >
-                        <text fg={methodColors?.text ?? '#ffffff'}>{abbreviateMethod(node.request.method)}</text>
+                        <text fg={methodColors?.text ?? '#ffffff'}>
+                          {abbreviateMethod(node.request.method)}
+                        </text>
                       </box>
                       <text
                         fg={colors.text.primary}

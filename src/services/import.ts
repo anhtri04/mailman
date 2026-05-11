@@ -227,8 +227,9 @@ function parseInsomnia(raw: Record<string, unknown>): Collection[] {
     collect(ws._id);
 
     if (wsRequests.length) {
-      const protocol: Protocol =
-        wsRequests.every((r) => r.variables !== undefined) ? 'graphql' : 'rest';
+      const protocol: Protocol = wsRequests.every((r) => r.variables !== undefined)
+        ? 'graphql'
+        : 'rest';
 
       result.push({
         id: Date.now().toString(),
