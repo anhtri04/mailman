@@ -565,6 +565,7 @@ export function App() {
                 >
                   <text
                     fg={collectionModalMode === 'new' ? colors.accent.primary : colors.text.muted}
+                    style={{paddingTop: 0.5, paddingBottom: 0.5}}
                   >
                     New
                   </text>
@@ -585,6 +586,7 @@ export function App() {
                     fg={
                       collectionModalMode === 'import' ? colors.accent.primary : colors.text.muted
                     }
+                    style={{paddingTop: 0.5, paddingBottom: 0.5}}
                   >
                     Import
                   </text>

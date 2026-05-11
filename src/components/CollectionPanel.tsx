@@ -20,6 +20,17 @@ type TreeNode =
   | { type: 'collection'; collection: Collection; index: number }
   | { type: 'request'; request: RequestItem; collectionId: string; index: number };
 
+function abbreviateMethod(method: string): string {
+  switch (method) {
+    case 'DELETE':
+      return 'DEL';
+    case 'PATCH':
+      return 'PTCH';
+    default:
+      return method;
+  }
+}
+
 export function CollectionPanel({
   focused,
   onFocus,
@@ -283,7 +294,7 @@ export function CollectionPanel({
                           marginRight: 0.5,
                         }}
                       >
-                        <text fg={methodColors?.text ?? '#ffffff'}>{node.request.method}</text>
+                        <text fg={methodColors?.text ?? '#ffffff'}>{abbreviateMethod(node.request.method)}</text>
                       </box>
                       <text
                         fg={colors.text.primary}
