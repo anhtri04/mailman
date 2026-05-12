@@ -72,7 +72,7 @@ export function App() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [requestName, setRequestName] = useState<string>('');
 
-  const [collectionModal, setCollectionModal] = useState<'import' | 'add' | null>(null);
+  const [collectionModal, setCollectionModal] = useState<'import' | 'add' | 'export' | null>(null);
   const [collectionModalMode, setCollectionModalMode] = useState<'new' | 'import'>('new');
   const [importError, setImportError] = useState<string | null>(null);
   const [newCollectionName, setNewCollectionName] = useState('');
@@ -494,6 +494,9 @@ export function App() {
                   ? collections.find((c) => c.id === activeCollectionId)
                   : undefined
               }
+              onExportCollection={() => {
+                setCollectionModal('export');
+              }}
             />
           </box>
         )}
@@ -883,6 +886,12 @@ export function App() {
                 </box>
               </box>
             </box>
+          </Modal>
+        )}
+
+        {collectionModal === 'export' && (
+          <Modal isOpen={true} onClose={() => setCollectionModal(null)} title="Export Collection">
+            <box style={{ flexDirection: 'column', gap: 1, padding: 1 }} />
           </Modal>
         )}
         {/* Response Expanded Modal - rendered at App level for full screen sizing */}
