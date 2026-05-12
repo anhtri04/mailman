@@ -8,6 +8,7 @@ import { detectContentType, formatResponseBody } from '../utils/response-formatt
 import { MailmanLogo } from './MailmanLogo';
 
 type ResponseTab = 'body' | 'headers' | 'raw';
+type SSEResponseTab = 'events' | 'headers' | 'raw';
 
 interface ResponsePanelProps {
   focused: boolean;
@@ -15,9 +16,12 @@ interface ResponsePanelProps {
   response: ResponseState | null;
   isExpanded: boolean;
   onToggleExpand: (expanded: boolean) => void;
+  onDisconnectStream?: () => void;
+  onClearStream?: () => void;
 }
 
 const TABS: ResponseTab[] = ['body', 'headers', 'raw'];
+const SSE_TABS: SSEResponseTab[] = ['events', 'headers', 'raw'];
 
 export function ResponsePanel({
   focused,
@@ -25,10 +29,14 @@ export function ResponsePanel({
   response,
   isExpanded,
   onToggleExpand,
+  onDisconnectStream,
+  onClearStream,
 }: ResponsePanelProps) {
   const { colors } = useTheme();
   const borderColor = focused ? colors.accent.primary : colors.border.default;
   const [activeTab, setActiveTab] = useState<ResponseTab>('body');
+  const [activeSseTab, setActiveSseTab] = useState<SSEResponseTab>('events');
+  const isSSEMode = response?.mode === 'sse';
 
   const contentType = useMemo(() => {
     if (!response) return 'text';
@@ -54,12 +62,20 @@ export function ResponsePanel({
     } else if (key.name === 'escape' && isExpanded) {
       onToggleExpand(false);
     } else if (focused && key.name === 'tab' && !isExpanded) {
-      // Cycle through tabs
-      const currentIndex = TABS.indexOf(activeTab);
-      const nextIndex = (currentIndex + 1) % TABS.length;
-      const nextTab = TABS[nextIndex];
-      if (nextTab) {
-        setActiveTab(nextTab);
+      if (isSSEMode) {
+        const currentIndex = SSE_TABS.indexOf(activeSseTab);
+        const nextIndex = (currentIndex + 1) % SSE_TABS.length;
+        const nextTab = SSE_TABS[nextIndex];
+        if (nextTab) {
+          setActiveSseTab(nextTab);
+        }
+      } else {
+        const currentIndex = TABS.indexOf(activeTab);
+        const nextIndex = (currentIndex + 1) % TABS.length;
+        const nextTab = TABS[nextIndex];
+        if (nextTab) {
+          setActiveTab(nextTab);
+        }
       }
     }
   });
@@ -96,6 +112,33 @@ export function ResponsePanel({
     [activeTab, handleTabClick],
   );
 
+  const renderSseTabButton = useCallback(
+    (tab: SSEResponseTab, label: string) => {
+      const isActive = activeSseTab === tab;
+      return (
+        <box
+          style={{
+            paddingLeft: 2,
+            paddingRight: 2,
+            paddingTop: 0.5,
+            paddingBottom: 0.5,
+            border: true,
+            borderColor: isActive ? colors.accent.primary : colors.border.default,
+          }}
+          onMouseDown={(e: { stopPropagation: () => void }) => {
+            e.stopPropagation();
+            setActiveSseTab(tab);
+          }}
+        >
+          <text fg={isActive ? colors.accent.primary : colors.text.muted}>
+            {isActive ? <strong>{label}</strong> : label}
+          </text>
+        </box>
+      );
+    },
+    [activeSseTab, colors],
+  );
+
   const getStatusColor = (status: number): string => {
     if (status === 0) return colors.syntax.warning; // Error/Network
     if (status >= 200 && status < 300) return colors.syntax.success; // Success
@@ -127,6 +170,12 @@ export function ResponsePanel({
         </text>
         {response && (
           <box style={{ flexDirection: 'row', gap: 2 }}>
+            {isSSEMode && response.isStreaming && (
+              <text fg={colors.syntax.success}>Streaming...</text>
+            )}
+            {isSSEMode && (
+              <text fg={colors.text.muted}>Events: {response.streamEventCount ?? 0}</text>
+            )}
             <text fg={colors.text.muted}>{contentSize}</text>
             <text fg={colors.text.muted}>{response.time}ms</text>
             <text fg={getStatusColor(response.status)}>
@@ -151,14 +200,55 @@ export function ResponsePanel({
 
             {/* Tabs */}
             <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1 }}>
-              {renderTabButton('body', 'Body')}
-              {renderTabButton('headers', 'Headers')}
-              {renderTabButton('raw', 'Raw')}
+              {isSSEMode ? (
+                <>
+                  {renderSseTabButton('events', 'Events')}
+                  {renderSseTabButton('headers', 'Headers')}
+                  {renderSseTabButton('raw', 'Raw')}
+                  {response.isStreaming && (
+                    <box
+                      style={{
+                        marginLeft: 1,
+                        border: true,
+                        borderColor: colors.syntax.warning,
+                        paddingLeft: 1,
+                        paddingRight: 1,
+                      }}
+                      onMouseDown={(e: { stopPropagation: () => void }) => {
+                        e.stopPropagation();
+                        onDisconnectStream?.();
+                      }}
+                    >
+                      <text fg={colors.syntax.warning}>Disconnect</text>
+                    </box>
+                  )}
+                  <box
+                    style={{
+                      border: true,
+                      borderColor: colors.border.default,
+                      paddingLeft: 1,
+                      paddingRight: 1,
+                    }}
+                    onMouseDown={(e: { stopPropagation: () => void }) => {
+                      e.stopPropagation();
+                      onClearStream?.();
+                    }}
+                  >
+                    <text fg={colors.text.muted}>Clear</text>
+                  </box>
+                </>
+              ) : (
+                <>
+                  {renderTabButton('body', 'Body')}
+                  {renderTabButton('headers', 'Headers')}
+                  {renderTabButton('raw', 'Raw')}
+                </>
+              )}
             </box>
 
             {/* Tab Content */}
             <box style={{ flexGrow: 1, marginTop: 1 }}>
-              {activeTab === 'body' && (
+              {!isSSEMode && activeTab === 'body' && (
                 <scrollbox style={{ flexGrow: 1 }}>
                   <SyntaxHighlighter
                     code={formattedBody}
@@ -171,15 +261,49 @@ export function ResponsePanel({
                 </scrollbox>
               )}
 
-              {activeTab === 'headers' && response.headers && (
+              {((!isSSEMode && activeTab === 'headers') ||
+                (isSSEMode && activeSseTab === 'headers')) &&
+                response.headers && (
+                  <scrollbox style={{ flexGrow: 1 }}>
+                    <HeadersDisplay headers={response.headers} />
+                  </scrollbox>
+                )}
+
+              {((!isSSEMode && activeTab === 'raw') || (isSSEMode && activeSseTab === 'raw')) && (
                 <scrollbox style={{ flexGrow: 1 }}>
-                  <HeadersDisplay headers={response.headers} />
+                  <text fg={colors.text.primary}>{response.body}</text>
                 </scrollbox>
               )}
 
-              {activeTab === 'raw' && (
+              {isSSEMode && activeSseTab === 'events' && (
                 <scrollbox style={{ flexGrow: 1 }}>
-                  <text fg={colors.text.primary}>{response.body}</text>
+                  <box style={{ flexDirection: 'column' }}>
+                    {(response.sseEvents ?? []).map((event, index) => (
+                      <box
+                        key={`${event.id ?? 'evt'}-${event.timestamp}-${index}`}
+                        style={{
+                          flexDirection: 'column',
+                          border: true,
+                          borderColor: colors.border.default,
+                          padding: 1,
+                          marginBottom: 1,
+                        }}
+                      >
+                        <text fg={colors.text.muted}>
+                          {event.event ?? 'message'} {event.id ? `#${event.id}` : ''}
+                        </text>
+                        <text fg={colors.text.primary}>{event.data}</text>
+                      </box>
+                    ))}
+                    {(response.sseEvents ?? []).length === 0 && (
+                      <text fg={colors.text.muted}>No SSE events received yet.</text>
+                    )}
+                    {(response.sseMeta?.droppedEvents ?? 0) > 0 && (
+                      <text fg={colors.syntax.warning}>
+                        Dropped older events: {response.sseMeta?.droppedEvents}
+                      </text>
+                    )}
+                  </box>
                 </scrollbox>
               )}
             </box>

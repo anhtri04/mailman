@@ -1,5 +1,6 @@
 import type { RequestOptions } from '../types';
-import { applyAuthToRequest, executeHttpRequest } from './http-shared';
+import { applyAuthToRequest, executeHttpRequest, executeHttpStreamRequest } from './http-shared';
+import type { SSEStreamHandlers, StreamExecutionResult } from './http-shared';
 
 export async function sendRequest(
   options: RequestOptions,
@@ -23,6 +24,26 @@ export async function sendRequest(
       headers,
       body: shouldExcludeBody ? undefined : options.body,
     },
+    timeoutMs,
+  );
+}
+
+export async function sendRequestWithStreaming(
+  options: RequestOptions,
+  handlers: SSEStreamHandlers,
+  timeoutMs?: number,
+): Promise<StreamExecutionResult> {
+  const { url, headers } = applyAuthToRequest(options);
+  const shouldExcludeBody = options.method === 'GET' || options.method === 'HEAD';
+
+  return executeHttpStreamRequest(
+    {
+      url,
+      method: options.method,
+      headers,
+      body: shouldExcludeBody ? undefined : options.body,
+    },
+    handlers,
     timeoutMs,
   );
 }

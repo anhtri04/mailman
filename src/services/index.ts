@@ -1,5 +1,5 @@
 export { sendGraphQLRequest } from './graphql-client';
-export { sendRequest } from './http-client';
+export { sendRequest, sendRequestWithStreaming } from './http-client';
 export {
   loadCollections,
   saveCollections,

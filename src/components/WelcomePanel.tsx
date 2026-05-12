@@ -22,7 +22,7 @@ function buildMethodSummary(requests: RequestItem[]): string {
 
 export function WelcomePanel({ collection, onExportCollection }: WelcomePanelProps) {
   const { colors } = useTheme();
-  const [copyStatus, setCopyStatus] = useState< 'success' | 'fail' | 'idle' >('idle');
+  const [copyStatus, setCopyStatus] = useState<'success' | 'fail' | 'idle'>('idle');
   const [lastCopiedRequestName, setLastCopiedRequestName] = useState<string>('');
 
   const methodSummary = useMemo(() => {
@@ -31,11 +31,11 @@ export function WelcomePanel({ collection, onExportCollection }: WelcomePanelPro
   }, [collection]);
 
   useEffect(() => {
-      if (copyStatus !== null) {
-        const timer = setTimeout(() => setCopyStatus('idle'), 2000);
-        return () => clearTimeout(timer);
-      }
-    }, [copyStatus]);
+    if (copyStatus !== null) {
+      const timer = setTimeout(() => setCopyStatus('idle'), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [copyStatus]);
 
   const handleCopyCurl = async (request: RequestItem) => {
     if (!collection) return;
@@ -79,7 +79,7 @@ export function WelcomePanel({ collection, onExportCollection }: WelcomePanelPro
               paddingLeft: 1,
               paddingRight: 1,
               paddingTop: 0.5,
-              paddingBottom: 0.5
+              paddingBottom: 0.5,
             }}
             onMouseDown={() => onExportCollection?.(collection)}
           >
@@ -93,46 +93,54 @@ export function WelcomePanel({ collection, onExportCollection }: WelcomePanelPro
         <box style={{ flexDirection: 'column', gap: 0 }}>
           <box>
             <scrollbox>
-            {collection.requests.map((req) => (
-              <box key={req.id} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <box style={{ flexDirection: 'row', gap: 1 }}>
-                  <text
-                    fg={
-                      colors.methods[req.method.toUpperCase() as keyof typeof colors.methods]?.text ??
-                      colors.text.primary
-                    }
+              {collection.requests.map((req) => (
+                <box key={req.id} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <box style={{ flexDirection: 'row', gap: 1 }}>
+                    <text
+                      fg={
+                        colors.methods[req.method.toUpperCase() as keyof typeof colors.methods]
+                          ?.text ?? colors.text.primary
+                      }
+                    >
+                      {req.method.toUpperCase()}
+                    </text>
+                    <text fg={colors.text.primary}>{req.name || req.url}</text>
+                    {req.auth && req.auth.type !== 'none' && <text fg={colors.text.dim}>auth</text>}
+                    {req.body && <text fg={colors.text.dim}>body</text>}
+                  </box>
+                  <box
+                    style={{
+                      border: true,
+                      borderColor: colors.border.default,
+                      borderStyle: 'rounded',
+                      paddingLeft: 1,
+                      paddingRight: 1,
+                      paddingTop: 0.5,
+                      paddingBottom: 0.5,
+                    }}
+                    onMouseDown={() => {
+                      void handleCopyCurl(req);
+                    }}
                   >
-                    {req.method.toUpperCase()}
-                  </text>
-                  <text fg={colors.text.primary}>{req.name || req.url}</text>
-                  {req.auth && req.auth.type !== 'none' && <text fg={colors.text.dim}>auth</text>}
-                  {req.body && <text fg={colors.text.dim}>body</text>}
+                    <text fg={colors.text.muted}>cURL</text>
+                  </box>
                 </box>
-                <box
-                  style={{
-                    border: true,
-                    borderColor: colors.border.default,
-                    borderStyle: 'rounded',
-                    paddingLeft: 1,
-                    paddingRight: 1,
-                    paddingTop: 0.5,
-                    paddingBottom: 0.5
-                  }}
-                  onMouseDown={() => {
-                    void handleCopyCurl(req);
-                  }}
-                >
-                  <text fg={colors.text.muted}>cURL</text>
-                </box>
-              </box>
-            ))}
-            {collection.requests.length === 0 && (
-              <text fg={colors.text.muted}>No requests in this collection</text>
-            )}
+              ))}
+              {collection.requests.length === 0 && (
+                <text fg={colors.text.muted}>No requests in this collection</text>
+              )}
             </scrollbox>
           </box>
-          {copyStatus === 'success' && <text fg="#44cc88" bg={colors.bg.app}>Copied cURL: {lastCopiedRequestName} ✓</text>}
-          {copyStatus === 'fail' && <text fg="#cc4444" bg={colors.bg.app}>Failed to copy {lastCopiedRequestName}</text>}
+          {copyStatus === 'success' && (
+            <text fg="#44cc88" bg={colors.bg.app}>
+              Copied cURL: {lastCopiedRequestName} ✓
+            </text>
+          )}
+          {copyStatus === 'fail' && (
+            <text fg="#cc4444" bg={colors.bg.app}>
+              Failed to copy {lastCopiedRequestName}
+            </text>
+          )}
         </box>
       </box>
     );

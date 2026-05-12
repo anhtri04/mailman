@@ -26,6 +26,28 @@ export interface ResponseState {
   body: string;
   headers: Record<string, string>;
   time: number;
+  mode?: 'single' | 'sse';
+  isStreaming?: boolean;
+  streamStartedAt?: number;
+  streamEndedAt?: number;
+  streamEventCount?: number;
+  sseEvents?: SSEEvent[];
+  sseMeta?: SSEMeta;
+}
+
+export interface SSEEvent {
+  id?: string;
+  event?: string;
+  data: string;
+  retry?: number;
+  timestamp: number;
+  raw?: string;
+}
+
+export interface SSEMeta {
+  lastEventId?: string;
+  retryMs?: number;
+  droppedEvents?: number;
 }
 
 export interface Collection {

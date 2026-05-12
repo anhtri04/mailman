@@ -37,7 +37,9 @@ export function classifyError(error: unknown): HttpError {
   return { type: 'unknown', message: 'An unexpected error occurred' };
 }
 
+import { createSSEParser } from './sse-parser';
 import type { AuthConfig } from '../types';
+import type { ResponseState, SSEEvent } from '../types';
 
 export function applyAuthToRequest(options: {
   url: string;
@@ -72,6 +74,30 @@ export interface HttpExecutionOptions {
   method: string;
   headers: Record<string, string>;
   body?: string;
+}
+
+export interface SSEStreamHandlers {
+  onOpen: (initial: Pick<ResponseState, 'status' | 'statusText' | 'headers' | 'time'>) => void;
+  onEvent: (event: SSEEvent) => void;
+  onError?: (message: string) => void;
+  onComplete?: () => void;
+}
+
+export interface SSEStreamController {
+  disconnect: () => void;
+}
+
+export interface StreamExecutionResult {
+  response: ResponseState;
+  controller: SSEStreamController;
+}
+
+function headersFromResponse(response: Response): Record<string, string> {
+  const responseHeaders: Record<string, string> = {};
+  response.headers.forEach((value, key) => {
+    responseHeaders[key] = value;
+  });
+  return responseHeaders;
 }
 
 export async function executeHttpRequest(
@@ -126,6 +152,128 @@ export async function executeHttpRequest(
       body: `Error: ${message}`,
       headers: {},
       time: endTime - startTime,
+    };
+  }
+}
+
+export async function executeHttpStreamRequest(
+  options: HttpExecutionOptions,
+  handlers: SSEStreamHandlers,
+  timeoutMs: number = DEFAULT_TIMEOUT,
+): Promise<StreamExecutionResult> {
+  const startTime = Date.now();
+
+  const controller = new AbortController();
+  const streamController: SSEStreamController = {
+    disconnect: () => {
+      controller.abort();
+    },
+  };
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(options.url, {
+      method: options.method,
+      headers: options.headers,
+      body: options.body,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    const headers = headersFromResponse(response);
+    const initial = {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+      time: Date.now() - startTime,
+    };
+    handlers.onOpen(initial);
+
+    const contentType = headers['content-type']?.toLowerCase() ?? '';
+    const isSSE = contentType.includes('text/event-stream');
+
+    if (!isSSE) {
+      const bodyText = await response.text();
+      return {
+        response: {
+          ...initial,
+          body: bodyText || '(empty response)',
+          mode: 'single',
+          isStreaming: false,
+        },
+        controller: streamController,
+      };
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      const endTime = Date.now();
+      return {
+        response: {
+          status: 0,
+          statusText: 'STREAM',
+          body: 'Error: SSE stream is not readable',
+          headers,
+          time: endTime - startTime,
+          mode: 'sse',
+          isStreaming: false,
+        },
+        controller: streamController,
+      };
+    }
+
+    const decoder = new TextDecoder();
+    const rawChunks: string[] = [];
+
+    const parser = createSSEParser({
+      onEvent: handlers.onEvent,
+      onRetry: () => {},
+      onComment: () => {},
+    });
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        parser.flush();
+        handlers.onComplete?.();
+        break;
+      }
+
+      if (value) {
+        const text = decoder.decode(value, { stream: true });
+        rawChunks.push(text);
+        parser.push(text);
+      }
+    }
+
+    const endTime = Date.now();
+    return {
+      response: {
+        ...initial,
+        body: rawChunks.join('') || '(empty response)',
+        time: endTime - startTime,
+        mode: 'sse',
+        isStreaming: false,
+      },
+      controller: streamController,
+    };
+  } catch (error) {
+    clearTimeout(timeoutId);
+    const { type, message } = classifyError(error);
+    handlers.onError?.(message);
+    const endTime = Date.now();
+    return {
+      response: {
+        status: 0,
+        statusText: type.toUpperCase(),
+        body: `Error: ${message}`,
+        headers: {},
+        time: endTime - startTime,
+        mode: 'single',
+        isStreaming: false,
+      },
+      controller: streamController,
     };
   }
 }

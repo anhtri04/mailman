@@ -1,5 +1,5 @@
 import { test, expect, describe, beforeEach, afterEach } from 'bun:test';
-import { sendRequest } from './http-client';
+import { sendRequest, sendRequestWithStreaming } from './http-client';
 import type { RequestOptions } from '../types';
 
 describe('http-client', () => {
@@ -576,6 +576,27 @@ describe('http-client', () => {
       expect(capturedUrl).toBe(
         'https://example.com/api?token=hello%20world%20%26%20more%3Dspecial',
       );
+    });
+  });
+
+  describe('sendRequestWithStreaming', () => {
+    test('should expose streaming API for REST requests', async () => {
+      const options: RequestOptions = {
+        method: 'GET',
+        url: 'https://example.com/sse',
+      };
+
+      const events: string[] = [];
+      await sendRequestWithStreaming(options, {
+        onOpen: () => {
+          events.push('open');
+        },
+        onEvent: () => {
+          events.push('event');
+        },
+      });
+
+      expect(events.length).toBeGreaterThanOrEqual(1);
     });
   });
 });

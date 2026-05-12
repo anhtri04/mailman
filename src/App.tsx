@@ -21,6 +21,7 @@ import { ThemeSelector } from './components/ThemeSelector';
 import { useTheme } from './theme/ThemeProvider';
 import {
   sendRequest,
+  sendRequestWithStreaming,
   sendGraphQLRequest,
   loadCollections,
   saveCollections,
@@ -65,6 +66,9 @@ export function App() {
     headers: {},
   });
   const [restResponses, setRestResponses] = useState<Record<string, ResponseState>>({});
+  const [restStreamControllers, setRestStreamControllers] = useState<
+    Record<string, { disconnect: () => void }>
+  >({});
   const [graphqlResponses, setGraphqlResponses] = useState<Record<string, ResponseState>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isCollectionCollapsed, setIsCollectionCollapsed] = useState(false);
@@ -92,6 +96,7 @@ export function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
+  const SSE_MAX_EVENTS = 500;
 
   const activeCollection = activeCollectionId
     ? collections.find((c) => c.id === activeCollectionId)
@@ -116,6 +121,12 @@ export function App() {
       return () => clearTimeout(timer);
     }
   }, [saveStatus]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(restStreamControllers).forEach((controller) => controller.disconnect());
+    };
+  }, [restStreamControllers]);
 
   useKeyboard((key) => {
     if (key.name === 'escape') {
@@ -297,8 +308,83 @@ export function App() {
     setIsLoading(true);
 
     try {
-      const result = await sendRequest(request);
-      setRestResponses((prev) => ({ ...prev, [activeRequestId]: result }));
+      const streamResult = await sendRequestWithStreaming(request, {
+        onOpen: (initial) => {
+          const isSSE = (initial.headers['content-type'] ?? '').includes('text/event-stream');
+          if (isSSE) {
+            setRestResponses((prev) => ({
+              ...prev,
+              [activeRequestId]: {
+                ...initial,
+                body: '(streaming)',
+                mode: 'sse',
+                isStreaming: true,
+                streamStartedAt: Date.now(),
+                streamEventCount: 0,
+                sseEvents: [],
+                sseMeta: { droppedEvents: 0 },
+              },
+            }));
+          }
+        },
+        onEvent: (event) => {
+          setRestResponses((prev) => {
+            const current = prev[activeRequestId];
+            if (!current || current.mode !== 'sse') return prev;
+            const events = [...(current.sseEvents ?? []), event];
+            const dropped = Math.max(0, events.length - SSE_MAX_EVENTS);
+            const nextEvents = dropped > 0 ? events.slice(dropped) : events;
+            return {
+              ...prev,
+              [activeRequestId]: {
+                ...current,
+                sseEvents: nextEvents,
+                streamEventCount: (current.streamEventCount ?? 0) + 1,
+                sseMeta: {
+                  ...current.sseMeta,
+                  lastEventId: event.id,
+                  retryMs: event.retry,
+                  droppedEvents: (current.sseMeta?.droppedEvents ?? 0) + dropped,
+                },
+                time: Date.now() - (current.streamStartedAt ?? Date.now()),
+              },
+            };
+          });
+        },
+        onError: (message) => {
+          setRestResponses((prev) => {
+            const current = prev[activeRequestId];
+            if (!current) return prev;
+            return {
+              ...prev,
+              [activeRequestId]: {
+                ...current,
+                body: `Error: ${message}`,
+                isStreaming: false,
+                streamEndedAt: Date.now(),
+              },
+            };
+          });
+        },
+        onComplete: () => {
+          setRestResponses((prev) => {
+            const current = prev[activeRequestId];
+            if (!current || current.mode !== 'sse') return prev;
+            return {
+              ...prev,
+              [activeRequestId]: {
+                ...current,
+                isStreaming: false,
+                streamEndedAt: Date.now(),
+                time: Date.now() - (current.streamStartedAt ?? Date.now()),
+              },
+            };
+          });
+        },
+      });
+
+      setRestStreamControllers((prev) => ({ ...prev, [activeRequestId]: streamResult.controller }));
+      setRestResponses((prev) => ({ ...prev, [activeRequestId]: streamResult.response }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       setRestResponses((prev) => ({
@@ -315,6 +401,41 @@ export function App() {
       setIsLoading(false);
     }
   }, [request, activeRequestId]);
+
+  const handleDisconnectStream = useCallback(() => {
+    if (!activeRequestId) return;
+    const controller = restStreamControllers[activeRequestId];
+    controller?.disconnect();
+    setRestResponses((prev) => {
+      const current = prev[activeRequestId];
+      if (!current) return prev;
+      return {
+        ...prev,
+        [activeRequestId]: {
+          ...current,
+          isStreaming: false,
+          streamEndedAt: Date.now(),
+        },
+      };
+    });
+  }, [activeRequestId, restStreamControllers]);
+
+  const handleClearStream = useCallback(() => {
+    if (!activeRequestId) return;
+    setRestResponses((prev) => {
+      const current = prev[activeRequestId];
+      if (!current || current.mode !== 'sse') return prev;
+      return {
+        ...prev,
+        [activeRequestId]: {
+          ...current,
+          sseEvents: [],
+          streamEventCount: 0,
+          sseMeta: { ...current.sseMeta, droppedEvents: 0 },
+        },
+      };
+    });
+  }, [activeRequestId]);
 
   const handleLoadRequest = useCallback(
     (item: RequestItem, collectionId: string) => {
@@ -482,6 +603,8 @@ export function App() {
                   response={currentResponse}
                   isExpanded={showResponseModal}
                   onToggleExpand={setShowResponseModal}
+                  onDisconnectStream={handleDisconnectStream}
+                  onClearStream={handleClearStream}
                 />
               </box>
             </>
