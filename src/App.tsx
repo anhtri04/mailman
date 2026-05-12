@@ -310,6 +310,7 @@ export function App() {
     try {
       const streamResult = await sendRequestWithStreaming(request, {
         onOpen: (initial) => {
+          setIsLoading(false);
           const isSSE = (initial.headers['content-type'] ?? '').includes('text/event-stream');
           if (isSSE) {
             setRestResponses((prev) => ({
@@ -352,6 +353,7 @@ export function App() {
           });
         },
         onError: (message) => {
+          setIsLoading(false);
           setRestResponses((prev) => {
             const current = prev[activeRequestId];
             if (!current) return prev;
@@ -384,8 +386,33 @@ export function App() {
       });
 
       setRestStreamControllers((prev) => ({ ...prev, [activeRequestId]: streamResult.controller }));
-      setRestResponses((prev) => ({ ...prev, [activeRequestId]: streamResult.response }));
+
+      setRestResponses((prev) => {
+        const current = prev[activeRequestId];
+        if (current?.mode === 'sse') {
+          return {
+            ...prev,
+            [activeRequestId]: {
+              ...current,
+              body: streamResult.response.body,
+              headers: streamResult.response.headers,
+              status: streamResult.response.status,
+              statusText: streamResult.response.statusText,
+              time: streamResult.response.time,
+              isStreaming: false,
+              streamEndedAt: Date.now(),
+            },
+          };
+        }
+        return { ...prev, [activeRequestId]: streamResult.response };
+      });
+      setRestStreamControllers((prev) => {
+        const next = { ...prev };
+        delete next[activeRequestId];
+        return next;
+      });
     } catch (error) {
+      setIsLoading(false);
       const errorMessage = error instanceof Error ? error.message : String(error);
       setRestResponses((prev) => ({
         ...prev,
@@ -418,6 +445,12 @@ export function App() {
         },
       };
     });
+    setRestStreamControllers((prev) => {
+      const next = { ...prev };
+      delete next[activeRequestId];
+      return next;
+    });
+    setIsLoading(false);
   }, [activeRequestId, restStreamControllers]);
 
   const handleClearStream = useCallback(() => {

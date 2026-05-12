@@ -213,6 +213,8 @@ export function ResponsePanel({
                         borderColor: colors.syntax.warning,
                         paddingLeft: 1,
                         paddingRight: 1,
+                        paddingTop: 0.5,
+                        paddingBottom: 0.5,
                       }}
                       onMouseDown={(e: { stopPropagation: () => void }) => {
                         e.stopPropagation();
@@ -228,6 +230,8 @@ export function ResponsePanel({
                       borderColor: colors.border.default,
                       paddingLeft: 1,
                       paddingRight: 1,
+                      paddingTop: 0.5,
+                      paddingBottom: 0.5,
                     }}
                     onMouseDown={(e: { stopPropagation: () => void }) => {
                       e.stopPropagation();
