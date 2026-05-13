@@ -1,21 +1,26 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useTheme } from '../theme/ThemeProvider';
 import type { ResponseState } from '../types';
+import type { RestResponseTab } from '../utils/responseCopyUtility';
 import { Modal } from './Modal';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { HeadersDisplay } from './HeadersDisplay';
 import { detectContentType, formatResponseBody } from '../utils/response-formatter';
 
-type ResponseTab = 'body' | 'headers' | 'raw';
-
 interface ResponseModalProps {
   response: ResponseState;
   onClose: () => void;
+  activeTab: RestResponseTab;
+  onActiveTabChange: (tab: RestResponseTab) => void;
 }
 
-export function ResponseModal({ response, onClose }: ResponseModalProps) {
+export function ResponseModal({
+  response,
+  onClose,
+  activeTab,
+  onActiveTabChange,
+}: ResponseModalProps) {
   const { colors } = useTheme();
-  const [activeTab, setActiveTab] = useState<ResponseTab>('body');
 
   const contentType = useMemo(() => {
     return detectContentType(response.headers, response.body);
@@ -33,7 +38,7 @@ export function ResponseModal({ response, onClose }: ResponseModalProps) {
   }, [response]);
 
   const renderTabButton = useCallback(
-    (tab: ResponseTab, label: string) => {
+    (tab: RestResponseTab, label: string) => {
       const isActive = activeTab === tab;
       return (
         <box
@@ -47,7 +52,7 @@ export function ResponseModal({ response, onClose }: ResponseModalProps) {
           }}
           onMouseDown={(e: { stopPropagation: () => void }) => {
             e.stopPropagation();
-            setActiveTab(tab);
+            onActiveTabChange(tab);
           }}
         >
           <text fg={isActive ? colors.accent.primary : colors.text.muted}>
@@ -56,7 +61,7 @@ export function ResponseModal({ response, onClose }: ResponseModalProps) {
         </box>
       );
     },
-    [activeTab],
+    [activeTab, onActiveTabChange],
   );
 
   return (

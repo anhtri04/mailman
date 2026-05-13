@@ -1,12 +1,11 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../theme/ThemeProvider';
 import type { ResponseState } from '../types';
+import type { GraphqlResponseTab } from '../utils/responseCopyUtility';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { HeadersDisplay } from './HeadersDisplay';
 import { MailmanLogo } from './MailmanLogo';
-
-type ResponseTab = 'body' | 'headers' | 'raw' | 'errors';
 
 interface GraphQLResponsePanelProps {
   focused: boolean;
@@ -14,9 +13,12 @@ interface GraphQLResponsePanelProps {
   response: ResponseState | null;
   isExpanded: boolean;
   onToggleExpand: (expanded: boolean) => void;
+  activeTab: GraphqlResponseTab;
+  onActiveTabChange: (tab: GraphqlResponseTab) => void;
+  copyStatus?: 'idle' | 'copied' | 'error';
 }
 
-const TABS: ResponseTab[] = ['body', 'headers', 'raw', 'errors'];
+const TABS: GraphqlResponseTab[] = ['body', 'headers', 'raw', 'errors'];
 
 export function GraphQLResponsePanel({
   focused,
@@ -24,10 +26,12 @@ export function GraphQLResponsePanel({
   response,
   isExpanded,
   onToggleExpand,
+  activeTab,
+  onActiveTabChange,
+  copyStatus = 'idle',
 }: GraphQLResponsePanelProps) {
   const { colors } = useTheme();
   const borderColor = focused ? colors.accent.primary : colors.border.default;
-  const [activeTab, setActiveTab] = useState<ResponseTab>('body');
 
   const parsedBody = useMemo(() => {
     if (!response) return null;
@@ -73,21 +77,21 @@ export function GraphQLResponsePanel({
       const nextIndex = (currentIndex + 1) % TABS.length;
       const nextTab = TABS[nextIndex];
       if (nextTab) {
-        setActiveTab(nextTab);
+        onActiveTabChange(nextTab);
       }
     }
   });
 
   const handleTabClick = useCallback(
-    (tab: ResponseTab) => (e: { stopPropagation: () => void }) => {
+    (tab: GraphqlResponseTab) => (e: { stopPropagation: () => void }) => {
       e.stopPropagation();
-      setActiveTab(tab);
+      onActiveTabChange(tab);
     },
-    [],
+    [onActiveTabChange],
   );
 
   const renderTabButton = useCallback(
-    (tab: ResponseTab, label: string) => {
+    (tab: GraphqlResponseTab, label: string) => {
       const isActive = activeTab === tab;
       const hasErrors = tab === 'errors' && graphqlErrors.length > 0;
       const displayLabel = hasErrors ? `${label} (${graphqlErrors.length})` : label;
@@ -147,6 +151,16 @@ export function GraphQLResponsePanel({
         </text>
         {response && (
           <box style={{ flexDirection: 'row', gap: 2 }}>
+            {copyStatus === 'copied' && (
+              <text fg="#44cc88" bg={colors.bg.app} style={{ paddingLeft: 1, paddingRight: 1 }}>
+                Copy ✓
+              </text>
+            )}
+            {copyStatus === 'error' && (
+              <text fg="#cc4444" bg={colors.bg.app} style={{ paddingLeft: 1, paddingRight: 1 }}>
+                Copy failed
+              </text>
+            )}
             <text fg={colors.text.muted}>{contentSize}</text>
             <text fg={colors.text.muted}>{response.time}ms</text>
             <text fg={getStatusColor(response.status)}>

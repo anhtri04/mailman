@@ -33,6 +33,16 @@ import {
   importCollectionsFromFile,
 } from './services';
 import { parseCurl } from './utils/curlUtility';
+import {
+  copyTextToClipboard,
+  getGraphqlTabCopyContent,
+  getRestTabCopyContent,
+} from './utils/responseCopyUtility';
+import type {
+  GraphqlResponseTab,
+  RestResponseTab,
+  SseResponseTab,
+} from './utils/responseCopyUtility';
 import type {
   RequestOptions,
   ResponseState,
@@ -86,6 +96,10 @@ export function App() {
   const [curlText, setCurlText] = useState('');
   const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
+  const [restActiveTab, setRestActiveTab] = useState<RestResponseTab>('body');
+  const [restActiveSseTab, setRestActiveSseTab] = useState<SseResponseTab>('events');
+  const [graphqlActiveTab, setGraphqlActiveTab] = useState<GraphqlResponseTab>('body');
+  const [modalActiveTab, setModalActiveTab] = useState<RestResponseTab>('body');
 
   const currentResponse = activeRequestId ? (restResponses[activeRequestId] ?? null) : null;
   const currentGraphqlResponse = activeRequestId
@@ -96,6 +110,7 @@ export function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
   const SSE_MAX_EVENTS = 500;
 
   const activeCollection = activeCollectionId
@@ -298,6 +313,13 @@ export function App() {
   }, [saveStatus]);
 
   useEffect(() => {
+    if (copyStatus !== 'idle') {
+      const timer = setTimeout(() => setCopyStatus('idle'), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [copyStatus]);
+
+  useEffect(() => {
     return () => {
       Object.values(restStreamControllers).forEach((controller) => controller.disconnect());
     };
@@ -379,6 +401,34 @@ export function App() {
           }
         })();
       }
+    } else if (key.ctrl && key.name === 'c') {
+      const canCopy = focusedArea === 'response' || showResponseModal;
+      if (!canCopy) return;
+
+      if (!activeRequestId) return;
+
+      const responseToCopy =
+        currentProtocol === 'graphql'
+          ? currentGraphqlResponse
+          : (currentResponse ?? restResponses[activeRequestId] ?? null);
+
+      if (!responseToCopy) return;
+
+      const content = showResponseModal
+        ? getRestTabCopyContent(responseToCopy, modalActiveTab, restActiveSseTab)
+        : currentProtocol === 'graphql'
+          ? getGraphqlTabCopyContent(responseToCopy, graphqlActiveTab)
+          : getRestTabCopyContent(responseToCopy, restActiveTab, restActiveSseTab);
+
+      void (async () => {
+        const copied = await copyTextToClipboard(content);
+        if (!copied) {
+          console.error('Failed to copy response content to clipboard.');
+          setCopyStatus('error');
+          return;
+        }
+        setCopyStatus('copied');
+      })();
     }
   });
 
@@ -781,6 +831,9 @@ export function App() {
                   response={currentGraphqlResponse}
                   isExpanded={showResponseModal}
                   onToggleExpand={setShowResponseModal}
+                  activeTab={graphqlActiveTab}
+                  onActiveTabChange={setGraphqlActiveTab}
+                  copyStatus={copyStatus}
                 />
               </box>
             </box>
@@ -819,6 +872,11 @@ export function App() {
                   onToggleExpand={setShowResponseModal}
                   onDisconnectStream={handleDisconnectStream}
                   onClearStream={handleClearStream}
+                  activeTab={restActiveTab}
+                  onActiveTabChange={setRestActiveTab}
+                  activeSseTab={restActiveSseTab}
+                  onActiveSseTabChange={setRestActiveSseTab}
+                  copyStatus={copyStatus}
                 />
               </box>
             </>
@@ -1233,7 +1291,12 @@ export function App() {
         )}
         {/* Response Expanded Modal - rendered at App level for full screen sizing */}
         {showResponseModal && currentResponse && (
-          <ResponseModal response={currentResponse} onClose={() => setShowResponseModal(false)} />
+          <ResponseModal
+            response={currentResponse}
+            onClose={() => setShowResponseModal(false)}
+            activeTab={modalActiveTab}
+            onActiveTabChange={setModalActiveTab}
+          />
         )}
         {/* Catalog Help Modal */}
         {showHelp && (

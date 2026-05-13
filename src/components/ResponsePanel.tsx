@@ -1,14 +1,12 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../theme/ThemeProvider';
 import type { ResponseState } from '../types';
+import type { RestResponseTab, SseResponseTab } from '../utils/responseCopyUtility';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { HeadersDisplay } from './HeadersDisplay';
 import { detectContentType, formatResponseBody } from '../utils/response-formatter';
 import { MailmanLogo } from './MailmanLogo';
-
-type ResponseTab = 'body' | 'headers' | 'raw';
-type SSEResponseTab = 'events' | 'headers' | 'raw';
 
 interface ResponsePanelProps {
   focused: boolean;
@@ -18,10 +16,15 @@ interface ResponsePanelProps {
   onToggleExpand: (expanded: boolean) => void;
   onDisconnectStream?: () => void;
   onClearStream?: () => void;
+  activeTab: RestResponseTab;
+  onActiveTabChange: (tab: RestResponseTab) => void;
+  activeSseTab: SseResponseTab;
+  onActiveSseTabChange: (tab: SseResponseTab) => void;
+  copyStatus?: 'idle' | 'copied' | 'error';
 }
 
-const TABS: ResponseTab[] = ['body', 'headers', 'raw'];
-const SSE_TABS: SSEResponseTab[] = ['events', 'headers', 'raw'];
+const TABS: RestResponseTab[] = ['body', 'headers', 'raw'];
+const SSE_TABS: SseResponseTab[] = ['events', 'headers', 'raw'];
 
 export function ResponsePanel({
   focused,
@@ -31,11 +34,14 @@ export function ResponsePanel({
   onToggleExpand,
   onDisconnectStream,
   onClearStream,
+  activeTab,
+  onActiveTabChange,
+  activeSseTab,
+  onActiveSseTabChange,
+  copyStatus = 'idle',
 }: ResponsePanelProps) {
   const { colors } = useTheme();
   const borderColor = focused ? colors.accent.primary : colors.border.default;
-  const [activeTab, setActiveTab] = useState<ResponseTab>('body');
-  const [activeSseTab, setActiveSseTab] = useState<SSEResponseTab>('events');
   const isSSEMode = response?.mode === 'sse';
 
   const contentType = useMemo(() => {
@@ -67,29 +73,29 @@ export function ResponsePanel({
         const nextIndex = (currentIndex + 1) % SSE_TABS.length;
         const nextTab = SSE_TABS[nextIndex];
         if (nextTab) {
-          setActiveSseTab(nextTab);
+          onActiveSseTabChange(nextTab);
         }
       } else {
         const currentIndex = TABS.indexOf(activeTab);
         const nextIndex = (currentIndex + 1) % TABS.length;
         const nextTab = TABS[nextIndex];
         if (nextTab) {
-          setActiveTab(nextTab);
+          onActiveTabChange(nextTab);
         }
       }
     }
   });
 
   const handleTabClick = useCallback(
-    (tab: ResponseTab) => (e: { stopPropagation: () => void }) => {
+    (tab: RestResponseTab) => (e: { stopPropagation: () => void }) => {
       e.stopPropagation();
-      setActiveTab(tab);
+      onActiveTabChange(tab);
     },
-    [],
+    [onActiveTabChange],
   );
 
   const renderTabButton = useCallback(
-    (tab: ResponseTab, label: string) => {
+    (tab: RestResponseTab, label: string) => {
       const isActive = activeTab === tab;
       return (
         <box
@@ -113,7 +119,7 @@ export function ResponsePanel({
   );
 
   const renderSseTabButton = useCallback(
-    (tab: SSEResponseTab, label: string) => {
+    (tab: SseResponseTab, label: string) => {
       const isActive = activeSseTab === tab;
       return (
         <box
@@ -127,7 +133,7 @@ export function ResponsePanel({
           }}
           onMouseDown={(e: { stopPropagation: () => void }) => {
             e.stopPropagation();
-            setActiveSseTab(tab);
+            onActiveSseTabChange(tab);
           }}
         >
           <text fg={isActive ? colors.accent.primary : colors.text.muted}>
@@ -136,7 +142,7 @@ export function ResponsePanel({
         </box>
       );
     },
-    [activeSseTab, colors],
+    [activeSseTab, colors, onActiveSseTabChange],
   );
 
   const getStatusColor = (status: number): string => {
@@ -170,6 +176,16 @@ export function ResponsePanel({
         </text>
         {response && (
           <box style={{ flexDirection: 'row', gap: 2 }}>
+            {copyStatus === 'copied' && (
+              <text fg="#44cc88" bg={colors.bg.app} style={{ paddingLeft: 1, paddingRight: 1 }}>
+                Copy ✓
+              </text>
+            )}
+            {copyStatus === 'error' && (
+              <text fg="#cc4444" bg={colors.bg.app} style={{ paddingLeft: 1, paddingRight: 1 }}>
+                Copy failed
+              </text>
+            )}
             {isSSEMode && response.isStreaming && (
               <text fg={colors.syntax.success}>Streaming...</text>
             )}

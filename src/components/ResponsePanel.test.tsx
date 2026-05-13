@@ -9,9 +9,12 @@ describe('ResponsePanel', () => {
 
   test('should be a valid React component', () => {
     const componentString = ResponsePanel.toString();
-    expect(componentString).toContain('useState');
     expect(componentString).toContain('useMemo');
     expect(componentString).toContain('useCallback');
+    expect(componentString).toContain('activeTab');
+    expect(componentString).toContain('onActiveTabChange');
+    expect(componentString).toContain('activeSseTab');
+    expect(componentString).toContain('onActiveSseTabChange');
   });
 
   test('should have tabs for body, headers, and raw', () => {
