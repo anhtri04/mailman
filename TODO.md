@@ -40,12 +40,12 @@ A terminal-based HTTP client built with Bun and OpenTUI.
   - Editor modal to define key-value pairs
   - Persist to `~/.mailman/environments.json`
 
-- [ ] **curl Import / Export**
+- [x] **curl Import / Export**
   - Export any request as a curl command
   - Parse and import curl commands into Mailman through the 'Add Request' panel
   - Copy to clipboard
 
-- [ ] **Basic & OAuth 2.0 Authentication**
+- [X] **Basic & OAuth 2.0 Authentication**
   - Basic Auth with username/password (base64)
   - OAuth 2.0 flows (Client Credentials, Authorization Code)
   - Token refresh support
@@ -54,7 +54,7 @@ A terminal-based HTTP client built with Bun and OpenTUI.
   - Support `multipart/form-data` content type
   - File selection for upload fields
 
-- [ ] **Postman / Insomnia Import**
+- [X] **Postman / Insomnia Import**
   - Import `.json` collections from Postman v2.1
   - Import from Insomnia v4 format
   - Map auth, headers, and bodies
@@ -62,6 +62,13 @@ A terminal-based HTTP client built with Bun and OpenTUI.
 - [ ] **Collection Export**
   - Export collection in a standard format(Postman/Insomnia)
   - 
+
+- [ ] **Modal Closing when Mouse Focusing on other Panels**
+  - When focus another Panel, the opening Modal will be closed(same when pressing esc)
+
+- [ ] **Keyboard-first workflow**
+  - Fast and muscle-memory driven
+  - If users can test an endpoint in 3 keystrokes, we win
 
 ### Medium Priority
 
@@ -91,6 +98,14 @@ A terminal-based HTTP client built with Bun and OpenTUI.
   - Useful for images, binaries, large JSON
   - Shortcut: Ctrl+D when response focused
 
+- [X] **Live Animated Instruction**
+  - Replace the current static Instruction on top right corner
+  - Implement a live Instruction with animation
+  - This live Instruction is based on user actions
+
+- [ ] **Loading Animation**
+  - Add animation when loading or transiting
+
 ### Low Priority
 
 - [ ] **Collection Rename in UI**
@@ -112,6 +127,14 @@ A terminal-based HTTP client built with Bun and OpenTUI.
 - [ ] **Request Templates / Snippets**
   - Common request patterns (e.g., JSON POST)
   - Quick insert from template library
+
+- [ ] **Project / Github Repo Scanning**
+  - Scan project and create API testing Collections automatically
+  - Use command or directory path
+
+- [ ] **Auto Complete and Auto Formatting**
+  - When typing user can get auto complete
+  - Auto format the body request, query and variables using keyboard shortcut
 
 ---
 
