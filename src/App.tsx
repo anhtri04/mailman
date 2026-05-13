@@ -430,6 +430,9 @@ export function App() {
 
     try {
       const result = await sendGraphQLRequest(graphqlRequest);
+      if (result.updatedAuth) {
+        setGraphqlRequest((prev) => ({ ...prev, auth: result.updatedAuth }));
+      }
       setGraphqlResponses((prev) => ({ ...prev, [activeRequestId]: result }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -559,6 +562,9 @@ export function App() {
           });
         },
       });
+      if (streamResult.updatedAuth) {
+        setRequest((prev) => ({ ...prev, auth: streamResult.updatedAuth }));
+      }
 
       setRestStreamControllers((prev) => ({ ...prev, [activeRequestId]: streamResult.controller }));
 

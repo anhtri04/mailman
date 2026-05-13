@@ -1,5 +1,5 @@
 import type { AuthConfig } from '../types';
-import { applyAuthToRequest, executeHttpRequest } from './http-shared';
+import { executeHttpRequest, resolveAuthToRequest } from './http-shared';
 
 export interface GraphQLRequestOptions {
   url: string;
@@ -19,6 +19,7 @@ export async function sendGraphQLRequest(
   body: string;
   headers: Record<string, string>;
   time: number;
+  updatedAuth?: AuthConfig;
 }> {
   const payload: Record<string, unknown> = {
     query: options.query,
@@ -36,13 +37,13 @@ export async function sendGraphQLRequest(
     payload.operationName = options.operationName.trim();
   }
 
-  const { url, headers } = applyAuthToRequest({
+  const { url, headers, updatedAuth } = await resolveAuthToRequest({
     url: options.url,
     headers: { 'Content-Type': 'application/json', ...options.headers },
     auth: options.auth,
   });
 
-  return executeHttpRequest(
+  const result = await executeHttpRequest(
     {
       url,
       method: 'POST',
@@ -51,4 +52,9 @@ export async function sendGraphQLRequest(
     },
     timeoutMs,
   );
+
+  return {
+    ...result,
+    updatedAuth,
+  };
 }

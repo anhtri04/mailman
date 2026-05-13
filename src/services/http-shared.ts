@@ -41,11 +41,72 @@ import { createSSEParser } from './sse-parser';
 import type { AuthConfig } from '../types';
 import type { ResponseState, SSEEvent } from '../types';
 
-export function applyAuthToRequest(options: {
+interface ResolvedAuthRequest {
+  url: string;
+  headers: Record<string, string>;
+  updatedAuth?: AuthConfig;
+}
+
+function encodeBasicAuth(username: string, password: string): string {
+  return Buffer.from(`${username}:${password}`).toString('base64');
+}
+
+function isTokenValid(expiresAt?: number): boolean {
+  if (!expiresAt) return true;
+  return Date.now() + 30_000 < expiresAt;
+}
+
+interface OAuthTokenResponse {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt?: number;
+  tokenType?: string;
+}
+
+async function requestOAuthToken(
+  tokenUrl: string,
+  body: URLSearchParams,
+  clientId?: string,
+  clientSecret?: string,
+): Promise<OAuthTokenResponse> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  };
+
+  if (clientId && clientSecret) {
+    headers.Authorization = `Basic ${encodeBasicAuth(clientId, clientSecret)}`;
+  }
+
+  const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers,
+    body: body.toString(),
+  });
+
+  const payload = (await response.json()) as Record<string, unknown>;
+  if (!response.ok || typeof payload.access_token !== 'string') {
+    const detail =
+      typeof payload.error_description === 'string'
+        ? payload.error_description
+        : response.statusText;
+    throw new Error(`OAuth token request failed: ${detail}`);
+  }
+
+  const expiresIn = typeof payload.expires_in === 'number' ? payload.expires_in : undefined;
+
+  return {
+    accessToken: payload.access_token,
+    refreshToken: typeof payload.refresh_token === 'string' ? payload.refresh_token : undefined,
+    tokenType: typeof payload.token_type === 'string' ? payload.token_type : 'Bearer',
+    expiresAt: expiresIn ? Date.now() + expiresIn * 1000 : undefined,
+  };
+}
+
+export async function resolveAuthToRequest(options: {
   url: string;
   headers?: Record<string, string>;
   auth?: AuthConfig;
-}): { url: string; headers: Record<string, string> } {
+}): Promise<ResolvedAuthRequest> {
   let url = options.url;
   const headers: Record<string, string> = { ...(options.headers ?? {}) };
 
@@ -64,6 +125,107 @@ export function applyAuthToRequest(options: {
     } else {
       headers[auth.key] = auth.value;
     }
+  }
+
+  if (auth.type === 'basic') {
+    headers['Authorization'] = `Basic ${encodeBasicAuth(auth.username ?? '', auth.password ?? '')}`;
+    return { url, headers };
+  }
+
+  if (auth.type === 'oauth2' && auth.oauth2) {
+    const oauth = auth.oauth2;
+    let accessToken = oauth.accessToken;
+    let refreshToken = oauth.refreshToken;
+    let expiresAt = oauth.expiresAt;
+    let tokenType = oauth.tokenType ?? 'Bearer';
+
+    if (!accessToken || !isTokenValid(expiresAt)) {
+      if (refreshToken) {
+        const body = new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: refreshToken,
+        });
+        if (!oauth.clientSecret) {
+          body.set('client_id', oauth.clientId);
+        }
+
+        const refreshed = await requestOAuthToken(
+          oauth.tokenUrl,
+          body,
+          oauth.clientId,
+          oauth.clientSecret,
+        );
+        accessToken = refreshed.accessToken;
+        refreshToken = refreshed.refreshToken ?? refreshToken;
+        expiresAt = refreshed.expiresAt;
+        tokenType = refreshed.tokenType ?? tokenType;
+      } else if (oauth.grantType === 'client_credentials') {
+        const body = new URLSearchParams({ grant_type: 'client_credentials' });
+        if (oauth.scope?.trim()) {
+          body.set('scope', oauth.scope.trim());
+        }
+        if (!oauth.clientSecret) {
+          body.set('client_id', oauth.clientId);
+        }
+
+        const token = await requestOAuthToken(
+          oauth.tokenUrl,
+          body,
+          oauth.clientId,
+          oauth.clientSecret,
+        );
+        accessToken = token.accessToken;
+        refreshToken = token.refreshToken;
+        expiresAt = token.expiresAt;
+        tokenType = token.tokenType ?? tokenType;
+      } else if (oauth.grantType === 'authorization_code' && oauth.code) {
+        const body = new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: oauth.code,
+        });
+        if (oauth.redirectUri?.trim()) {
+          body.set('redirect_uri', oauth.redirectUri.trim());
+        }
+        if (oauth.codeVerifier?.trim()) {
+          body.set('code_verifier', oauth.codeVerifier.trim());
+        }
+        if (!oauth.clientSecret) {
+          body.set('client_id', oauth.clientId);
+        }
+
+        const token = await requestOAuthToken(
+          oauth.tokenUrl,
+          body,
+          oauth.clientId,
+          oauth.clientSecret,
+        );
+        accessToken = token.accessToken;
+        refreshToken = token.refreshToken;
+        expiresAt = token.expiresAt;
+        tokenType = token.tokenType ?? tokenType;
+      } else {
+        throw new Error('OAuth2 auth is not fully configured');
+      }
+    }
+
+    if (accessToken) {
+      headers['Authorization'] = `${tokenType} ${accessToken}`;
+    }
+
+    return {
+      url,
+      headers,
+      updatedAuth: {
+        ...auth,
+        oauth2: {
+          ...oauth,
+          accessToken,
+          refreshToken,
+          expiresAt,
+          tokenType,
+        },
+      },
+    };
   }
 
   return { url, headers };
@@ -90,6 +252,7 @@ export interface SSEStreamController {
 export interface StreamExecutionResult {
   response: ResponseState;
   controller: SSEStreamController;
+  updatedAuth?: AuthConfig;
 }
 
 function headersFromResponse(response: Response): Record<string, string> {

@@ -577,6 +577,75 @@ describe('http-client', () => {
         'https://example.com/api?token=hello%20world%20%26%20more%3Dspecial',
       );
     });
+
+    test('should apply basic auth header', async () => {
+      let capturedInit: RequestInit | undefined;
+      const mockResponse = new Response('{}', { status: 200, statusText: 'OK' });
+
+      globalThis.fetch = ((url: string | URL | Request, init?: RequestInit) => {
+        capturedInit = init;
+        return Promise.resolve(mockResponse);
+      }) as unknown as typeof fetch;
+
+      await sendRequest({
+        method: 'GET',
+        url: 'https://example.com/api',
+        auth: {
+          type: 'basic',
+          username: 'alice',
+          password: 'secret',
+        },
+      });
+
+      expect(capturedInit?.headers).toEqual({
+        Authorization: 'Basic YWxpY2U6c2VjcmV0',
+      });
+    });
+
+    test('should refresh oauth2 access token before request', async () => {
+      const calls: Array<{ url: string; init?: RequestInit }> = [];
+      globalThis.fetch = ((url: string | URL | Request, init?: RequestInit) => {
+        calls.push({ url: url.toString(), init });
+
+        if (calls.length === 1) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                access_token: 'new-access',
+                refresh_token: 'new-refresh',
+                expires_in: 3600,
+                token_type: 'Bearer',
+              }),
+              { status: 200, statusText: 'OK' },
+            ),
+          );
+        }
+
+        return Promise.resolve(new Response('{"ok":true}', { status: 200, statusText: 'OK' }));
+      }) as unknown as typeof fetch;
+
+      const result = await sendRequest({
+        method: 'GET',
+        url: 'https://example.com/data',
+        auth: {
+          type: 'oauth2',
+          oauth2: {
+            grantType: 'client_credentials',
+            tokenUrl: 'https://auth.example.com/token',
+            clientId: 'client-id',
+            refreshToken: 'old-refresh',
+            accessToken: 'old-access',
+            expiresAt: Date.now() - 1000,
+          },
+        },
+      });
+
+      expect(calls[0]?.url).toBe('https://auth.example.com/token');
+      expect(calls[1]?.url).toBe('https://example.com/data');
+      expect(calls[1]?.init?.headers).toEqual({ Authorization: 'Bearer new-access' });
+      expect(result.updatedAuth?.oauth2?.accessToken).toBe('new-access');
+      expect(result.updatedAuth?.oauth2?.refreshToken).toBe('new-refresh');
+    });
   });
 
   describe('sendRequestWithStreaming', () => {

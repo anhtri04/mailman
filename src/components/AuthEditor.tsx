@@ -11,6 +11,8 @@ const AUTH_TYPES: { value: AuthType; label: string }[] = [
   { value: 'none', label: 'No Auth' },
   { value: 'bearer', label: 'Bearer Token' },
   { value: 'api-key', label: 'API Key' },
+  { value: 'basic', label: 'Basic Auth' },
+  { value: 'oauth2', label: 'OAuth 2.0' },
 ];
 
 export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
@@ -20,6 +22,61 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
   const [apiKey, setApiKey] = useState(currentAuth.key ?? '');
   const [apiValue, setApiValue] = useState(currentAuth.value ?? '');
   const [location, setLocation] = useState<'header' | 'query'>(currentAuth.location ?? 'header');
+  const [username, setUsername] = useState(currentAuth.username ?? '');
+  const [password, setPassword] = useState(currentAuth.password ?? '');
+  const [oauth2GrantType, setOauth2GrantType] = useState<
+    'client_credentials' | 'authorization_code'
+  >(currentAuth.oauth2?.grantType ?? 'client_credentials');
+  const [oauth2TokenUrl, setOauth2TokenUrl] = useState(currentAuth.oauth2?.tokenUrl ?? '');
+  const [oauth2ClientId, setOauth2ClientId] = useState(currentAuth.oauth2?.clientId ?? '');
+  const [oauth2ClientSecret, setOauth2ClientSecret] = useState(
+    currentAuth.oauth2?.clientSecret ?? '',
+  );
+  const [oauth2Scope, setOauth2Scope] = useState(currentAuth.oauth2?.scope ?? '');
+  const [oauth2Code, setOauth2Code] = useState(currentAuth.oauth2?.code ?? '');
+  const [oauth2RedirectUri, setOauth2RedirectUri] = useState(currentAuth.oauth2?.redirectUri ?? '');
+  const [oauth2CodeVerifier, setOauth2CodeVerifier] = useState(
+    currentAuth.oauth2?.codeVerifier ?? '',
+  );
+  const [oauth2AccessToken, setOauth2AccessToken] = useState(currentAuth.oauth2?.accessToken ?? '');
+  const [oauth2RefreshToken, setOauth2RefreshToken] = useState(
+    currentAuth.oauth2?.refreshToken ?? '',
+  );
+
+  const buildOAuth2AuthConfig = useCallback((): AuthConfig => {
+    const oauth2 = {
+      grantType: oauth2GrantType,
+      tokenUrl: oauth2TokenUrl,
+      clientId: oauth2ClientId,
+      clientSecret: oauth2ClientSecret || undefined,
+      scope: oauth2Scope || undefined,
+      code: oauth2Code || undefined,
+      redirectUri: oauth2RedirectUri || undefined,
+      codeVerifier: oauth2CodeVerifier || undefined,
+      accessToken: oauth2AccessToken || undefined,
+      refreshToken: oauth2RefreshToken || undefined,
+      tokenType: currentAuth.oauth2?.tokenType,
+      expiresAt: currentAuth.oauth2?.expiresAt,
+    } as const;
+
+    return {
+      type: 'oauth2',
+      oauth2,
+    };
+  }, [
+    oauth2GrantType,
+    oauth2TokenUrl,
+    oauth2ClientId,
+    oauth2ClientSecret,
+    oauth2Scope,
+    oauth2Code,
+    oauth2RedirectUri,
+    oauth2CodeVerifier,
+    oauth2AccessToken,
+    oauth2RefreshToken,
+    currentAuth.oauth2?.tokenType,
+    currentAuth.oauth2?.expiresAt,
+  ]);
 
   const handleTypeChange = useCallback(
     (newType: AuthType) => {
@@ -29,9 +86,13 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
         onAuthChange({ type: 'bearer', token });
       } else if (newType === 'api-key') {
         onAuthChange({ type: 'api-key', key: apiKey, value: apiValue, location });
+      } else if (newType === 'basic') {
+        onAuthChange({ type: 'basic', username, password });
+      } else if (newType === 'oauth2') {
+        onAuthChange(buildOAuth2AuthConfig());
       }
     },
-    [onAuthChange, token, apiKey, apiValue, location],
+    [onAuthChange, token, apiKey, apiValue, location, username, password, buildOAuth2AuthConfig],
   );
 
   const handleTokenChange = useCallback(
@@ -73,6 +134,32 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
     },
     [currentAuth.type, onAuthChange, apiKey, apiValue],
   );
+
+  const handleBasicUsernameChange = useCallback(
+    (newUsername: string) => {
+      setUsername(newUsername);
+      if (currentAuth.type === 'basic') {
+        onAuthChange({ type: 'basic', username: newUsername, password });
+      }
+    },
+    [currentAuth.type, onAuthChange, password],
+  );
+
+  const handleBasicPasswordChange = useCallback(
+    (newPassword: string) => {
+      setPassword(newPassword);
+      if (currentAuth.type === 'basic') {
+        onAuthChange({ type: 'basic', username, password: newPassword });
+      }
+    },
+    [currentAuth.type, onAuthChange, username],
+  );
+
+  const updateOAuth2 = useCallback(() => {
+    if (currentAuth.type === 'oauth2') {
+      onAuthChange(buildOAuth2AuthConfig());
+    }
+  }, [currentAuth.type, onAuthChange, buildOAuth2AuthConfig]);
 
   return (
     <box style={{ flexDirection: 'column', gap: 1, flexGrow: 1, height: '100%' }}>
@@ -243,6 +330,219 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 </text>
               </box>
             )}
+          </box>
+        )}
+
+        {currentAuth.type === 'basic' && (
+          <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
+            <text fg={colors.text.muted}>Username:</text>
+            <box style={{ border: true, borderColor: colors.border.default, paddingLeft: 1 }}>
+              <input
+                value={username}
+                onInput={handleBasicUsernameChange}
+                placeholder="Enter username..."
+                backgroundColor={colors.bg.panel}
+                textColor={colors.text.primary}
+              />
+            </box>
+            <text fg={colors.text.muted}>Password:</text>
+            <box style={{ border: true, borderColor: colors.border.default, paddingLeft: 1 }}>
+              <input
+                value={password}
+                onInput={handleBasicPasswordChange}
+                placeholder="Enter password..."
+                backgroundColor={colors.bg.panel}
+                textColor={colors.text.primary}
+              />
+            </box>
+          </box>
+        )}
+
+        {currentAuth.type === 'oauth2' && (
+          <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
+            <text fg={colors.text.muted}>OAuth 2.0 Configuration:</text>
+            <box style={{ flexDirection: 'row', gap: 1 }}>
+              <box
+                style={{
+                  paddingLeft: 2,
+                  paddingRight: 2,
+                  border: true,
+                  borderColor:
+                    oauth2GrantType === 'client_credentials'
+                      ? colors.accent.primary
+                      : colors.border.default,
+                }}
+                onMouseDown={() => {
+                  setOauth2GrantType('client_credentials');
+                  updateOAuth2();
+                }}
+              >
+                <text
+                  fg={
+                    oauth2GrantType === 'client_credentials'
+                      ? colors.accent.primary
+                      : colors.text.muted
+                  }
+                >
+                  Client Credentials
+                </text>
+              </box>
+              <box
+                style={{
+                  paddingLeft: 2,
+                  paddingRight: 2,
+                  border: true,
+                  borderColor:
+                    oauth2GrantType === 'authorization_code'
+                      ? colors.accent.primary
+                      : colors.border.default,
+                }}
+                onMouseDown={() => {
+                  setOauth2GrantType('authorization_code');
+                  updateOAuth2();
+                }}
+              >
+                <text
+                  fg={
+                    oauth2GrantType === 'authorization_code'
+                      ? colors.accent.primary
+                      : colors.text.muted
+                  }
+                >
+                  Authorization Code
+                </text>
+              </box>
+            </box>
+
+            <text fg={colors.text.muted}>Token URL:</text>
+            <box style={{ border: true, borderColor: colors.border.default, paddingLeft: 1 }}>
+              <input
+                value={oauth2TokenUrl}
+                onInput={(val) => {
+                  setOauth2TokenUrl(val);
+                  updateOAuth2();
+                }}
+                placeholder="https://auth.example.com/oauth/token"
+                backgroundColor={colors.bg.panel}
+                textColor={colors.text.primary}
+              />
+            </box>
+
+            <text fg={colors.text.muted}>Client ID:</text>
+            <box style={{ border: true, borderColor: colors.border.default, paddingLeft: 1 }}>
+              <input
+                value={oauth2ClientId}
+                onInput={(val) => {
+                  setOauth2ClientId(val);
+                  updateOAuth2();
+                }}
+                placeholder="Enter client id..."
+                backgroundColor={colors.bg.panel}
+                textColor={colors.text.primary}
+              />
+            </box>
+
+            <text fg={colors.text.muted}>Client Secret (optional for PKCE/public clients):</text>
+            <box style={{ border: true, borderColor: colors.border.default, paddingLeft: 1 }}>
+              <input
+                value={oauth2ClientSecret}
+                onInput={(val) => {
+                  setOauth2ClientSecret(val);
+                  updateOAuth2();
+                }}
+                placeholder="Enter client secret..."
+                backgroundColor={colors.bg.panel}
+                textColor={colors.text.primary}
+              />
+            </box>
+
+            <text fg={colors.text.muted}>Scope (optional):</text>
+            <box style={{ border: true, borderColor: colors.border.default, paddingLeft: 1 }}>
+              <input
+                value={oauth2Scope}
+                onInput={(val) => {
+                  setOauth2Scope(val);
+                  updateOAuth2();
+                }}
+                placeholder="read write profile"
+                backgroundColor={colors.bg.panel}
+                textColor={colors.text.primary}
+              />
+            </box>
+
+            {oauth2GrantType === 'authorization_code' && (
+              <>
+                <text fg={colors.text.muted}>Authorization Code:</text>
+                <box style={{ border: true, borderColor: colors.border.default, paddingLeft: 1 }}>
+                  <input
+                    value={oauth2Code}
+                    onInput={(val) => {
+                      setOauth2Code(val);
+                      updateOAuth2();
+                    }}
+                    placeholder="Paste authorization code..."
+                    backgroundColor={colors.bg.panel}
+                    textColor={colors.text.primary}
+                  />
+                </box>
+
+                <text fg={colors.text.muted}>Redirect URI (optional):</text>
+                <box style={{ border: true, borderColor: colors.border.default, paddingLeft: 1 }}>
+                  <input
+                    value={oauth2RedirectUri}
+                    onInput={(val) => {
+                      setOauth2RedirectUri(val);
+                      updateOAuth2();
+                    }}
+                    placeholder="https://localhost/callback"
+                    backgroundColor={colors.bg.panel}
+                    textColor={colors.text.primary}
+                  />
+                </box>
+
+                <text fg={colors.text.muted}>Code Verifier (optional PKCE):</text>
+                <box style={{ border: true, borderColor: colors.border.default, paddingLeft: 1 }}>
+                  <input
+                    value={oauth2CodeVerifier}
+                    onInput={(val) => {
+                      setOauth2CodeVerifier(val);
+                      updateOAuth2();
+                    }}
+                    placeholder="Enter code verifier..."
+                    backgroundColor={colors.bg.panel}
+                    textColor={colors.text.primary}
+                  />
+                </box>
+              </>
+            )}
+
+            <text fg={colors.text.muted}>Access Token (optional seed):</text>
+            <box style={{ border: true, borderColor: colors.border.default, paddingLeft: 1 }}>
+              <input
+                value={oauth2AccessToken}
+                onInput={(val) => {
+                  setOauth2AccessToken(val);
+                  updateOAuth2();
+                }}
+                placeholder="Optional existing access token"
+                backgroundColor={colors.bg.panel}
+                textColor={colors.text.primary}
+              />
+            </box>
+
+            <text fg={colors.text.muted}>Refresh Token (optional seed):</text>
+            <box style={{ border: true, borderColor: colors.border.default, paddingLeft: 1 }}>
+              <input
+                value={oauth2RefreshToken}
+                onInput={(val) => {
+                  setOauth2RefreshToken(val);
+                  updateOAuth2();
+                }}
+                placeholder="Optional existing refresh token"
+                backgroundColor={colors.bg.panel}
+                textColor={colors.text.primary}
+              />
+            </box>
           </box>
         )}
 
