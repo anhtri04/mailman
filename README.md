@@ -40,6 +40,16 @@ bun dev
 
 ## Usage
 
+### CLI Mode (MVP)
+
+Run the integrated CLI variant:
+
+```bash
+bun run dev:cli
+```
+
+Detailed module documentation: [`docs/cli-module.md`](docs/cli-module.md)
+
 ### Navigation
 
 | Key | Action |

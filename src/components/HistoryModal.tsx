@@ -65,7 +65,7 @@ export function HistoryModal({ entries, onOpenEntry, errorMessage }: HistoryModa
           paddingLeft: 1,
           paddingRight: 1,
           paddingTop: 0.5,
-          paddingBottom: 0.5
+          paddingBottom: 0.5,
         }}
       >
         <input
