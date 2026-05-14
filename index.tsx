@@ -3,7 +3,11 @@
 import { createCliRenderer } from '@opentui/core';
 import { createRoot } from '@opentui/react';
 import { App } from './src/App';
+import { CliApp } from './src/cli';
 import { ThemeProvider } from './src/theme/ThemeProvider';
+
+const modeArg = process.argv[2]?.toLowerCase();
+const isCliMode = modeArg === 'cli';
 
 // Create the CLI renderer (async)
 const renderer = await createCliRenderer({
@@ -13,11 +17,7 @@ const renderer = await createCliRenderer({
 
 // Create and mount the React root
 const root = createRoot(renderer);
-root.render(
-  <ThemeProvider>
-    <App />
-  </ThemeProvider>,
-);
+root.render(<ThemeProvider>{isCliMode ? <CliApp /> : <App />}</ThemeProvider>);
 
 // Clean exit handler
 const cleanExit = () => {
