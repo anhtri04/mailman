@@ -12,6 +12,7 @@ import {
   GraphQLRequestPanel,
   GraphQLResponsePanel,
   FileBrowser,
+  HistoryModal,
 } from './components';
 import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
@@ -31,6 +32,8 @@ import {
   deleteCollection,
   deleteRequest,
   importCollectionsFromFile,
+  loadHistory,
+  appendHistoryEntry,
 } from './services';
 import { parseCurl } from './utils/curlUtility';
 import {
@@ -44,6 +47,7 @@ import type {
   SseResponseTab,
 } from './utils/responseCopyUtility';
 import type {
+  HistoryEntry,
   RequestOptions,
   ResponseState,
   AuthConfig,
@@ -108,6 +112,9 @@ export function App() {
 
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
@@ -123,6 +130,7 @@ export function App() {
   const instructionContextKey = useMemo(() => {
     if (showHelp) return 'app.blocked.help';
     if (showThemeSelector) return 'app.blocked.theme';
+    if (showHistoryModal) return 'app.blocked.history';
     if (showResponseModal) return 'app.blocked.responseModal';
     if (activeModal) return `app.blocked.editorModal.${activeModal}`;
     if (collectionModal) return `app.blocked.collectionModal.${collectionModal}`;
@@ -149,6 +157,7 @@ export function App() {
   }, [
     showHelp,
     showThemeSelector,
+    showHistoryModal,
     showResponseModal,
     activeModal,
     collectionModal,
@@ -176,6 +185,11 @@ export function App() {
         'Esc Close modals / go back',
         'Inspect response body and headers',
         'Ctrl+G Open this help panel',
+      ],
+      'app.blocked.history': [
+        'Esc Close modals / go back',
+        'Type to search by method, URL, status, or body',
+        'Enter Open selected request from history',
       ],
       'app.blocked.editorModal.headers': [
         'Esc Close modals / go back',
@@ -335,6 +349,11 @@ export function App() {
         setShowHelp(false);
         return;
       }
+      if (showHistoryModal) {
+        setShowHistoryModal(false);
+        setHistoryError(null);
+        return;
+      }
       if (showResponseModal) {
         setShowResponseModal(false);
         return;
@@ -351,6 +370,7 @@ export function App() {
       if (
         !showHelp &&
         !showThemeSelector &&
+        !showHistoryModal &&
         !activeModal &&
         !collectionModal &&
         !showResponseModal
@@ -361,11 +381,28 @@ export function App() {
       if (
         !showThemeSelector &&
         !showHelp &&
+        !showHistoryModal &&
         !activeModal &&
         !collectionModal &&
         !showResponseModal
       ) {
         setShowThemeSelector(true);
+      }
+    } else if (key.ctrl && key.name === 'r') {
+      if (
+        !showThemeSelector &&
+        !showHelp &&
+        !showHistoryModal &&
+        !activeModal &&
+        !collectionModal &&
+        !showResponseModal
+      ) {
+        setHistoryError(null);
+        setShowHistoryModal(true);
+        void (async () => {
+          const entries = await loadHistory();
+          setHistoryEntries(entries);
+        })();
       }
     } else if (key.ctrl && key.name === 's') {
       if (activeRequestId && activeCollectionId) {
@@ -432,6 +469,119 @@ export function App() {
     }
   });
 
+  const addRestHistoryEntry = useCallback(
+    (response: ResponseState) => {
+      if (!activeRequestId) return;
+      void appendHistoryEntry({
+        protocol: 'rest',
+        collectionId: activeCollectionId ?? undefined,
+        requestId: activeRequestId,
+        requestName: requestName || undefined,
+        request: {
+          method: request.method,
+          url: request.url,
+          headers: request.headers ?? {},
+          body: request.body,
+          auth: request.auth,
+        },
+        response: {
+          status: response.status,
+          statusText: response.statusText,
+          body: response.body,
+          headers: response.headers,
+          time: response.time,
+          mode: response.mode,
+          sseSummary:
+            response.mode === 'sse'
+              ? {
+                  eventCount: response.streamEventCount ?? 0,
+                  droppedEvents: response.sseMeta?.droppedEvents ?? 0,
+                  durationMs:
+                    response.streamEndedAt && response.streamStartedAt
+                      ? Math.max(0, response.streamEndedAt - response.streamStartedAt)
+                      : response.time,
+                }
+              : undefined,
+        },
+      });
+    },
+    [activeCollectionId, activeRequestId, request, requestName],
+  );
+
+  const addGraphqlHistoryEntry = useCallback(
+    (response: ResponseState) => {
+      if (!activeRequestId) return;
+      void appendHistoryEntry({
+        protocol: 'graphql',
+        collectionId: activeCollectionId ?? undefined,
+        requestId: activeRequestId,
+        requestName: requestName || undefined,
+        request: {
+          method: 'POST',
+          url: graphqlRequest.url,
+          headers: graphqlRequest.headers,
+          body: graphqlRequest.query,
+          variables: graphqlRequest.variables,
+          auth: graphqlRequest.auth,
+        },
+        response: {
+          status: response.status,
+          statusText: response.statusText,
+          body: response.body,
+          headers: response.headers,
+          time: response.time,
+          mode: response.mode,
+        },
+      });
+    },
+    [activeCollectionId, activeRequestId, graphqlRequest, requestName],
+  );
+
+  const openFromHistory = useCallback(
+    (entry: HistoryEntry) => {
+      if (!entry.collectionId || !entry.requestId) {
+        setHistoryError('Selected history item is missing request reference.');
+        return;
+      }
+
+      const collection = collections.find((item) => item.id === entry.collectionId);
+      const matchedRequest = collection?.requests.find((item) => item.id === entry.requestId);
+
+      if (!collection || !matchedRequest) {
+        setHistoryError('Original request no longer exists. Cannot open from history.');
+        return;
+      }
+
+      setActiveCollectionId(collection.id);
+      setActiveRequestId(matchedRequest.id);
+      setRequestName(entry.requestName || matchedRequest.name);
+
+      if (entry.protocol === 'graphql') {
+        setGraphqlRequest({
+          url: entry.request.url,
+          query: entry.request.body ?? '',
+          variables: entry.request.variables ?? '',
+          headers: entry.request.headers,
+          auth: entry.request.auth,
+        });
+        setGraphqlResponses((prev) => ({ ...prev, [matchedRequest.id]: entry.response }));
+      } else {
+        setRequest({
+          method: entry.request.method,
+          url: entry.request.url,
+          headers: entry.request.headers,
+          body: entry.request.body ?? '',
+          auth: entry.request.auth,
+        });
+        setRestResponses((prev) => ({ ...prev, [matchedRequest.id]: entry.response }));
+      }
+
+      setHistoryError(null);
+      setShowHistoryModal(false);
+    },
+    [collections],
+  );
+
   const handleUrlChange = useCallback((url: string) => {
     setRequest((prev) => ({ ...prev, url }));
   }, []);
@@ -484,22 +634,25 @@ export function App() {
         setGraphqlRequest((prev) => ({ ...prev, auth: result.updatedAuth }));
       }
       setGraphqlResponses((prev) => ({ ...prev, [activeRequestId]: result }));
+      addGraphqlHistoryEntry(result);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorResponse: ResponseState = {
+        status: 0,
+        statusText: 'ERROR',
+        body: `Error: ${errorMessage}`,
+        headers: {},
+        time: 0,
+      };
       setGraphqlResponses((prev) => ({
         ...prev,
-        [activeRequestId]: {
-          status: 0,
-          statusText: 'ERROR',
-          body: `Error: ${errorMessage}`,
-          headers: {},
-          time: 0,
-        },
+        [activeRequestId]: errorResponse,
       }));
+      addGraphqlHistoryEntry(errorResponse);
     } finally {
       setIsLoading(false);
     }
-  }, [graphqlRequest, activeRequestId]);
+  }, [graphqlRequest, activeRequestId, addGraphqlHistoryEntry]);
 
   // Extract base URL without query params for QueryParamsEditor
   const baseUrl = request.url.split('?')[0] ?? request.url;
@@ -637,6 +790,7 @@ export function App() {
         }
         return { ...prev, [activeRequestId]: streamResult.response };
       });
+      addRestHistoryEntry(streamResult.response);
       setRestStreamControllers((prev) => {
         const next = { ...prev };
         delete next[activeRequestId];
@@ -645,20 +799,22 @@ export function App() {
     } catch (error) {
       setIsLoading(false);
       const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorResponse: ResponseState = {
+        status: 0,
+        statusText: 'ERROR',
+        body: `Error: ${errorMessage}`,
+        headers: {},
+        time: 0,
+      };
       setRestResponses((prev) => ({
         ...prev,
-        [activeRequestId]: {
-          status: 0,
-          statusText: 'ERROR',
-          body: `Error: ${errorMessage}`,
-          headers: {},
-          time: 0,
-        },
+        [activeRequestId]: errorResponse,
       }));
+      addRestHistoryEntry(errorResponse);
     } finally {
       setIsLoading(false);
     }
-  }, [request, activeRequestId]);
+  }, [request, activeRequestId, addRestHistoryEntry]);
 
   const handleDisconnectStream = useCallback(() => {
     if (!activeRequestId) return;
@@ -1302,6 +1458,23 @@ export function App() {
         {showHelp && (
           <Modal isOpen={true} onClose={() => setShowHelp(false)} title="Help">
             <CatalogPanel onClose={() => setShowHelp(false)} />
+          </Modal>
+        )}
+        {showHistoryModal && (
+          <Modal
+            isOpen={true}
+            onClose={() => {
+              setShowHistoryModal(false);
+              setHistoryError(null);
+            }}
+            title="Request History"
+            subtitle={`${historyEntries.length} entries`}
+          >
+            <HistoryModal
+              entries={historyEntries}
+              onOpenEntry={openFromHistory}
+              errorMessage={historyError}
+            />
           </Modal>
         )}
         {/* Theme Selector Modal */}

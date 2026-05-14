@@ -72,7 +72,7 @@ A terminal-based HTTP client built with Bun and OpenTUI.
 
 ### Medium Priority
 
-- [ ] **Request History**
+- [x] **Request History**
   - Auto-log last N requests
   - Quick re-run from history
   - Persist to `~/.mailman/history.json`

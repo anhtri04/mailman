@@ -40,6 +40,7 @@ export function CatalogPanel({ onClose }: CatalogPanelProps) {
             <text fg={colors.text.primary}>• Ctrl+T Change theme</text>
             <text fg={colors.text.primary}>• Ctrl+S Save request changes</text>
             <text fg={colors.text.primary}>• Ctrl+G Open this help panel</text>
+            <text fg={colors.text.primary}>• Ctrl+R Open request history panel</text>
           </box>
 
           <box style={{ flexDirection: 'column', gap: 1 }}>
