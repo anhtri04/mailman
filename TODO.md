@@ -70,6 +70,16 @@ A terminal-based HTTP client built with Bun and OpenTUI.
   - Fast and muscle-memory driven
   - If users can test an endpoint in 3 keystrokes, we win
 
+- [ ] **CLI Mode**
+  - Start with the command `mailman cli`
+  - Quick entry using a mailman `REQUEST_COMMAND`
+  - Fix text area and response pane
+  - Leverage the use of `/command`
+
+- [ ] **Web Scanning**
+  - Integrate Vercel's Browser to API skill
+  - Scan a web and then build collections from it
+
 ### Medium Priority
 
 - [x] **Request History**
@@ -105,6 +115,11 @@ A terminal-based HTTP client built with Bun and OpenTUI.
 
 - [ ] **Loading Animation**
   - Add animation when loading or transiting
+
+- [ ] **API Stress Test**
+  - Implement a dedicated interface for API stress test
+  - Support both CLI and TUI mode
+  - Clone Apache Jmeter
 
 ### Low Priority
 
