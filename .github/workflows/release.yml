@@ -34,18 +34,28 @@ jobs:
 
       - run: bun install
 
+      - if: runner.os == 'Windows'
+        name: Setup MSVC developer tools
+        uses: ilammy/msvc-dev-cmd@v1
+
       # Attach realistic metadata to the Windows .exe (reduces generic/untrusted appearance)
       # Requires a resources.rc in your repo root; see AGENTS.md for an example.
       - if: runner.os == 'Windows'
         name: Apply Windows version metadata
         shell: pwsh
         run: |
-          if (Test-Path resources.rc) {
+          $rc = Get-Command rc.exe -ErrorAction SilentlyContinue
+          if ((Test-Path resources.rc) -and $rc) {
             New-Item -ItemType Directory -Force -Path dist | Out-Null
-            # Assume rc.exe is in PATH via Visual Studio or Windows SDK
+            Write-Host "Using rc.exe at: $($rc.Source)"
             rc.exe /fo dist\resources.res resources.rc
             bun build --compile ./index.tsx --outfile "dist\${{ matrix.artifact }}" --target=${{ matrix.target }} --windows-resources=dist\resources.res
           } else {
+            if (-not (Test-Path resources.rc)) {
+              Write-Host '::warning::resources.rc not found; building Windows artifact without version metadata.'
+            } elseif (-not $rc) {
+              Write-Host '::warning::rc.exe not found after MSVC setup; building Windows artifact without version metadata.'
+            }
             bun build --compile ./index.tsx --outfile "dist\${{ matrix.artifact }}" --target=${{ matrix.target }}
           }
 
