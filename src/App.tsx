@@ -55,7 +55,7 @@ import type {
   RequestItem,
   Protocol,
 } from './types';
-
+import type { KeyBinding } from '@opentui/core';
 type Tab = 'headers' | 'body' | 'query' | 'auth';
 
 export function App() {
@@ -119,6 +119,8 @@ export function App() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
   const SSE_MAX_EVENTS = 500;
+
+  const selectAllBindings: KeyBinding[] = [{ name: "a" , ctrl: true, action : "select-all"}]
 
   const activeCollection = activeCollectionId
     ? collections.find((c) => c.id === activeCollectionId)
@@ -1223,6 +1225,7 @@ export function App() {
                       value={newCollectionName}
                       onInput={(val: string) => setNewCollectionName(val)}
                       focused={true}
+                      keyBindings={selectAllBindings}
                     />
                   </box>
                   <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
@@ -1341,6 +1344,7 @@ export function App() {
                   value={newRequestName}
                   onInput={(val: string) => setNewRequestName(val)}
                   focused={true}
+                  keyBindings={selectAllBindings}
                 />
               </box>
 
@@ -1358,6 +1362,7 @@ export function App() {
                   placeholder={`curl -X GET https://api.example.com -H "Accept: application/json"`}
                   value={curlText}
                   onInput={(val: string) => setCurlText(val)}
+                  keyBindings={selectAllBindings}
                 />
               </box>
 

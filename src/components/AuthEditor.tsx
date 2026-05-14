@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useTheme } from '../theme/ThemeProvider';
 import type { AuthConfig, AuthType } from '../types';
+import type { KeyBinding } from '@opentui/core';
 
 interface AuthEditorProps {
   auth?: AuthConfig;
@@ -42,6 +43,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
   const [oauth2RefreshToken, setOauth2RefreshToken] = useState(
     currentAuth.oauth2?.refreshToken ?? '',
   );
+  const selectAllBindings: KeyBinding[] = [{ name: 'a', ctrl: true, action: 'select-all' }];
 
   const buildOAuth2AuthConfig = useCallback((): AuthConfig => {
     const oauth2 = {
@@ -217,6 +219,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 placeholder="Enter bearer token..."
                 backgroundColor={colors.bg.panel}
                 textColor={colors.text.primary}
+                keyBindings={selectAllBindings}
               />
             </box>
             {token && (
@@ -290,6 +293,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                   placeholder="e.g., X-API-Key, api_key..."
                   backgroundColor={colors.bg.panel}
                   textColor={colors.text.primary}
+                  keyBindings={selectAllBindings}
                 />
               </box>
             </box>
@@ -313,6 +317,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                   placeholder="Enter API key value..."
                   backgroundColor={colors.bg.panel}
                   textColor={colors.text.primary}
+                  keyBindings={selectAllBindings}
                 />
               </box>
             </box>
@@ -343,6 +348,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 placeholder="Enter username..."
                 backgroundColor={colors.bg.panel}
                 textColor={colors.text.primary}
+                keyBindings={selectAllBindings}
               />
             </box>
             <text fg={colors.text.muted}>Password:</text>
@@ -353,6 +359,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 placeholder="Enter password..."
                 backgroundColor={colors.bg.panel}
                 textColor={colors.text.primary}
+                keyBindings={selectAllBindings}
               />
             </box>
           </box>
@@ -425,6 +432,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 placeholder="https://auth.example.com/oauth/token"
                 backgroundColor={colors.bg.panel}
                 textColor={colors.text.primary}
+                keyBindings={selectAllBindings}
               />
             </box>
 
@@ -439,6 +447,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 placeholder="Enter client id..."
                 backgroundColor={colors.bg.panel}
                 textColor={colors.text.primary}
+                keyBindings={selectAllBindings}
               />
             </box>
 
@@ -453,6 +462,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 placeholder="Enter client secret..."
                 backgroundColor={colors.bg.panel}
                 textColor={colors.text.primary}
+                keyBindings={selectAllBindings}
               />
             </box>
 
@@ -467,6 +477,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 placeholder="read write profile"
                 backgroundColor={colors.bg.panel}
                 textColor={colors.text.primary}
+                keyBindings={selectAllBindings}
               />
             </box>
 
@@ -483,6 +494,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                     placeholder="Paste authorization code..."
                     backgroundColor={colors.bg.panel}
                     textColor={colors.text.primary}
+                    keyBindings={selectAllBindings}
                   />
                 </box>
 
@@ -497,6 +509,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                     placeholder="https://localhost/callback"
                     backgroundColor={colors.bg.panel}
                     textColor={colors.text.primary}
+                    keyBindings={selectAllBindings}
                   />
                 </box>
 
@@ -511,6 +524,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                     placeholder="Enter code verifier..."
                     backgroundColor={colors.bg.panel}
                     textColor={colors.text.primary}
+                    keyBindings={selectAllBindings}
                   />
                 </box>
               </>
@@ -527,6 +541,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 placeholder="Optional existing access token"
                 backgroundColor={colors.bg.panel}
                 textColor={colors.text.primary}
+                keyBindings={selectAllBindings}
               />
             </box>
 
@@ -541,6 +556,7 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 placeholder="Optional existing refresh token"
                 backgroundColor={colors.bg.panel}
                 textColor={colors.text.primary}
+                keyBindings={selectAllBindings}
               />
             </box>
           </box>

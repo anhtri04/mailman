@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import type { TextareaRenderable } from '@opentui/core';
+import type { KeyBinding, TextareaRenderable } from '@opentui/core';
 import { useTheme } from '../theme/ThemeProvider';
 import type { AuthConfig } from '../types';
 
@@ -48,6 +48,7 @@ export function GraphQLRequestPanel({
   const [activeTab, setActiveTab] = useState<Tab | null>(null);
   const queryRef = useRef<TextareaRenderable>(null);
   const variablesRef = useRef<TextareaRenderable>(null);
+  const selectAllBindings: KeyBinding[] = [{ name: 'a', ctrl: true, action: 'select-all' }];
 
   const hasVariables = !!(variables && variables.trim().length > 0);
   const hasHeaders = Object.keys(headers).length > 0;
@@ -169,6 +170,7 @@ export function GraphQLRequestPanel({
             value={url}
             onInput={onUrlChange}
             focused={focused}
+            keyBindings={selectAllBindings}
           />
         </box>
       </box>
@@ -220,6 +222,7 @@ export function GraphQLRequestPanel({
               initialValue={query}
               focused={focused}
               onContentChange={handleQueryChange}
+              keyBindings={selectAllBindings}
               backgroundColor={colors.bg.panel}
               textColor={colors.text.primary}
               placeholderColor={colors.text.dim}
@@ -248,6 +251,7 @@ export function GraphQLRequestPanel({
               initialValue={variables}
               focused={focused}
               onContentChange={handleVariablesChange}
+              keyBindings={selectAllBindings}
               backgroundColor={colors.bg.panel}
               textColor={colors.text.primary}
               placeholderColor={colors.text.dim}

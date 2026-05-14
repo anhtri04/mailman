@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useTheme } from '../theme/ThemeProvider';
+import type { KeyBinding } from '@opentui/core';
 
 interface HeadersEditorProps {
   headers: Record<string, string>;
@@ -44,6 +45,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
   const [newValue, setNewValue] = useState('');
   const [focusedField, setFocusedField] = useState<'key' | 'value' | null>(null);
   const [showPresets, setShowPresets] = useState(false);
+  const selectAllBindings: KeyBinding[] = [{ name: "a" , ctrl: true, action : "select-all"}]
 
   const updateHeaders = useCallback(
     (newEntries: HeaderEntry[]) => {
@@ -170,6 +172,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
                 focused={focusedField === 'key'}
                 backgroundColor={colors.bg.panel}
                 textColor={colors.text.primary}
+                keyBindings={selectAllBindings}
               />
             </box>
             <box
@@ -189,6 +192,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
                 focused={focusedField === 'value'}
                 backgroundColor={colors.bg.panel}
                 textColor={colors.text.primary}
+                keyBindings={selectAllBindings}
               />
             </box>
             <box
