@@ -18,4 +18,10 @@ describe('AuthEditor', () => {
     expect(componentString).toContain('auth');
     expect(componentString).toContain('onAuthChange');
   });
+
+  test('should include select-all key binding for auth inputs', () => {
+    const componentString = AuthEditor.toString();
+    expect(componentString).toContain('action: "select-all"');
+    expect(componentString).toContain('keyBindings: selectAllBindings');
+  });
 });
