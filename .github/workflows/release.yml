@@ -97,7 +97,19 @@ jobs:
           pattern: mailman-*
 
       - name: Flatten dist directory
-        run: mv dist/mailman-*/* dist/ && rmdir dist/mailman-*
+        run: |
+          for d in dist/mailman-*; do
+            [ -d "$d" ] || continue
+            name="$(basename "$d")"
+            if [ -f "$d/$name" ]; then
+              mv "$d/$name" "dist/$name.tmp"
+            else
+              first_file="$(ls -1 "$d" | head -n 1)"
+              mv "$d/$first_file" "dist/$name.tmp"
+            fi
+            rmdir "$d"
+            mv "dist/$name.tmp" "dist/$name"
+          done
 
       - name: Substitute version in release notes
         run: sed -i 's/\${{ github.ref_name }}/${{ github.ref_name }}/g' RELEASE.md
