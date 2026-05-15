@@ -22,10 +22,9 @@ export function CliOutput({ outputs }: CliOutputProps) {
       <box style={{ marginTop: -2 }}>
         <text
           fg={colors.accent.primary}
-          bg={colors.bg.app}
           style={{ paddingLeft: 1, paddingRight: 1 }}
         >
-          <strong> CLI Output </strong>
+          <strong> Output </strong>
         </text>
       </box>
       <scrollbox style={{ flexGrow: 1 }}>

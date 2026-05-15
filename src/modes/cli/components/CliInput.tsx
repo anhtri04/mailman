@@ -18,7 +18,6 @@ export function CliInput({ value, onChange }: CliInputProps) {
         paddingLeft: 1,
         paddingRight: 1,
         paddingTop: 0.5,
-        paddingBottom: 0.5,
         alignItems: 'center',
       }}
     >
