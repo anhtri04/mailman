@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { themes as ALL_THEMES } from './themes';
 import { adaptTheme } from './theme-adapter';
-import { loadPreferences, savePreferences } from '../services/preferences';
+import { loadPreferences, savePreferences } from '../../core/services/preferences';
 import { colors as defaultColors } from './colors';
 import type { MailmanColors, OpencodeTheme } from './types';
 

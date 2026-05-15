@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { Modal } from './Modal';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 
 interface ThemeSelectorProps {
   isOpen: boolean;

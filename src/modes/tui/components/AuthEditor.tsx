@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { AuthConfig, AuthType } from '../../../types';
 import type { KeyBinding } from '@opentui/core';
 

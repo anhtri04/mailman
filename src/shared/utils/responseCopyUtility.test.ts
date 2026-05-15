@@ -4,7 +4,7 @@ import {
   getGraphqlTabCopyContent,
   getRestTabCopyContent,
 } from './responseCopyUtility';
-import type { ResponseState } from '../types';
+import type { ResponseState } from '../../core/types';
 
 describe('responseCopyUtility', () => {
   const baseResponse: ResponseState = {

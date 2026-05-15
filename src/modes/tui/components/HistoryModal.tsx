@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useKeyboard } from '@opentui/react';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { HistoryEntry } from '../../../types';
 
 interface HistoryModalProps {

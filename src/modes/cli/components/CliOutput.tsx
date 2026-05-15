@@ -1,4 +1,4 @@
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { CliOutputEntry } from '../types';
 
 interface CliOutputProps {

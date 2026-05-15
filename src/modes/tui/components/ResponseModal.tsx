@@ -1,11 +1,11 @@
 import { useMemo, useCallback } from 'react';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { ResponseState } from '../../../types';
-import type { RestResponseTab } from '../../../utils/responseCopyUtility';
+import type { RestResponseTab } from '../../../shared/utils/responseCopyUtility';
 import { Modal } from './Modal';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { HeadersDisplay } from './HeadersDisplay';
-import { detectContentType, formatResponseBody } from '../../../utils/response-formatter';
+import { detectContentType, formatResponseBody } from '../../../shared/utils/response-formatter';
 
 interface ResponseModalProps {
   response: ResponseState;

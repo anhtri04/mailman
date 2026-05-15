@@ -1,5 +1,5 @@
 import { detectContentType, formatResponseBody } from './response-formatter';
-import type { ResponseState } from '../types';
+import type { ResponseState } from '../../core/types';
 
 export type RestResponseTab = 'body' | 'headers' | 'raw';
 export type SseResponseTab = 'events' | 'headers' | 'raw';

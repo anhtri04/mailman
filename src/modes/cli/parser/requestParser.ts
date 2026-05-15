@@ -1,4 +1,4 @@
-import { detectCurl, parseCurl } from '../../../utils/curlUtility';
+import { detectCurl, parseCurl } from '../../../shared/utils/curlUtility';
 import type { ParsedRequest } from '../types';
 
 const HTTP_METHODS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']);

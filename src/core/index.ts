@@ -1,3 +1,4 @@
+export * from './services';
 export type {
   AuthConfig,
   AuthType,
@@ -17,4 +18,4 @@ export type {
   ResponseState,
   SSEEvent,
   SSEMeta,
-} from './core/types';
+} from './types';

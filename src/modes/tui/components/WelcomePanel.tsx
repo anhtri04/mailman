@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
-import { copyCurl } from '../../../utils/curlUtility';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { copyCurl } from '../../../shared/utils/curlUtility';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 import { MailmanLogo } from './MailmanLogo';
 import type { Collection, RequestItem } from '../../../types';
 

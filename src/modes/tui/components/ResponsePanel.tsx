@@ -1,11 +1,11 @@
 import { useMemo, useCallback } from 'react';
 import { useKeyboard } from '@opentui/react';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { ResponseState } from '../../../types';
-import type { RestResponseTab, SseResponseTab } from '../../../utils/responseCopyUtility';
+import type { RestResponseTab, SseResponseTab } from '../../../shared/utils/responseCopyUtility';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { HeadersDisplay } from './HeadersDisplay';
-import { detectContentType, formatResponseBody } from '../../../utils/response-formatter';
+import { detectContentType, formatResponseBody } from '../../../shared/utils/response-formatter';
 import { MailmanLogo } from './MailmanLogo';
 
 interface ResponsePanelProps {

@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import type { FocusArea } from '../types';
+import type { FocusArea } from '../../../core/types';
 
 // Since we can't easily mock React hooks, we'll test the module structure
 // and verify the hook follows the expected API pattern

@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react';
 import type { KeyBinding, TextareaRenderable } from '@opentui/core';
 import { useKeyboard, useRenderer } from '@opentui/react';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 
 interface BodyEditorProps {
   body: string;

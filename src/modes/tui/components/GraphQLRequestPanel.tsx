@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import type { KeyBinding, TextareaRenderable } from '@opentui/core';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { AuthConfig } from '../../../types';
 
 type Tab = 'headers' | 'auth';

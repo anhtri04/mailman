@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useKeyboard } from '@opentui/react';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 
 interface QueryParamsEditorProps {
   baseUrl: string;

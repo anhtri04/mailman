@@ -1,5 +1,5 @@
 import type { CliCommand } from '../commands/registry';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 
 interface CommandPaletteProps {
   visible: boolean;

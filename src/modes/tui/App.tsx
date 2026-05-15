@@ -19,7 +19,7 @@ import { BodyEditor } from './components/BodyEditor';
 import { QueryParamsEditor } from './components/QueryParamsEditor';
 import { AuthEditor } from './components/AuthEditor';
 import { ThemeSelector } from './components/ThemeSelector';
-import { useTheme } from '../../theme/ThemeProvider';
+import { useTheme } from '../../shared/theme/ThemeProvider';
 import {
   sendRequest,
   sendRequestWithStreaming,
@@ -34,18 +34,18 @@ import {
   importCollectionsFromFile,
   loadHistory,
   appendHistoryEntry,
-} from '../../services';
-import { parseCurl } from '../../utils/curlUtility';
+} from '../../core/services';
+import { parseCurl } from '../../shared/utils/curlUtility';
 import {
   copyTextToClipboard,
   getGraphqlTabCopyContent,
   getRestTabCopyContent,
-} from '../../utils/responseCopyUtility';
+} from '../../shared/utils/responseCopyUtility';
 import type {
   GraphqlResponseTab,
   RestResponseTab,
   SseResponseTab,
-} from '../../utils/responseCopyUtility';
+} from '../../shared/utils/responseCopyUtility';
 import type {
   HistoryEntry,
   RequestOptions,
@@ -54,7 +54,7 @@ import type {
   Collection,
   RequestItem,
   Protocol,
-} from '../../types';
+} from '../../core/types';
 import type { KeyBinding } from '@opentui/core';
 type Tab = 'headers' | 'body' | 'query' | 'auth';
 

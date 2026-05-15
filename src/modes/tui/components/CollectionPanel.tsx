@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useKeyboard } from '@opentui/react';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { Collection, RequestItem } from '../../../types';
 
 interface CollectionPanelProps {

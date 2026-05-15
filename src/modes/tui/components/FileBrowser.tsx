@@ -4,7 +4,7 @@ import { join } from 'path';
 import { homedir } from 'os';
 import { useDirectory } from '../hooks/useDirectory';
 import type { DirItem } from '../hooks/useDirectory';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 
 interface FileBrowserProps {
   startPath: string;

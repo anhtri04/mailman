@@ -1,13 +1,13 @@
 // Syntax highlighter component for JSON, XML, and text content
 import { useMemo } from 'react';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 import {
   parseJsonForHighlighting,
   getTokenColor,
   formatXml,
   formatJson,
-} from '../../../utils/response-formatter';
-import type { ContentType } from '../../../utils/response-formatter';
+} from '../../../shared/utils/response-formatter';
+import type { ContentType } from '../../../shared/utils/response-formatter';
 
 interface SyntaxHighlighterProps {
   code: string;

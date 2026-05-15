@@ -1,6 +1,6 @@
 // Headers display component for showing HTTP response headers
 import { useMemo } from 'react';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 
 interface HeadersDisplayProps {
   headers: Record<string, string>;

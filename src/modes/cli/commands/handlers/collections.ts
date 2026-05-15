@@ -1,4 +1,4 @@
-import { loadCollections } from '../../../../services';
+import { loadCollections } from '../../../../core/services';
 import type { CliCommand } from '../registry';
 
 export function buildCollectionsCommands(): CliCommand[] {

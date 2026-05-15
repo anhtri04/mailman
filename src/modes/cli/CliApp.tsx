@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useKeyboard } from '@opentui/react';
-import { loadCollections, sendRequest } from '../../services';
+import { loadCollections, sendRequest } from '../../core/services';
 import { CliInput } from './components/CliInput';
 import { CliOutput } from './components/CliOutput';
 import { CommandPalette } from './components/CommandPalette';

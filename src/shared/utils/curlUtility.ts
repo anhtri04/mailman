@@ -1,4 +1,4 @@
-import type { Protocol } from '../types';
+import type { Protocol } from '../../core/types';
 
 export interface ParsedCurl {
   protocol: Protocol;

@@ -1,8 +1,8 @@
 import { useMemo, useCallback } from 'react';
 import { useKeyboard } from '@opentui/react';
-import { useTheme } from '../../../theme/ThemeProvider';
+import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { ResponseState } from '../../../types';
-import type { GraphqlResponseTab } from '../../../utils/responseCopyUtility';
+import type { GraphqlResponseTab } from '../../../shared/utils/responseCopyUtility';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { HeadersDisplay } from './HeadersDisplay';
 import { MailmanLogo } from './MailmanLogo';

@@ -1,4 +1,4 @@
-import type { Collection, RequestOptions, ResponseState } from '../../types';
+import type { Collection, RequestOptions, ResponseState } from '../../core/types';
 
 export type CliOutputKind = 'system' | 'request' | 'response' | 'error';
 

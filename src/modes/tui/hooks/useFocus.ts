@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { FocusArea } from '../types';
+import type { FocusArea } from '../../../core/types';
 
 interface UseFocusReturn {
   focusedArea: FocusArea;

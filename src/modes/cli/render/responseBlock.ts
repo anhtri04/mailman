@@ -1,5 +1,5 @@
 import type { ResponseState } from '../../../types';
-import { detectContentType, formatResponseBody } from '../../../utils/response-formatter';
+import { detectContentType, formatResponseBody } from '../../../shared/utils/response-formatter';
 import type { CliViewToggles } from '../types';
 
 interface RequestMeta {
