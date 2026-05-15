@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useKeyboard } from '@opentui/react';
-import { useFocus } from './hooks';
+import { useFocus, useKeyboardShortcuts } from './hooks';
 import {
   RequestPanel,
   ResponsePanel,
@@ -341,135 +340,130 @@ export function App() {
     };
   }, [restStreamControllers]);
 
-  useKeyboard((key) => {
-    if (key.name === 'escape') {
-      if (showThemeSelector) {
-        setShowThemeSelector(false);
+  const handleQuit = useCallback(() => {
+    const cleanExit = (globalThis as any).__mailmanCleanExit;
+    if (cleanExit) cleanExit();
+  }, []);
+
+  const handleOpenHistory = useCallback(() => {
+    void (async () => {
+      const entries = await loadHistory();
+      setHistoryEntries(entries);
+    })();
+  }, []);
+
+  const handleSaveRequest = useCallback(() => {
+    if (!activeRequestId || !activeCollectionId) return;
+
+    void (async () => {
+      try {
+        await updateRequest(
+          activeCollectionId,
+          activeRequestId,
+          currentProtocol === 'graphql'
+            ? {
+                method: 'POST',
+                url: graphqlRequest.url,
+                headers: graphqlRequest.headers,
+                body: graphqlRequest.query,
+                variables: graphqlRequest.variables,
+                auth: graphqlRequest.auth,
+              }
+            : {
+                method: request.method,
+                url: request.url,
+                headers: request.headers,
+                body: request.body,
+                auth: request.auth,
+              },
+        );
+        const updated = await loadCollections();
+        setCollections(updated);
+        setSaveStatus('saved');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error('Failed to save request:', message);
+        setSaveStatus('error');
+      }
+    })();
+  }, [
+    activeCollectionId,
+    activeRequestId,
+    currentProtocol,
+    graphqlRequest,
+    request.auth,
+    request.body,
+    request.headers,
+    request.method,
+    request.url,
+  ]);
+
+  const handleCopyResponse = useCallback(() => {
+    const canCopy = focusedArea === 'response' || showResponseModal;
+    if (!canCopy || !activeRequestId) return;
+
+    const responseToCopy =
+      currentProtocol === 'graphql'
+        ? currentGraphqlResponse
+        : (currentResponse ?? restResponses[activeRequestId] ?? null);
+
+    if (!responseToCopy) return;
+
+    const content = showResponseModal
+      ? getRestTabCopyContent(responseToCopy, modalActiveTab, restActiveSseTab)
+      : currentProtocol === 'graphql'
+        ? getGraphqlTabCopyContent(responseToCopy, graphqlActiveTab)
+        : getRestTabCopyContent(responseToCopy, restActiveTab, restActiveSseTab);
+
+    void (async () => {
+      const copied = await copyTextToClipboard(content);
+      if (!copied) {
+        console.error('Failed to copy response content to clipboard.');
+        setCopyStatus('error');
         return;
       }
-      if (showHelp) {
-        setShowHelp(false);
-        return;
-      }
-      if (showHistoryModal) {
-        setShowHistoryModal(false);
-        setHistoryError(null);
-        return;
-      }
-      if (showResponseModal) {
-        setShowResponseModal(false);
-        return;
-      }
-      if (activeModal) {
-        setActiveModal(null);
-      } else if (collectionModal) {
-        setCollectionModal(null);
-      }
-    } else if (key.ctrl && key.name === 'q') {
-      const cleanExit = (globalThis as any).__mailmanCleanExit;
-      if (cleanExit) cleanExit();
-    } else if (key.ctrl && key.name === 'g') {
-      if (
-        !showHelp &&
-        !showThemeSelector &&
-        !showHistoryModal &&
-        !activeModal &&
-        !collectionModal &&
-        !showResponseModal
-      ) {
-        setShowHelp(true);
-      }
-    } else if (key.ctrl && key.name === 't') {
-      if (
-        !showThemeSelector &&
-        !showHelp &&
-        !showHistoryModal &&
-        !activeModal &&
-        !collectionModal &&
-        !showResponseModal
-      ) {
-        setShowThemeSelector(true);
-      }
-    } else if (key.ctrl && key.name === 'r') {
-      if (
-        !showThemeSelector &&
-        !showHelp &&
-        !showHistoryModal &&
-        !activeModal &&
-        !collectionModal &&
-        !showResponseModal
-      ) {
-        setHistoryError(null);
-        setShowHistoryModal(true);
-        void (async () => {
-          const entries = await loadHistory();
-          setHistoryEntries(entries);
-        })();
-      }
-    } else if (key.ctrl && key.name === 's') {
-      if (activeRequestId && activeCollectionId) {
-        void (async () => {
-          try {
-            await updateRequest(
-              activeCollectionId,
-              activeRequestId,
-              currentProtocol === 'graphql'
-                ? {
-                    method: 'POST',
-                    url: graphqlRequest.url,
-                    headers: graphqlRequest.headers,
-                    body: graphqlRequest.query,
-                    variables: graphqlRequest.variables,
-                    auth: graphqlRequest.auth,
-                  }
-                : {
-                    method: request.method,
-                    url: request.url,
-                    headers: request.headers,
-                    body: request.body,
-                    auth: request.auth,
-                  },
-            );
-            const updated = await loadCollections();
-            setCollections(updated);
-            setSaveStatus('saved');
-          } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            console.error('Failed to save request:', message);
-            setSaveStatus('error');
-          }
-        })();
-      }
-    } else if (key.ctrl && key.name === 'c') {
-      const canCopy = focusedArea === 'response' || showResponseModal;
-      if (!canCopy) return;
+      setCopyStatus('copied');
+    })();
+  }, [
+    activeRequestId,
+    currentGraphqlResponse,
+    currentProtocol,
+    currentResponse,
+    focusedArea,
+    graphqlActiveTab,
+    modalActiveTab,
+    restActiveSseTab,
+    restActiveTab,
+    restResponses,
+    showResponseModal,
+  ]);
 
-      if (!activeRequestId) return;
-
-      const responseToCopy =
-        currentProtocol === 'graphql'
-          ? currentGraphqlResponse
-          : (currentResponse ?? restResponses[activeRequestId] ?? null);
-
-      if (!responseToCopy) return;
-
-      const content = showResponseModal
-        ? getRestTabCopyContent(responseToCopy, modalActiveTab, restActiveSseTab)
-        : currentProtocol === 'graphql'
-          ? getGraphqlTabCopyContent(responseToCopy, graphqlActiveTab)
-          : getRestTabCopyContent(responseToCopy, restActiveTab, restActiveSseTab);
-
-      void (async () => {
-        const copied = await copyTextToClipboard(content);
-        if (!copied) {
-          console.error('Failed to copy response content to clipboard.');
-          setCopyStatus('error');
-          return;
-        }
-        setCopyStatus('copied');
-      })();
-    }
-  });
+  useKeyboardShortcuts(
+    {
+      showThemeSelector,
+      showHelp,
+      showHistoryModal,
+      showResponseModal,
+      activeModal,
+      collectionModal,
+      hasActiveRequest: Boolean(activeRequestId),
+      hasActiveCollection: Boolean(activeCollectionId),
+      canCopyResponse: focusedArea === 'response' || showResponseModal,
+    },
+    {
+      setShowThemeSelector,
+      setShowHelp,
+      setShowHistoryModal,
+      setShowResponseModal,
+      setActiveModal,
+      setCollectionModal,
+      resetHistoryError: () => setHistoryError(null),
+      onQuit: handleQuit,
+      onOpenHistory: handleOpenHistory,
+      onSaveRequest: handleSaveRequest,
+      onCopyResponse: handleCopyResponse,
+    },
+  );
 
   const addRestHistoryEntry = useCallback(
     (response: ResponseState) => {
