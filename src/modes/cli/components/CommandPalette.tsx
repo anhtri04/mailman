@@ -4,19 +4,12 @@ import { useTheme } from '../../../shared/theme/ThemeProvider';
 interface CommandPaletteProps {
   visible: boolean;
   commands: CliCommand[];
-  input: string;
+  selectedIndex: number;
 }
 
-export function CommandPalette({ visible, commands, input }: CommandPaletteProps) {
+export function CommandPalette({ visible, commands, selectedIndex }: CommandPaletteProps) {
   const { colors } = useTheme();
   if (!visible) return null;
-
-  const query = input.slice(1).trim().toLowerCase();
-  const filtered = commands
-    .filter((cmd) => cmd.name.includes(query) || cmd.aliases.some((alias) => alias.includes(query)))
-    .slice(0, 6);
-
-  if (filtered.length === 0) return null;
 
   return (
     <box
@@ -29,13 +22,22 @@ export function CommandPalette({ visible, commands, input }: CommandPaletteProps
         paddingRight: 1,
         paddingTop: 0.5,
         paddingBottom: 0.5,
+        maxHeight: 8,
       }}
     >
-      {filtered.map((cmd) => (
-        <text key={cmd.name} fg={colors.text.primary}>
-          /{cmd.name} - {cmd.description}
-        </text>
-      ))}
+      <scrollbox style={{ flexGrow: 1 }}>
+        <box style={{ flexDirection: 'column' }}>
+          {commands.map((cmd, index) => (
+            <text
+              key={cmd.name}
+              fg={index === selectedIndex ? colors.accent.text : colors.text.primary}
+              bg={index === selectedIndex ? colors.accent.primary : undefined}
+            >
+              /{cmd.name} - {cmd.description}
+            </text>
+          ))}
+        </box>
+      </scrollbox>
     </box>
   );
 }

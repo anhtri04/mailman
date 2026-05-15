@@ -5,6 +5,7 @@ import { CliInput } from './components/CliInput';
 import { CliOutput } from './components/CliOutput';
 import { CommandPalette } from './components/CommandPalette';
 import { getCommands, resolveCommand } from './commands/registry';
+import { useCommandPalette } from './hooks/useCommandPalette';
 import { useCliState } from './hooks/useCliState';
 import { parseUnifiedInput } from './parser/unifiedInputParser';
 import { renderResponseBlock } from './render/responseBlock';
@@ -13,6 +14,7 @@ import { renderSystemMessage } from './render/systemMessage';
 export function CliApp() {
   const { state, setState, pushOutput } = useCliState();
   const commands = getCommands();
+  const palette = useCommandPalette(state.input, commands);
 
   useEffect(() => {
     void (async () => {
@@ -26,8 +28,8 @@ export function CliApp() {
     if (exit) exit();
   }, []);
 
-  const submitInput = useCallback(async () => {
-    const raw = state.input.trim();
+  const submitInput = useCallback(async (rawInput?: string) => {
+    const raw = (rawInput ?? state.input).trim();
     if (!raw) return;
 
     setState((prev) => ({
@@ -80,7 +82,7 @@ export function CliApp() {
   }, [cleanExit, commands, pushOutput, setState, state, state.input, state.toggles]);
 
   useKeyboard((key) => {
-    if (key.ctrl && key.name === 'c') {
+    if (key.ctrl && key.name === 'q') {
       cleanExit();
       return;
     }
@@ -91,11 +93,36 @@ export function CliApp() {
     }
 
     if (key.name === 'return' || key.name === 'enter') {
+      const selection = palette.selectForEnter();
+      if (selection) {
+        if (selection.executeNow) {
+          void submitInput(selection.nextInput);
+        } else {
+          const nextInput = selection.nextInput;
+          if (!nextInput) return;
+          setState((prev) => ({ ...prev, input: nextInput, historyIndex: null }));
+        }
+        return;
+      }
+
       void submitInput();
       return;
     }
 
+    if (key.name === 'tab') {
+      const completedInput = palette.autocompleteInput();
+      if (!completedInput) return;
+
+      setState((prev) => ({ ...prev, input: completedInput, historyIndex: null }));
+      return;
+    }
+
     if (key.name === 'up') {
+      if (palette.visible) {
+        palette.moveSelectionUp();
+        return;
+      }
+
       setState((prev) => {
         if (prev.history.length === 0) return prev;
         const nextIndex =
@@ -107,6 +134,11 @@ export function CliApp() {
     }
 
     if (key.name === 'down') {
+      if (palette.visible) {
+        palette.moveSelectionDown();
+        return;
+      }
+
       setState((prev) => {
         if (prev.history.length === 0 || prev.historyIndex === null) return prev;
         const nextIndex = prev.historyIndex + 1;
@@ -120,12 +152,12 @@ export function CliApp() {
   });
 
   return (
-    <box style={{ flexDirection: 'column', height: '100%', padding: 1, gap: 1 }}>
+    <box style={{ flexDirection: 'column', height: '100%', padding: 1, gap: 0.5 }}>
       <CliOutput outputs={state.outputs} />
       <CommandPalette
-        visible={state.input.startsWith('/')}
-        commands={commands}
-        input={state.input}
+        visible={palette.visible}
+        commands={palette.filtered}
+        selectedIndex={palette.selectedIndex}
       />
       <CliInput
         value={state.input}
