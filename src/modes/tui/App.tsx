@@ -40,6 +40,7 @@ import {
   getGraphqlTabCopyContent,
   getRestTabCopyContent,
 } from '../../shared/utils/responseCopyUtility';
+import { getInstructionContextKey, INSTRUCTION_CATALOG } from './utils/instructions';
 import type {
   GraphqlResponseTab,
   RestResponseTab,
@@ -128,164 +129,42 @@ export function App() {
   const isStreamingResponse =
     currentResponse?.mode === 'sse' && (currentResponse.isStreaming ?? false);
 
-  const instructionContextKey = useMemo(() => {
-    if (showHelp) return 'app.blocked.help';
-    if (showThemeSelector) return 'app.blocked.theme';
-    if (showHistoryModal) return 'app.blocked.history';
-    if (showResponseModal) return 'app.blocked.responseModal';
-    if (activeModal) return `app.blocked.editorModal.${activeModal}`;
-    if (collectionModal) return `app.blocked.collectionModal.${collectionModal}`;
-    if (isLoading) {
-      return currentProtocol === 'graphql' ? 'request.loading.graphql' : 'request.loading.rest';
-    }
-    if (isStreamingResponse) return 'request.streaming.rest';
-    if (activeRequestId) {
-      if (currentProtocol === 'graphql') {
-        return focusedArea === 'response'
-          ? 'request.active.graphql.response'
-          : 'request.active.graphql.request';
-      }
-      return focusedArea === 'response'
-        ? 'request.active.rest.response'
-        : 'request.active.rest.request';
-    }
-    if (activeCollectionId) {
-      return currentProtocol === 'graphql'
-        ? 'collection.selected.noRequest.graphql'
-        : 'collection.selected.noRequest.rest';
-    }
-    return 'idle.noCollection';
-  }, [
-    showHelp,
-    showThemeSelector,
-    showHistoryModal,
-    showResponseModal,
-    activeModal,
-    collectionModal,
-    isLoading,
-    currentProtocol,
-    isStreamingResponse,
-    activeRequestId,
-    focusedArea,
-    activeCollectionId,
-  ]);
-
-  const instructionCatalog = useMemo(
-    () => ({
-      'app.blocked.help': [
-        'Esc Close modals / go back',
-        '↑ / ↓ Navigate collections and requests',
-        'Tab Switch focus between panels',
-      ],
-      'app.blocked.theme': [
-        'Esc Close modals / go back',
-        'Ctrl+T Change theme',
-        'Ctrl+G Open this help panel',
-      ],
-      'app.blocked.responseModal': [
-        'Esc Close modals / go back',
-        'Inspect response body and headers',
-        'Ctrl+G Open this help panel',
-      ],
-      'app.blocked.history': [
-        'Esc Close modals / go back',
-        'Type to search by method, URL, status, or body',
-        'Enter Open selected request from history',
-      ],
-      'app.blocked.editorModal.headers': [
-        'Esc Close modals / go back',
-        'Edit request headers',
-        'Ctrl+S Save request changes',
-      ],
-      'app.blocked.editorModal.body': [
-        'Esc Close modals / go back',
-        'Edit request body',
-        'Ctrl+S Save request changes',
-      ],
-      'app.blocked.editorModal.query': [
-        'Esc Close modals / go back',
-        'Edit query parameters',
-        'Ctrl+S Save request changes',
-      ],
-      'app.blocked.editorModal.auth': [
-        'Esc Close modals / go back',
-        'Edit authentication settings',
-        'Ctrl+S Save request changes',
-      ],
-      'app.blocked.collectionModal.import': [
-        'Esc Close modals / go back',
-        'Use Import to create a new collection',
-        'Press Enter to confirm inputs',
-      ],
-      'app.blocked.collectionModal.add': [
-        'Esc Close modals / go back',
-        'Set method and request name',
-        'Quick Curl (Optional) to prefill request',
-      ],
-      'app.blocked.collectionModal.export': [
-        'Esc Close modals / go back',
-        'Export selected collection',
-        'Ctrl+G Open this help panel',
-      ],
-      'request.loading.rest': [
-        'Sending request...',
-        'Wait for response status and body',
-        'Space Expand response (when focused)',
-      ],
-      'request.loading.graphql': [
-        'Sending GraphQL request...',
-        'Wait for response status and body',
-        'Ctrl+S Save request changes',
-      ],
-      'request.streaming.rest': [
-        'Live stream active',
-        'Use response controls to disconnect stream',
-        'Use response controls to clear stream events',
-      ],
-      'request.active.rest.request': [
-        'URL bar: type an endpoint and press Enter to send',
-        'H / B / Q / A buttons edit headers, body, query, or auth',
-        'Ctrl+S Save request changes',
-      ],
-      'request.active.rest.response': [
-        'Response panel shows status, time, body, and headers',
-        'Space Expand response (when focused)',
-        'Esc Close modals / go back',
-      ],
-      'request.active.graphql.request': [
-        'Edit query and variables, then send',
-        'H / A buttons edit headers or auth',
-        'Ctrl+S Save request changes',
-      ],
-      'request.active.graphql.response': [
-        'Response panel shows status, time, body, and headers',
-        'Space Expand response (when focused)',
-        'Esc Close modals / go back',
-      ],
-      'collection.selected.noRequest.rest': [
-        'Add requests inside a collection to save them for later',
-        'Selecting a request automatically loads its configuration',
-        'Ctrl+G Open this help panel',
-      ],
-      'collection.selected.noRequest.graphql': [
-        'Add GraphQL requests to this collection',
-        'Selecting a request automatically loads its configuration',
-        'Ctrl+G Open this help panel',
-      ],
-      'idle.noCollection': [
-        '↑ / ↓ Navigate collections and requests',
-        'Ctrl+T Change theme',
-        'Ctrl+Q Quit application',
-      ],
-    }),
-    [],
+  const instructionContextKey = useMemo(
+    () =>
+      getInstructionContextKey({
+        showHelp,
+        showThemeSelector,
+        showHistoryModal,
+        showResponseModal,
+        activeModal,
+        collectionModal,
+        isLoading,
+        currentProtocol,
+        isStreamingResponse,
+        activeRequestId,
+        focusedArea,
+        activeCollectionId,
+      }),
+    [
+      showHelp,
+      showThemeSelector,
+      showHistoryModal,
+      showResponseModal,
+      activeModal,
+      collectionModal,
+      isLoading,
+      currentProtocol,
+      isStreamingResponse,
+      activeRequestId,
+      focusedArea,
+      activeCollectionId,
+    ],
   );
 
   const [instructionIndex, setInstructionIndex] = useState(0);
   const [isInstructionAnimating, setIsInstructionAnimating] = useState(false);
   const currentInstructionQueue =
-    instructionCatalog[instructionContextKey as keyof typeof instructionCatalog] ??
-    instructionCatalog['idle.noCollection'];
+    INSTRUCTION_CATALOG[instructionContextKey] ?? INSTRUCTION_CATALOG['idle.noCollection'];
 
   useEffect(() => {
     setInstructionIndex(0);
@@ -306,7 +185,7 @@ export function App() {
   }, [instructionContextKey, instructionIndex]);
 
   const liveInstruction =
-    currentInstructionQueue[instructionIndex] ?? instructionCatalog['idle.noCollection'][0];
+    currentInstructionQueue[instructionIndex] ?? INSTRUCTION_CATALOG['idle.noCollection'][0];
 
   useEffect(() => {
     void (async () => {
