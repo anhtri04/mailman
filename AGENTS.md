@@ -24,12 +24,15 @@ There is no standalone typecheck script — `bun run lint` includes `--type-chec
 ```
 index.tsx               # Entry point — creates CLI renderer and React root
 src/
-  App.tsx               # Root component, keyboard bindings, modal routing
+  modes/
+    tui/
+      App.tsx           # Root TUI component, keyboard bindings, modal routing
+      components/       # TUI React components (PascalCase.tsx)
+        index.ts        # Barrel re-exports all TUI components
+      hooks/            # TUI hooks (camelCase.ts)
+        index.ts        # Barrel re-exports
+    cli/                # Integrated CLI mode
   types.ts              # Shared types (RequestOptions, ResponseState, Collection, etc.)
-  components/           # React UI components (PascalCase.tsx)
-    index.ts            # Barrel re-exports all components
-  hooks/                # Custom React hooks (camelCase.ts)
-    index.ts            # Barrel re-exports
   services/             # Business logic & IO (camelCase.ts)
     index.ts            # Barrel re-exports
   theme/                # Theme system — colors, types, ThemeProvider, adapters
@@ -57,7 +60,7 @@ src/
 - Single quotes throughout (enforced by oxfmt)
 - Group order: external packages → local modules
 - Type-only imports use `import type`
-- Local paths are relative: `import { App } from './src/App'`
+- Local paths are relative: `import { App } from './src/modes/tui'`
 
 ### Formatting
 - oxfmt with `singleQuote: true`; markdown files are ignored

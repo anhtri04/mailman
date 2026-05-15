@@ -2,8 +2,8 @@ import { useState, useCallback } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { join } from 'path';
 import { homedir } from 'os';
-import { useDirectory } from '../../../hooks/useDirectory';
-import type { DirItem } from '../../../hooks/useDirectory';
+import { useDirectory } from '../hooks/useDirectory';
+import type { DirItem } from '../hooks/useDirectory';
 import { useTheme } from '../../../theme/ThemeProvider';
 
 interface FileBrowserProps {

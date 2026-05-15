@@ -130,14 +130,13 @@ bun run seed         # Load example collections into ~/.mailman/
 ```
 index.tsx                 # Entry point
 src/
-  App.tsx                 # Temporary compatibility barrel for TUI app
   modes/
-    tui/                  # TUI mode app shell
+    tui/                  # TUI mode (interactive app)
+      App.tsx             # TUI root component
+      components/         # TUI UI components + tests
+      hooks/              # TUI-specific hooks + tests
     cli/                  # CLI mode implementation
-  cli/                    # Temporary compatibility barrel (to be removed)
   types.ts                # Shared type definitions
-  components/             # React UI components (PascalCase.tsx)
-  hooks/                  # Custom React hooks (camelCase.ts)
   services/               # Business logic & IO (camelCase.ts)
   theme/                  # Theme system — colors, types, ThemeProvider
   utils/                  # Pure utility functions (camelCase.ts)
