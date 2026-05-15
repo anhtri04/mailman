@@ -1,1 +1,1 @@
-export { CliApp } from './CliApp';
+export { CliApp } from '../modes/cli';

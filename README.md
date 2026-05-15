@@ -48,7 +48,7 @@ Run the integrated CLI variant:
 bun run dev:cli
 ```
 
-Detailed module documentation: [`docs/cli-module.md`](docs/cli-module.md)
+CLI source: [`src/modes/cli`](src/modes/cli)
 
 ### Navigation
 
@@ -130,7 +130,11 @@ bun run seed         # Load example collections into ~/.mailman/
 ```
 index.tsx                 # Entry point
 src/
-  App.tsx                 # Root component, keyboard bindings, modal routing
+  App.tsx                 # Temporary compatibility barrel for TUI app
+  modes/
+    tui/                  # TUI mode app shell
+    cli/                  # CLI mode implementation
+  cli/                    # Temporary compatibility barrel (to be removed)
   types.ts                # Shared type definitions
   components/             # React UI components (PascalCase.tsx)
   hooks/                  # Custom React hooks (camelCase.ts)

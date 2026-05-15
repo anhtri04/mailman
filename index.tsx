@@ -2,8 +2,8 @@
 
 import { createCliRenderer } from '@opentui/core';
 import { createRoot } from '@opentui/react';
-import { App } from './src/App';
-import { CliApp } from './src/cli';
+import { App } from './src/modes/tui';
+import { CliApp } from './src/modes/cli';
 import { ThemeProvider } from './src/theme/ThemeProvider';
 
 const modeArg = process.argv[2]?.toLowerCase();
