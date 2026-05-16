@@ -38,8 +38,9 @@ export function classifyError(error: unknown): HttpError {
 }
 
 import { createSSEParser } from './sse-parser';
+import { buildRequestStats } from './request-stats';
 import type { AuthConfig } from '../types';
-import type { ResponseState, SSEEvent } from '../types';
+import type { RequestStats, ResponseState, SSEEvent } from '../types';
 
 interface ResolvedAuthRequest {
   url: string;
@@ -239,7 +240,9 @@ export interface HttpExecutionOptions {
 }
 
 export interface SSEStreamHandlers {
-  onOpen: (initial: Pick<ResponseState, 'status' | 'statusText' | 'headers' | 'time'>) => void;
+  onOpen: (
+    initial: Pick<ResponseState, 'status' | 'statusText' | 'headers' | 'time' | 'stats'>,
+  ) => void;
   onEvent: (event: SSEEvent) => void;
   onError?: (message: string) => void;
   onComplete?: () => void;
@@ -272,6 +275,7 @@ export async function executeHttpRequest(
   body: string;
   headers: Record<string, string>;
   time: number;
+  stats: RequestStats;
 }> {
   const startTime = Date.now();
 
@@ -286,6 +290,7 @@ export async function executeHttpRequest(
       signal: controller.signal,
     });
 
+    const responseStartTime = Date.now();
     clearTimeout(timeoutId);
 
     const responseHeaders: Record<string, string> = {};
@@ -295,26 +300,50 @@ export async function executeHttpRequest(
 
     const bodyText = await response.text();
     const endTime = Date.now();
+    const body = bodyText || '(empty response)';
+    const totalMs = endTime - startTime;
 
     return {
       status: response.status,
       statusText: response.statusText,
-      body: bodyText || '(empty response)',
+      body,
       headers: responseHeaders,
-      time: endTime - startTime,
+      time: totalMs,
+      stats: buildRequestStats({
+        request: options,
+        response: {
+          url: response.url,
+          redirected: response.redirected,
+          headers: responseHeaders,
+          body,
+        },
+        timings: {
+          totalMs,
+          ttfbMs: responseStartTime - startTime,
+          downloadMs: endTime - responseStartTime,
+        },
+      }),
     };
   } catch (error) {
     clearTimeout(timeoutId);
 
     const { type, message } = classifyError(error);
     const endTime = Date.now();
+    const body = `Error: ${message}`;
+    const totalMs = endTime - startTime;
 
     return {
       status: 0,
       statusText: type.toUpperCase(),
-      body: `Error: ${message}`,
+      body,
       headers: {},
-      time: endTime - startTime,
+      time: totalMs,
+      stats: buildRequestStats({
+        request: options,
+        response: { headers: {}, body },
+        timings: { totalMs },
+        errorType: type,
+      }),
     };
   }
 }
@@ -342,14 +371,30 @@ export async function executeHttpStreamRequest(
       signal: controller.signal,
     });
 
+    const responseStartTime = Date.now();
     clearTimeout(timeoutId);
 
     const headers = headersFromResponse(response);
+    const initialTime = responseStartTime - startTime;
     const initial = {
       status: response.status,
       statusText: response.statusText,
       headers,
-      time: Date.now() - startTime,
+      time: initialTime,
+      stats: buildRequestStats({
+        request: options,
+        response: {
+          url: response.url,
+          redirected: response.redirected,
+          headers,
+          body: '',
+        },
+        timings: {
+          totalMs: initialTime,
+          ttfbMs: initialTime,
+          downloadMs: 0,
+        },
+      }),
     };
     handlers.onOpen(initial);
 
@@ -358,10 +403,28 @@ export async function executeHttpStreamRequest(
 
     if (!isSSE) {
       const bodyText = await response.text();
+      const endTime = Date.now();
+      const body = bodyText || '(empty response)';
+      const totalMs = endTime - startTime;
       return {
         response: {
           ...initial,
-          body: bodyText || '(empty response)',
+          body,
+          time: totalMs,
+          stats: buildRequestStats({
+            request: options,
+            response: {
+              url: response.url,
+              redirected: response.redirected,
+              headers,
+              body,
+            },
+            timings: {
+              totalMs,
+              ttfbMs: responseStartTime - startTime,
+              downloadMs: endTime - responseStartTime,
+            },
+          }),
           mode: 'single',
           isStreaming: false,
         },
@@ -379,6 +442,20 @@ export async function executeHttpStreamRequest(
           body: 'Error: SSE stream is not readable',
           headers,
           time: endTime - startTime,
+          stats: buildRequestStats({
+            request: options,
+            response: {
+              url: response.url,
+              redirected: response.redirected,
+              headers,
+              body: 'Error: SSE stream is not readable',
+            },
+            timings: {
+              totalMs: endTime - startTime,
+              ttfbMs: responseStartTime - startTime,
+              downloadMs: endTime - responseStartTime,
+            },
+          }),
           mode: 'sse',
           isStreaming: false,
         },
@@ -411,11 +488,27 @@ export async function executeHttpStreamRequest(
     }
 
     const endTime = Date.now();
+    const body = rawChunks.join('') || '(empty response)';
+    const totalMs = endTime - startTime;
     return {
       response: {
         ...initial,
-        body: rawChunks.join('') || '(empty response)',
-        time: endTime - startTime,
+        body,
+        time: totalMs,
+        stats: buildRequestStats({
+          request: options,
+          response: {
+            url: response.url,
+            redirected: response.redirected,
+            headers,
+            body,
+          },
+          timings: {
+            totalMs,
+            ttfbMs: responseStartTime - startTime,
+            downloadMs: endTime - responseStartTime,
+          },
+        }),
         mode: 'sse',
         isStreaming: false,
       },
@@ -426,13 +519,21 @@ export async function executeHttpStreamRequest(
     const { type, message } = classifyError(error);
     handlers.onError?.(message);
     const endTime = Date.now();
+    const body = `Error: ${message}`;
+    const totalMs = endTime - startTime;
     return {
       response: {
         status: 0,
         statusText: type.toUpperCase(),
-        body: `Error: ${message}`,
+        body,
         headers: {},
-        time: endTime - startTime,
+        time: totalMs,
+        stats: buildRequestStats({
+          request: options,
+          response: { headers: {}, body },
+          timings: { totalMs },
+          errorType: type,
+        }),
         mode: 'single',
         isStreaming: false,
       },

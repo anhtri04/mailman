@@ -1,3 +1,5 @@
+import type { RequestStats } from './request-stats';
+
 export interface SSEEvent {
   id?: string;
   event?: string;
@@ -19,6 +21,7 @@ export interface ResponseState {
   body: string;
   headers: Record<string, string>;
   time: number;
+  stats?: RequestStats;
   mode?: 'single' | 'sse';
   isStreaming?: boolean;
   streamStartedAt?: number;

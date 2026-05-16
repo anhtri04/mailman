@@ -8,6 +8,7 @@ interface UseKeyboardShortcutsState {
   showHelp: boolean;
   showHistoryModal: boolean;
   showResponseModal: boolean;
+  showRequestStatsModal: boolean;
   activeModal: EditorModal;
   collectionModal: CollectionModal;
   hasActiveRequest: boolean;
@@ -20,6 +21,7 @@ interface UseKeyboardShortcutsActions {
   setShowHelp: (show: boolean) => void;
   setShowHistoryModal: (show: boolean) => void;
   setShowResponseModal: (show: boolean) => void;
+  setShowRequestStatsModal: (show: boolean) => void;
   setActiveModal: (modal: EditorModal) => void;
   setCollectionModal: (modal: CollectionModal) => void;
   resetHistoryError: () => void;
@@ -40,6 +42,7 @@ function isInteractionBlocked(state: UseKeyboardShortcutsState): boolean {
     state.showHelp ||
     state.showHistoryModal ||
     state.showResponseModal ||
+    state.showRequestStatsModal ||
     state.activeModal !== null ||
     state.collectionModal !== null
   );
@@ -78,6 +81,11 @@ export function handleKeyboardShortcut(
 
     if (state.showResponseModal) {
       actions.setShowResponseModal(false);
+      return;
+    }
+
+    if (state.showRequestStatsModal) {
+      actions.setShowRequestStatsModal(false);
       return;
     }
 

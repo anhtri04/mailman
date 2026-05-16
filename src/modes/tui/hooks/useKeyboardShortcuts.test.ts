@@ -7,6 +7,7 @@ function createState(overrides: Record<string, unknown> = {}) {
     showHelp: false,
     showHistoryModal: false,
     showResponseModal: false,
+    showRequestStatsModal: false,
     activeModal: null,
     collectionModal: null,
     hasActiveRequest: false,
@@ -23,6 +24,8 @@ function createActionLog() {
     setShowHelp: (show: boolean) => calls.push(`setShowHelp:${String(show)}`),
     setShowHistoryModal: (show: boolean) => calls.push(`setShowHistoryModal:${String(show)}`),
     setShowResponseModal: (show: boolean) => calls.push(`setShowResponseModal:${String(show)}`),
+    setShowRequestStatsModal: (show: boolean) =>
+      calls.push(`setShowRequestStatsModal:${String(show)}`),
     setActiveModal: (modal: 'headers' | 'body' | 'query' | 'auth' | null) =>
       calls.push(`setActiveModal:${String(modal)}`),
     setCollectionModal: (modal: 'import' | 'add' | 'export' | null) =>
@@ -77,7 +80,11 @@ describe('handleKeyboardShortcut', () => {
   test('copies response on Ctrl+C only when response copy is allowed', () => {
     const { actions, calls } = createActionLog();
 
-    handleKeyboardShortcut({ ctrl: true, name: 'c' }, createState({ canCopyResponse: true }), actions);
+    handleKeyboardShortcut(
+      { ctrl: true, name: 'c' },
+      createState({ canCopyResponse: true }),
+      actions,
+    );
 
     expect(calls).toEqual(['onCopyResponse']);
   });

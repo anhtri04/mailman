@@ -7,6 +7,7 @@ export type InstructionContextKey =
   | 'app.blocked.help'
   | 'app.blocked.theme'
   | 'app.blocked.responseModal'
+  | 'app.blocked.requestStats'
   | 'app.blocked.history'
   | 'app.blocked.editorModal.headers'
   | 'app.blocked.editorModal.body'
@@ -31,6 +32,7 @@ interface InstructionContextInput {
   showThemeSelector: boolean;
   showHistoryModal: boolean;
   showResponseModal: boolean;
+  showRequestStatsModal: boolean;
   activeModal: EditorModal;
   collectionModal: CollectionModal;
   isLoading: boolean;
@@ -56,6 +58,11 @@ export const INSTRUCTION_CATALOG: Record<InstructionContextKey, string[]> = {
     'Esc Close modals / go back',
     'Inspect response body and headers',
     'Ctrl+G Open this help panel',
+  ],
+  'app.blocked.requestStats': [
+    'Esc Close modals / go back',
+    'Review timings, sizes, and network details',
+    'Stats are saved with request history',
   ],
   'app.blocked.history': [
     'Esc Close modals / go back',
@@ -154,6 +161,7 @@ export function getInstructionContextKey(input: InstructionContextInput): Instru
   if (input.showThemeSelector) return 'app.blocked.theme';
   if (input.showHistoryModal) return 'app.blocked.history';
   if (input.showResponseModal) return 'app.blocked.responseModal';
+  if (input.showRequestStatsModal) return 'app.blocked.requestStats';
   if (input.activeModal) return `app.blocked.editorModal.${input.activeModal}`;
   if (input.collectionModal) return `app.blocked.collectionModal.${input.collectionModal}`;
 

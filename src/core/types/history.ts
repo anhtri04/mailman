@@ -1,5 +1,6 @@
 import type { AuthConfig } from './auth';
 import type { Protocol } from './collections';
+import type { RequestStats } from './request-stats';
 
 export interface HistorySSESummary {
   eventCount: number;
@@ -22,6 +23,7 @@ export interface HistoryResponseSnapshot {
   body: string;
   headers: Record<string, string>;
   time: number;
+  stats?: RequestStats;
   mode?: 'single' | 'sse';
   sseSummary?: HistorySSESummary;
 }

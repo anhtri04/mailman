@@ -1,4 +1,5 @@
 import type { ResponseState } from '../../../types';
+import { formatBytes } from '../../../core/services';
 import { detectContentType, formatResponseBody } from '../../../shared/utils/response-formatter';
 import type { CliViewToggles } from '../types';
 
@@ -23,6 +24,13 @@ export function renderResponseBlock(
   if (toggles.showMeta) {
     lines.push(divider('Meta'));
     lines.push(`${requestMeta.method} ${requestMeta.url}`);
+    if (response.stats) {
+      lines.push(`TTFB: ${response.stats.timings.ttfbMs ?? '-'}ms`);
+      lines.push(`Download: ${response.stats.timings.downloadMs ?? '-'}ms`);
+      lines.push(`Request size: ${formatBytes(response.stats.requestSize.totalBytes)}`);
+      lines.push(`Response size: ${formatBytes(response.stats.responseSize.totalBytes)}`);
+      lines.push(`Network: ${response.stats.network.protocol}//${response.stats.network.host}`);
+    }
   }
 
   if (toggles.showHeaders) {

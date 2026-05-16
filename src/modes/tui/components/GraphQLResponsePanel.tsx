@@ -13,6 +13,7 @@ interface GraphQLResponsePanelProps {
   response: ResponseState | null;
   isExpanded: boolean;
   onToggleExpand: (expanded: boolean) => void;
+  onOpenStats?: () => void;
   activeTab: GraphqlResponseTab;
   onActiveTabChange: (tab: GraphqlResponseTab) => void;
   copyStatus?: 'idle' | 'copied' | 'error';
@@ -26,6 +27,7 @@ export function GraphQLResponsePanel({
   response,
   isExpanded,
   onToggleExpand,
+  onOpenStats,
   activeTab,
   onActiveTabChange,
   copyStatus = 'idle',
@@ -160,6 +162,17 @@ export function GraphQLResponsePanel({
               <text fg="#cc4444" bg={colors.bg.app} style={{ paddingLeft: 1, paddingRight: 1 }}>
                 Copy failed
               </text>
+            )}
+            {onOpenStats && (
+              <box
+                style={{ paddingLeft: 1, paddingRight: 1 }}
+                onMouseDown={(e: { stopPropagation: () => void }) => {
+                  e.stopPropagation();
+                  onOpenStats();
+                }}
+              >
+                <text fg={colors.accent.primary}>Stats</text>
+              </box>
             )}
             <text fg={colors.text.muted}>{contentSize}</text>
             <text fg={colors.text.muted}>{response.time}ms</text>

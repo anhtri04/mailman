@@ -9,4 +9,11 @@ export type {
   HistorySSESummary,
 } from './history';
 export type { RequestOptions } from './request';
+export type {
+  NetworkStats,
+  RequestSizeStats,
+  RequestStats,
+  RequestTimingStats,
+  ResponseSizeStats,
+} from './request-stats';
 export type { ResponseState, SSEEvent, SSEMeta } from './response';

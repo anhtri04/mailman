@@ -14,6 +14,7 @@ interface ResponsePanelProps {
   response: ResponseState | null;
   isExpanded: boolean;
   onToggleExpand: (expanded: boolean) => void;
+  onOpenStats?: () => void;
   onDisconnectStream?: () => void;
   onClearStream?: () => void;
   activeTab: RestResponseTab;
@@ -32,6 +33,7 @@ export function ResponsePanel({
   response,
   isExpanded,
   onToggleExpand,
+  onOpenStats,
   onDisconnectStream,
   onClearStream,
   activeTab,
@@ -185,6 +187,17 @@ export function ResponsePanel({
               <text fg="#cc4444" bg={colors.bg.app} style={{ paddingLeft: 1, paddingRight: 1 }}>
                 Copy failed
               </text>
+            )}
+            {onOpenStats && (
+              <box
+                style={{ paddingLeft: 1, paddingRight: 1 }}
+                onMouseDown={(e: { stopPropagation: () => void }) => {
+                  e.stopPropagation();
+                  onOpenStats();
+                }}
+              >
+                <text fg={colors.accent.primary}>Stats</text>
+              </box>
             )}
             {isSSEMode && response.isStreaming && (
               <text fg={colors.syntax.success}>Streaming...</text>

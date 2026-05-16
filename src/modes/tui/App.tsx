@@ -12,6 +12,7 @@ import {
   GraphQLResponsePanel,
   FileBrowser,
   HistoryModal,
+  RequestStatsModal,
 } from './components';
 import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
@@ -113,6 +114,7 @@ export function App() {
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showRequestStatsModal, setShowRequestStatsModal] = useState(false);
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [showResponseModal, setShowResponseModal] = useState(false);
@@ -120,7 +122,7 @@ export function App() {
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
   const SSE_MAX_EVENTS = 500;
 
-  const selectAllBindings: KeyBinding[] = [{ name: "a" , ctrl: true, action : "select-all"}]
+  const selectAllBindings: KeyBinding[] = [{ name: 'a', ctrl: true, action: 'select-all' }];
 
   const activeCollection = activeCollectionId
     ? collections.find((c) => c.id === activeCollectionId)
@@ -136,6 +138,7 @@ export function App() {
         showThemeSelector,
         showHistoryModal,
         showResponseModal,
+        showRequestStatsModal,
         activeModal,
         collectionModal,
         isLoading,
@@ -150,6 +153,7 @@ export function App() {
       showThemeSelector,
       showHistoryModal,
       showResponseModal,
+      showRequestStatsModal,
       activeModal,
       collectionModal,
       isLoading,
@@ -323,6 +327,7 @@ export function App() {
       showHelp,
       showHistoryModal,
       showResponseModal,
+      showRequestStatsModal,
       activeModal,
       collectionModal,
       hasActiveRequest: Boolean(activeRequestId),
@@ -334,6 +339,7 @@ export function App() {
       setShowHelp,
       setShowHistoryModal,
       setShowResponseModal,
+      setShowRequestStatsModal,
       setActiveModal,
       setCollectionModal,
       resetHistoryError: () => setHistoryError(null),
@@ -365,6 +371,7 @@ export function App() {
           body: response.body,
           headers: response.headers,
           time: response.time,
+          stats: response.stats,
           mode: response.mode,
           sseSummary:
             response.mode === 'sse'
@@ -405,6 +412,7 @@ export function App() {
           body: response.body,
           headers: response.headers,
           time: response.time,
+          stats: response.stats,
           mode: response.mode,
         },
       });
@@ -658,6 +666,7 @@ export function App() {
               status: streamResult.response.status,
               statusText: streamResult.response.statusText,
               time: streamResult.response.time,
+              stats: streamResult.response.stats,
               isStreaming: false,
               streamEndedAt: Date.now(),
             },
@@ -862,6 +871,7 @@ export function App() {
                   response={currentGraphqlResponse}
                   isExpanded={showResponseModal}
                   onToggleExpand={setShowResponseModal}
+                  onOpenStats={() => setShowRequestStatsModal(true)}
                   activeTab={graphqlActiveTab}
                   onActiveTabChange={setGraphqlActiveTab}
                   copyStatus={copyStatus}
@@ -901,6 +911,7 @@ export function App() {
                   response={currentResponse}
                   isExpanded={showResponseModal}
                   onToggleExpand={setShowResponseModal}
+                  onOpenStats={() => setShowRequestStatsModal(true)}
                   onDisconnectStream={handleDisconnectStream}
                   onClearStream={handleClearStream}
                   activeTab={restActiveTab}
@@ -1332,6 +1343,20 @@ export function App() {
             onActiveTabChange={setModalActiveTab}
           />
         )}
+        {showRequestStatsModal &&
+          (currentProtocol === 'graphql' ? currentGraphqlResponse : currentResponse) && (
+            <Modal
+              isOpen={true}
+              onClose={() => setShowRequestStatsModal(false)}
+              title="Request Stats"
+            >
+              <RequestStatsModal
+                response={
+                  (currentProtocol === 'graphql' ? currentGraphqlResponse : currentResponse)!
+                }
+              />
+            </Modal>
+          )}
         {/* Catalog Help Modal */}
         {showHelp && (
           <Modal isOpen={true} onClose={() => setShowHelp(false)} title="Help">

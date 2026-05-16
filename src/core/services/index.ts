@@ -1,4 +1,10 @@
 export { sendGraphQLRequest } from './graphql-client';
+export {
+  buildRequestStats,
+  calculateBodyBytes,
+  calculateHeaderBytes,
+  formatBytes,
+} from './request-stats';
 export { sendRequest, sendRequestWithStreaming } from './http-client';
 export {
   loadCollections,

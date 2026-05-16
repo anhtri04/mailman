@@ -1,4 +1,4 @@
-import type { RequestOptions } from '../types';
+import type { RequestOptions, RequestStats } from '../types';
 import { executeHttpRequest, executeHttpStreamRequest, resolveAuthToRequest } from './http-shared';
 import type { SSEStreamHandlers, StreamExecutionResult } from './http-shared';
 
@@ -11,6 +11,7 @@ export async function sendRequest(
   body: string;
   headers: Record<string, string>;
   time: number;
+  stats: RequestStats;
   updatedAuth?: RequestOptions['auth'];
 }> {
   const { url, headers, updatedAuth } = await resolveAuthToRequest(options);
@@ -30,6 +31,10 @@ export async function sendRequest(
 
   return {
     ...result,
+    stats: {
+      ...result.stats,
+      network: { ...result.stats.network, url: options.url },
+    },
     updatedAuth,
   };
 }
@@ -49,12 +54,34 @@ export async function sendRequestWithStreaming(
       headers,
       body: shouldExcludeBody ? undefined : options.body,
     },
-    handlers,
+    {
+      ...handlers,
+      onOpen: (initial) => {
+        handlers.onOpen({
+          ...initial,
+          stats: initial.stats
+            ? {
+                ...initial.stats,
+                network: { ...initial.stats.network, url: options.url },
+              }
+            : undefined,
+        });
+      },
+    },
     timeoutMs,
   );
 
   return {
     ...streamResult,
+    response: {
+      ...streamResult.response,
+      stats: streamResult.response.stats
+        ? {
+            ...streamResult.response.stats,
+            network: { ...streamResult.response.stats.network, url: options.url },
+          }
+        : undefined,
+    },
     updatedAuth,
   };
 }

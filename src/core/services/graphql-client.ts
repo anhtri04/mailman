@@ -1,4 +1,4 @@
-import type { AuthConfig } from '../types';
+import type { AuthConfig, RequestStats } from '../types';
 import { executeHttpRequest, resolveAuthToRequest } from './http-shared';
 
 export interface GraphQLRequestOptions {
@@ -19,6 +19,7 @@ export async function sendGraphQLRequest(
   body: string;
   headers: Record<string, string>;
   time: number;
+  stats: RequestStats;
   updatedAuth?: AuthConfig;
 }> {
   const payload: Record<string, unknown> = {
@@ -55,6 +56,10 @@ export async function sendGraphQLRequest(
 
   return {
     ...result,
+    stats: {
+      ...result.stats,
+      network: { ...result.stats.network, url: options.url },
+    },
     updatedAuth,
   };
 }
