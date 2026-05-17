@@ -4,6 +4,7 @@ import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { AuthConfig } from '../../../types';
 
 type Tab = 'headers' | 'auth';
+type ActiveEditor = 'url' | 'query' | 'variables' | null;
 
 interface GraphQLRequestPanelProps {
   focused: boolean;
@@ -46,6 +47,7 @@ export function GraphQLRequestPanel({
 }: GraphQLRequestPanelProps) {
   const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab | null>(null);
+  const [activeEditor, setActiveEditor] = useState<ActiveEditor>(null);
   const queryRef = useRef<TextareaRenderable>(null);
   const variablesRef = useRef<TextareaRenderable>(null);
   const selectAllBindings: KeyBinding[] = [{ name: 'a', ctrl: true, action: 'select-all' }];
@@ -53,10 +55,14 @@ export function GraphQLRequestPanel({
   const hasVariables = !!(variables && variables.trim().length > 0);
   const hasHeaders = Object.keys(headers).length > 0;
   const hasAuth = !!(auth && auth.type !== 'none');
+  const urlEditorFocused = focused && activeEditor === 'url';
+  const queryEditorFocused = focused && activeEditor === 'query';
+  const variablesEditorFocused = focused && activeEditor === 'variables';
 
   const handleTabClick = useCallback(
     (tab: Tab) => (e: { stopPropagation: () => void }) => {
       e.stopPropagation();
+      setActiveEditor(null);
       if (activeTab === tab) {
         setActiveTab(null);
       } else {
@@ -117,7 +123,10 @@ export function GraphQLRequestPanel({
         flexGrow: 1,
         borderStyle: 'rounded',
       }}
-      onMouseDown={onFocus}
+      onMouseDown={() => {
+        setActiveEditor(null);
+        onFocus();
+      }}
     >
       <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }}>
         <text
@@ -154,7 +163,7 @@ export function GraphQLRequestPanel({
         <box
           style={{
             border: true,
-            borderColor: focused ? colors.accent.primary : colors.border.default,
+            borderColor: urlEditorFocused ? colors.accent.primary : colors.border.default,
             paddingLeft: 1,
             paddingRight: 1,
             paddingTop: 0.5,
@@ -164,13 +173,15 @@ export function GraphQLRequestPanel({
           }}
           onMouseDown={(e) => {
             e.stopPropagation();
+            setActiveEditor('url');
+            onFocus();
           }}
         >
           <input
             placeholder="GraphQL endpoint URL..."
             value={url}
             onInput={onUrlChange}
-            focused={focused}
+            focused={urlEditorFocused}
             keyBindings={selectAllBindings}
           />
         </box>
@@ -194,6 +205,7 @@ export function GraphQLRequestPanel({
           }}
           onMouseDown={(e) => {
             e.stopPropagation();
+            setActiveEditor(null);
             onSend();
           }}
         >
@@ -211,9 +223,14 @@ export function GraphQLRequestPanel({
           style={{
             flexGrow: 1,
             border: true,
-            borderColor: focused ? colors.accent.primary : colors.border.default,
+            borderColor: queryEditorFocused ? colors.accent.primary : colors.border.default,
             backgroundColor: colors.bg.panel,
             marginTop: 0.5,
+          }}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            setActiveEditor('query');
+            onFocus();
           }}
         >
           <scrollbox style={{ flexGrow: 1 }}>
@@ -221,7 +238,7 @@ export function GraphQLRequestPanel({
               ref={queryRef}
               placeholder="Enter GraphQL query or mutation..."
               initialValue={query}
-              focused={focused}
+              focused={queryEditorFocused}
               onContentChange={handleQueryChange}
               keyBindings={selectAllBindings}
               backgroundColor={colors.bg.panel}
@@ -240,9 +257,14 @@ export function GraphQLRequestPanel({
           style={{
             flexGrow: 1,
             border: true,
-            borderColor: focused ? colors.accent.primary : colors.border.default,
+            borderColor: variablesEditorFocused ? colors.accent.primary : colors.border.default,
             backgroundColor: colors.bg.panel,
             marginTop: 0.5,
+          }}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            setActiveEditor('variables');
+            onFocus();
           }}
         >
           <scrollbox style={{ flexGrow: 1 }}>
@@ -250,7 +272,7 @@ export function GraphQLRequestPanel({
               ref={variablesRef}
               placeholder='Ex: {"id": "123"}'
               initialValue={variables}
-              focused={focused}
+              focused={variablesEditorFocused}
               onContentChange={handleVariablesChange}
               keyBindings={selectAllBindings}
               backgroundColor={colors.bg.panel}

@@ -3,6 +3,7 @@ import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { AuthConfig } from '../../../types';
 
 type Tab = 'headers' | 'body' | 'query' | 'auth';
+type ActiveEditor = 'url' | null;
 
 interface RequestPanelProps {
   focused: boolean;
@@ -51,7 +52,9 @@ export function RequestPanel({
 }: RequestPanelProps) {
   const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab | null>(null);
+  const [activeEditor, setActiveEditor] = useState<ActiveEditor>(null);
   const borderColor = focused ? colors.accent.primary : colors.border.default;
+  const urlEditorFocused = focused && activeEditor === 'url';
 
   // Check if each section has data for indicator
   const hasHeaders = Object.keys(headers).length > 0;
@@ -62,6 +65,7 @@ export function RequestPanel({
   const handleTabClick = useCallback(
     (tab: Tab) => (e: { stopPropagation: () => void }) => {
       e.stopPropagation();
+      setActiveEditor(null);
       // Toggle: if clicking same tab, close it; otherwise open new one
       if (activeTab === tab) {
         setActiveTab(null);
@@ -113,7 +117,10 @@ export function RequestPanel({
         flexGrow: 1,
         borderStyle: 'rounded',
       }}
-      onMouseDown={onFocus}
+      onMouseDown={() => {
+        setActiveEditor(null);
+        onFocus();
+      }}
     >
       <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }}>
         <text
@@ -161,6 +168,7 @@ export function RequestPanel({
           }}
           onMouseDown={(e) => {
             e.stopPropagation();
+            setActiveEditor(null);
             const currentIndex = METHODS.indexOf(method);
             const nextIndex = (currentIndex + 1) % METHODS.length;
             const nextMethod = METHODS[nextIndex];
@@ -180,7 +188,7 @@ export function RequestPanel({
           style={{
             flexGrow: 1,
             border: true,
-            borderColor: focused ? colors.accent.primary : colors.border.default,
+            borderColor: urlEditorFocused ? colors.accent.primary : colors.border.default,
             paddingLeft: 1,
             paddingRight: 1,
             paddingTop: 0.5,
@@ -189,9 +197,16 @@ export function RequestPanel({
           }}
           onMouseDown={(e) => {
             e.stopPropagation();
+            setActiveEditor('url');
+            onFocus();
           }}
         >
-          <input placeholder="Enter URL..." value={url} onInput={onUrlChange} focused={focused} />
+          <input
+            placeholder="Enter URL..."
+            value={url}
+            onInput={onUrlChange}
+            focused={urlEditorFocused}
+          />
         </box>
       </box>
 
@@ -214,6 +229,7 @@ export function RequestPanel({
           }}
           onMouseDown={(e) => {
             e.stopPropagation();
+            setActiveEditor(null);
             onSend();
           }}
         >
