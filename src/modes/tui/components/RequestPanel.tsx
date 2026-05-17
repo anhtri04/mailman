@@ -72,8 +72,9 @@ export function RequestPanel({
         else if (tab === 'query') onOpenQuery();
         else if (tab === 'auth') onOpenAuth();
       }
+      onFocus();  // Focus the Request Panel if clicking its Tabs
     },
-    [activeTab, onOpenHeaders, onOpenBody, onOpenQuery, onOpenAuth],
+    [onFocus, activeTab, onOpenHeaders, onOpenBody, onOpenQuery, onOpenAuth],
   );
 
   const renderTabButton = useCallback(

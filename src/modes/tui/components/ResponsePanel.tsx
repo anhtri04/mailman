@@ -91,9 +91,10 @@ export function ResponsePanel({
   const handleTabClick = useCallback(
     (tab: RestResponseTab) => (e: { stopPropagation: () => void }) => {
       e.stopPropagation();
+      onFocus();
       onActiveTabChange(tab);
     },
-    [onActiveTabChange],
+    [onFocus, onActiveTabChange],
   );
 
   const renderTabButton = useCallback(

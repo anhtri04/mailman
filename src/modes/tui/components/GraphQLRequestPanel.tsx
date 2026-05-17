@@ -64,8 +64,9 @@ export function GraphQLRequestPanel({
         if (tab === 'headers') onOpenHeaders();
         else if (tab === 'auth') onOpenAuth();
       }
+      onFocus();  // Focus the Request Panel if clicking its Tabs
     },
-    [activeTab, onOpenHeaders, onOpenAuth],
+    [onFocus, activeTab, onOpenHeaders, onOpenAuth],
   );
 
   const handleQueryChange = useCallback(() => {

@@ -87,9 +87,10 @@ export function GraphQLResponsePanel({
   const handleTabClick = useCallback(
     (tab: GraphqlResponseTab) => (e: { stopPropagation: () => void }) => {
       e.stopPropagation();
+      onFocus();
       onActiveTabChange(tab);
     },
-    [onActiveTabChange],
+    [onFocus, onActiveTabChange],
   );
 
   const renderTabButton = useCallback(

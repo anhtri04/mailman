@@ -55,6 +55,7 @@ import type {
   Collection,
   RequestItem,
   Protocol,
+  FocusArea,
 } from '../../core/types';
 import type { KeyBinding } from '@opentui/core';
 type Tab = 'headers' | 'body' | 'query' | 'auth';
@@ -227,6 +228,60 @@ export function App() {
     const cleanExit = (globalThis as any).__mailmanCleanExit;
     if (cleanExit) cleanExit();
   }, []);
+
+  const closeActiveOverlayForFocusChange = useCallback(() => {
+    if (activeModal) {
+      setActiveModal(null);
+      return;
+    }
+
+    if (collectionModal) {
+      setCollectionModal(null);
+      setImportError(null);
+      return;
+    }
+
+    if (showHelp) {
+      setShowHelp(false);
+      return;
+    }
+
+    if (showHistoryModal) {
+      setShowHistoryModal(false);
+      setHistoryError(null);
+      return;
+    }
+
+    if (showResponseModal) {
+      setShowResponseModal(false);
+      return;
+    }
+
+    if (showRequestStatsModal) {
+      setShowRequestStatsModal(false);
+      return;
+    }
+
+    if (showThemeSelector) {
+      setShowThemeSelector(false);
+    }
+  }, [
+    activeModal,
+    collectionModal,
+    showHelp,
+    showHistoryModal,
+    showResponseModal,
+    showRequestStatsModal,
+    showThemeSelector,
+  ]);
+
+  const handleFocusArea = useCallback(
+    (area: FocusArea) => {
+      closeActiveOverlayForFocusChange();
+      setFocus(area);
+    },
+    [closeActiveOverlayForFocusChange, setFocus],
+  );
 
   const handleOpenHistory = useCallback(() => {
     void (async () => {
@@ -799,7 +854,7 @@ export function App() {
       >
         <CollectionPanel
           focused={isFocused('collections') && !collectionModal && !activeModal}
-          onFocus={() => setFocus('collections')}
+          onFocus={() => handleFocusArea('collections')}
           isCollapsed={isCollectionCollapsed}
           onToggleCollapse={() => setIsCollectionCollapsed((prev) => !prev)}
           collections={collections}
@@ -846,7 +901,7 @@ export function App() {
               <box width="50%" style={{ flexDirection: 'column' }}>
                 <GraphQLRequestPanel
                   focused={isFocused('request')}
-                  onFocus={() => setFocus('request')}
+                  onFocus={() => handleFocusArea('request')}
                   url={graphqlRequest.url}
                   onUrlChange={handleGraphqlUrlChange}
                   query={graphqlRequest.query}
@@ -867,7 +922,7 @@ export function App() {
               <box width="50%" style={{ flexDirection: 'column' }}>
                 <GraphQLResponsePanel
                   focused={isFocused('response')}
-                  onFocus={() => setFocus('response')}
+                  onFocus={() => handleFocusArea('response')}
                   response={currentGraphqlResponse}
                   isExpanded={showResponseModal}
                   onToggleExpand={setShowResponseModal}
@@ -883,7 +938,7 @@ export function App() {
               <box height="35%" style={{ flexDirection: 'column' }}>
                 <RequestPanel
                   focused={isFocused('request')}
-                  onFocus={() => setFocus('request')}
+                  onFocus={() => handleFocusArea('request')}
                   url={request.url}
                   onUrlChange={handleUrlChange}
                   method={request.method}
@@ -907,7 +962,7 @@ export function App() {
               <box height="65%" style={{ flexDirection: 'column', marginTop: 1 }}>
                 <ResponsePanel
                   focused={isFocused('response')}
-                  onFocus={() => setFocus('response')}
+                  onFocus={() => handleFocusArea('response')}
                   response={currentResponse}
                   isExpanded={showResponseModal}
                   onToggleExpand={setShowResponseModal}
