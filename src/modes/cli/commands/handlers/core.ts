@@ -24,7 +24,8 @@ export function buildCoreCommands(): CliCommand[] {
       name: 'help',
       aliases: ['h'],
       description: 'Show available commands',
-      usage: '/help',
+      usage: '/help [command]',
+      argsSpec: [{ name: 'command', required: false, dynamicValues: 'commands' }],
       handler: (_args, _ctx) => ({
         message:
           'Commands: /help, /collections, /use <id|name>, /show <body|headers|meta>, /hide <body|headers|meta>, /clear, /exit',
@@ -35,6 +36,7 @@ export function buildCoreCommands(): CliCommand[] {
       aliases: [],
       description: 'Show response section',
       usage: '/show body|headers|meta',
+      argsSpec: [{ name: 'section', required: true, values: ['body', 'headers', 'meta'] }],
       handler: (args, ctx) => {
         const target = args[0] as 'body' | 'headers' | 'meta' | undefined;
         if (!target || !['body', 'headers', 'meta'].includes(target)) {
@@ -48,6 +50,7 @@ export function buildCoreCommands(): CliCommand[] {
       aliases: [],
       description: 'Hide response section',
       usage: '/hide body|headers|meta',
+      argsSpec: [{ name: 'section', required: true, values: ['body', 'headers', 'meta'] }],
       handler: (args, ctx) => {
         const target = args[0] as 'body' | 'headers' | 'meta' | undefined;
         if (!target || !['body', 'headers', 'meta'].includes(target)) {

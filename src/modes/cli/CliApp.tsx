@@ -3,9 +3,9 @@ import { useKeyboard } from '@opentui/react';
 import { loadCollections, sendRequest } from '../../core/services';
 import { CliInput } from './components/CliInput';
 import { CliOutput } from './components/CliOutput';
-import { CommandPalette } from './components/CommandPalette';
+import { InputSuggestionPanel } from './components/InputSuggestionPanel';
 import { getCommands, resolveCommand } from './commands/registry';
-import { useCommandPalette } from './hooks/useCommandPalette';
+import { useInputSuggestions } from './hooks/useInputSuggestions';
 import { useCliState } from './hooks/useCliState';
 import { parseUnifiedInput } from './parser/unifiedInputParser';
 import { renderResponseBlock } from './render/responseBlock';
@@ -14,7 +14,11 @@ import { renderSystemMessage } from './render/systemMessage';
 export function CliApp() {
   const { state, setState, pushOutput } = useCliState();
   const commands = getCommands();
-  const palette = useCommandPalette(state.input, commands);
+  const suggestions = useInputSuggestions({
+    input: state.input,
+    commands,
+    collections: state.collections,
+  });
 
   useEffect(() => {
     void (async () => {
@@ -28,58 +32,61 @@ export function CliApp() {
     if (exit) exit();
   }, []);
 
-  const submitInput = useCallback(async (rawInput?: string) => {
-    const raw = (rawInput ?? state.input).trim();
-    if (!raw) return;
+  const submitInput = useCallback(
+    async (rawInput?: string) => {
+      const raw = (rawInput ?? state.input).trim();
+      if (!raw) return;
 
-    setState((prev) => ({
-      ...prev,
-      input: '',
-      history: [...prev.history, raw],
-      historyIndex: null,
-    }));
+      setState((prev) => ({
+        ...prev,
+        input: '',
+        history: [...prev.history, raw],
+        historyIndex: null,
+      }));
 
-    pushOutput('request', `> ${raw}`);
+      pushOutput('request', `> ${raw}`);
 
-    try {
-      const parsed = parseUnifiedInput(raw);
+      try {
+        const parsed = parseUnifiedInput(raw);
 
-      if (parsed.kind === 'command') {
-        const command = resolveCommand(parsed.name, commands);
-        if (!command) {
-          pushOutput('error', `Unknown command: /${parsed.name || ''}. Try /help.`);
+        if (parsed.kind === 'command') {
+          const command = resolveCommand(parsed.name, commands);
+          if (!command) {
+            pushOutput('error', `Unknown command: /${parsed.name || ''}. Try /help.`);
+            return;
+          }
+
+          const result = await command.handler(parsed.args, {
+            state,
+            setState,
+            cleanExit,
+          });
+
+          if (result.error) {
+            pushOutput('error', result.error);
+          }
+          if (result.message) {
+            pushOutput('system', renderSystemMessage(result.message));
+          }
           return;
         }
 
-        const result = await command.handler(parsed.args, {
-          state,
-          setState,
-          cleanExit,
+        setState((prev) => ({ ...prev, isLoading: true, activeRequest: parsed.request }));
+        const response = await sendRequest(parsed.request);
+        const responseText = renderResponseBlock(response, state.toggles, {
+          method: parsed.request.method,
+          url: parsed.request.url,
         });
-
-        if (result.error) {
-          pushOutput('error', result.error);
-        }
-        if (result.message) {
-          pushOutput('system', renderSystemMessage(result.message));
-        }
-        return;
+        setState((prev) => ({ ...prev, isLoading: false, lastResponse: response }));
+        pushOutput('response', responseText);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        setState((prev) => ({ ...prev, isLoading: false }));
+        pushOutput('error', message);
       }
-
-      setState((prev) => ({ ...prev, isLoading: true, activeRequest: parsed.request }));
-      const response = await sendRequest(parsed.request);
-      const responseText = renderResponseBlock(response, state.toggles, {
-        method: parsed.request.method,
-        url: parsed.request.url,
-      });
-      setState((prev) => ({ ...prev, isLoading: false, lastResponse: response }));
-      pushOutput('response', responseText);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setState((prev) => ({ ...prev, isLoading: false }));
-      pushOutput('error', message);
-    }
-  }, [cleanExit, commands, pushOutput, setState, state, state.input, state.toggles]);
+    },
+    [cleanExit, commands, pushOutput, setState, state, state.input, state.toggles],
+  );
 
   useKeyboard((key) => {
     if (key.ctrl && key.name === 'q') {
@@ -93,7 +100,7 @@ export function CliApp() {
     }
 
     if (key.name === 'return' || key.name === 'enter') {
-      const selection = palette.selectForEnter();
+      const selection = suggestions.selectForEnter();
       if (selection) {
         if (selection.executeNow) {
           void submitInput(selection.nextInput);
@@ -110,7 +117,7 @@ export function CliApp() {
     }
 
     if (key.name === 'tab') {
-      const completedInput = palette.autocompleteInput();
+      const completedInput = suggestions.autocompleteInput();
       if (!completedInput) return;
 
       setState((prev) => ({ ...prev, input: completedInput, historyIndex: null }));
@@ -118,8 +125,8 @@ export function CliApp() {
     }
 
     if (key.name === 'up') {
-      if (palette.visible) {
-        palette.moveSelectionUp();
+      if (suggestions.visible) {
+        suggestions.moveSelectionUp();
         return;
       }
 
@@ -134,8 +141,8 @@ export function CliApp() {
     }
 
     if (key.name === 'down') {
-      if (palette.visible) {
-        palette.moveSelectionDown();
+      if (suggestions.visible) {
+        suggestions.moveSelectionDown();
         return;
       }
 
@@ -154,10 +161,10 @@ export function CliApp() {
   return (
     <box style={{ flexDirection: 'column', height: '100%', padding: 1, gap: 0.5 }}>
       <CliOutput outputs={state.outputs} />
-      <CommandPalette
-        visible={palette.visible}
-        commands={palette.filtered}
-        selectedIndex={palette.selectedIndex}
+      <InputSuggestionPanel
+        visible={suggestions.visible}
+        suggestions={suggestions.suggestions}
+        selectedIndex={suggestions.selectedIndex}
       />
       <CliInput
         value={state.input}

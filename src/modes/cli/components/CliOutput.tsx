@@ -20,10 +20,7 @@ export function CliOutput({ outputs }: CliOutputProps) {
       }}
     >
       <box style={{ marginTop: -2 }}>
-        <text
-          fg={colors.accent.primary}
-          style={{ paddingLeft: 1, paddingRight: 1 }}
-        >
+        <text fg={colors.accent.primary} style={{ paddingLeft: 1, paddingRight: 1 }}>
           <strong> Output </strong>
         </text>
       </box>

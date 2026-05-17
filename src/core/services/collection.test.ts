@@ -51,7 +51,9 @@ describe('collection persistence', () => {
   });
 
   test('save and load roundtrip', async () => {
-    const collections: Collection[] = [{ id: '1', name: 'Test Collection', requests: [], protocol: 'rest' }];
+    const collections: Collection[] = [
+      { id: '1', name: 'Test Collection', requests: [], protocol: 'rest' },
+    ];
     await saveCollections(collections);
     const loaded = await loadCollections();
     expect(loaded).toEqual(collections);

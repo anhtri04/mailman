@@ -13,11 +13,21 @@ export interface CommandResult {
   error?: string;
 }
 
+export interface CliCommandArgSpec {
+  name: string;
+  required: boolean;
+  repeatable?: boolean;
+  values?: string[];
+  dynamicValues?: 'commands' | 'collections' | 'requests';
+  description?: string;
+}
+
 export interface CliCommand {
   name: string;
   aliases: string[];
   description: string;
   usage: string;
+  argsSpec?: CliCommandArgSpec[];
   handler: (args: string[], ctx: CommandContext) => Promise<CommandResult> | CommandResult;
 }
 

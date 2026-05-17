@@ -23,6 +23,7 @@ export function buildCollectionsCommands(): CliCommand[] {
       aliases: [],
       description: 'Set active collection',
       usage: '/use <id|name>',
+      argsSpec: [{ name: 'collection', required: true, dynamicValues: 'collections' }],
       handler: async (args, ctx) => {
         const needle = args.join(' ').trim().toLowerCase();
         if (!needle) {

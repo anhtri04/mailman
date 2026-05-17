@@ -39,6 +39,8 @@ export interface ParsedRequest {
   kind: 'request';
   raw: string;
   request: RequestOptions;
+  protocol?: 'rest' | 'graphql' | 'sse';
+  responseMode?: 'standard' | 'sse';
 }
 
 export type ParsedInput = ParsedCommand | ParsedRequest;

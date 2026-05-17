@@ -10,20 +10,40 @@ describe('parseUnifiedInput', () => {
     expect(parsed.args).toEqual(['headers']);
   });
 
-  test('parses method url shorthand request', () => {
-    const parsed = parseUnifiedInput('GET https://example.com');
+  test('parses canonical REST request', () => {
+    const parsed = parseUnifiedInput('http rest GET https://example.com');
     expect(parsed.kind).toBe('request');
     if (parsed.kind !== 'request') return;
+    expect(parsed.protocol).toBe('rest');
     expect(parsed.request.method).toBe('GET');
     expect(parsed.request.url).toBe('https://example.com');
   });
 
-  test('parses curl request', () => {
-    const parsed = parseUnifiedInput('curl -X POST https://example.com -d \'{"a":1}\'');
+  test('parses GraphQL request', () => {
+    const parsed = parseUnifiedInput(
+      "http graphql https://example.com/graphql --query '{ viewer { login } }'",
+    );
     expect(parsed.kind).toBe('request');
     if (parsed.kind !== 'request') return;
+    expect(parsed.protocol).toBe('graphql');
     expect(parsed.request.method).toBe('POST');
-    expect(parsed.request.url).toBe('https://example.com');
-    expect(parsed.request.body).toBe('{"a":1}');
+    expect(parsed.request.url).toBe('https://example.com/graphql');
+    expect(parsed.request.body).toBe(JSON.stringify({ query: '{ viewer { login } }' }));
+  });
+
+  test('parses SSE request', () => {
+    const parsed = parseUnifiedInput('http sse https://example.com/events');
+    expect(parsed.kind).toBe('request');
+    if (parsed.kind !== 'request') return;
+    expect(parsed.protocol).toBe('sse');
+    expect(parsed.responseMode).toBe('sse');
+    expect(parsed.request.method).toBe('GET');
+    expect(parsed.request.headers?.Accept).toBe('text/event-stream');
+  });
+
+  test('rejects old method url shorthand', () => {
+    expect(() => parseUnifiedInput('GET https://example.com')).toThrow(
+      'Unknown input. Start a request with "http" or use /help.',
+    );
   });
 });
