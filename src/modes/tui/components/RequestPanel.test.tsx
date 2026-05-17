@@ -13,4 +13,16 @@ describe('RequestPanel', () => {
     expect(componentString).toContain('useState');
     expect(componentString).toContain('useCallback');
   });
+
+  test('should focus request panel when clicking request tabs', () => {
+    const componentString = RequestPanel.toString();
+    expect(componentString).toContain('onFocus()');
+    expect(componentString).toContain('onOpenHeaders()');
+    expect(componentString).toContain('onOpenBody()');
+    expect(componentString).toContain('onOpenQuery()');
+    expect(componentString).toContain('onOpenAuth()');
+    expect(componentString).toContain(
+      '[onFocus, activeTab, onOpenHeaders, onOpenBody, onOpenQuery, onOpenAuth]',
+    );
+  });
 });

@@ -45,7 +45,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
   const [newValue, setNewValue] = useState('');
   const [focusedField, setFocusedField] = useState<'key' | 'value' | null>(null);
   const [showPresets, setShowPresets] = useState(false);
-  const selectAllBindings: KeyBinding[] = [{ name: "a" , ctrl: true, action : "select-all"}]
+  const selectAllBindings: KeyBinding[] = [{ name: 'a', ctrl: true, action: 'select-all' }];
 
   const updateHeaders = useCallback(
     (newEntries: HeaderEntry[]) => {

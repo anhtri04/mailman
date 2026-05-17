@@ -1,10 +1,4 @@
-export {
-  buildCurl,
-  copyCurl,
-  detectCurl,
-  detectProtocol,
-  parseCurl,
-} from './curlUtility';
+export { buildCurl, copyCurl, detectCurl, detectProtocol, parseCurl } from './curlUtility';
 export type { CurlInput, ParsedCurl } from './curlUtility';
 export {
   detectContentType,

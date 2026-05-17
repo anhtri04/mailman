@@ -63,14 +63,14 @@ A terminal-based HTTP client built with Bun and OpenTUI.
   - Export collection in a standard format(Postman/Insomnia)
   - 
 
-- [ ] **Modal Closing when Mouse Focusing on other Panels**
+- [x] **Modal Closing when Mouse Focusing on other Panels**
   - When focus another Panel, the opening Modal will be closed(same when pressing esc)
 
 - [ ] **Keyboard-first workflow**
   - Fast and muscle-memory driven
   - If users can test an endpoint in 3 keystrokes, we win
 
-- [ ] **CLI Mode**
+- [x] **CLI Mode**
   - Start with the command `mailman cli`
   - Quick entry using a mailman `REQUEST_COMMAND`
   - Fix text area and response pane

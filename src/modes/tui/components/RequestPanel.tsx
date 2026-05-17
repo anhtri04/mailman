@@ -72,7 +72,7 @@ export function RequestPanel({
         else if (tab === 'query') onOpenQuery();
         else if (tab === 'auth') onOpenAuth();
       }
-      onFocus();  // Focus the Request Panel if clicking its Tabs
+      onFocus(); // Focus the Request Panel if clicking its Tabs
     },
     [onFocus, activeTab, onOpenHeaders, onOpenBody, onOpenQuery, onOpenAuth],
   );

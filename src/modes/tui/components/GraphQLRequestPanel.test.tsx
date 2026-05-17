@@ -27,4 +27,12 @@ describe('GraphQLRequestPanel', () => {
     expect(componentString).toContain('onOpenHeaders');
     expect(componentString).toContain('onOpenAuth');
   });
+
+  test('should focus request panel when clicking GraphQL request tabs', () => {
+    const componentString = GraphQLRequestPanel.toString();
+    expect(componentString).toContain('onFocus()');
+    expect(componentString).toContain('onOpenHeaders()');
+    expect(componentString).toContain('onOpenAuth()');
+    expect(componentString).toContain('[onFocus, activeTab, onOpenHeaders, onOpenAuth]');
+  });
 });

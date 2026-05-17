@@ -57,4 +57,18 @@ describe('ResponsePanel', () => {
     expect(componentString).toContain('useKeyboard');
     expect(componentString).toContain('tab');
   });
+
+  test('should focus response panel when clicking REST response tabs', () => {
+    const componentString = ResponsePanel.toString();
+    expect(componentString).toContain('onFocus()');
+    expect(componentString).toContain('onActiveTabChange(tab)');
+    expect(componentString).toContain('[onFocus, onActiveTabChange]');
+  });
+
+  test('should focus response panel when clicking SSE response tabs', () => {
+    const componentString = ResponsePanel.toString();
+    expect(componentString).toContain('onFocus()');
+    expect(componentString).toContain('onActiveSseTabChange(tab)');
+    expect(componentString).toContain('[activeSseTab, colors, onFocus, onActiveSseTabChange]');
+  });
 });

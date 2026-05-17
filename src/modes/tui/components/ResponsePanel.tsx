@@ -136,6 +136,7 @@ export function ResponsePanel({
           }}
           onMouseDown={(e: { stopPropagation: () => void }) => {
             e.stopPropagation();
+            onFocus();
             onActiveSseTabChange(tab);
           }}
         >
@@ -145,7 +146,7 @@ export function ResponsePanel({
         </box>
       );
     },
-    [activeSseTab, colors, onActiveSseTabChange],
+    [activeSseTab, colors, onFocus, onActiveSseTabChange],
   );
 
   const getStatusColor = (status: number): string => {

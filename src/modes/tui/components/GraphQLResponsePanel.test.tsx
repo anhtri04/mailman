@@ -34,4 +34,12 @@ describe('GraphQLResponsePanel', () => {
     expect(componentString).toContain('onToggleExpand');
     expect(componentString).toContain('onActiveTabChange');
   });
+
+  test('should focus response panel when clicking response tabs', () => {
+    const componentString = GraphQLResponsePanel.toString();
+    expect(componentString).toContain('e.stopPropagation()');
+    expect(componentString).toContain('onFocus()');
+    expect(componentString).toContain('onActiveTabChange(tab)');
+    expect(componentString).toContain('[onFocus, onActiveTabChange]');
+  });
 });
