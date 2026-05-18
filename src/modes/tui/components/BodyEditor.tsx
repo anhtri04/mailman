@@ -3,12 +3,22 @@ import type { KeyBinding, TextareaRenderable } from '@opentui/core';
 import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
 import { formatRequestBody } from '../../../shared/utils/request-formatter';
+import { useTextareaSyntaxHighlight } from '../hooks/useTextareaSyntaxHighlight';
+import type { TextareaHighlightLanguage } from '../utils/textarea-highlighting';
 
 interface BodyEditorProps {
   body: string;
   onBodyChange: (body: string) => void;
   focused: boolean;
   detectedContentType?: string;
+}
+
+function detectHighlightLanguage(contentType: string): TextareaHighlightLanguage {
+  const normalized = contentType.toLowerCase();
+  if (normalized.includes('json') || normalized.includes('+json')) return 'json';
+  if (normalized.includes('xml')) return 'xml';
+  if (normalized.includes('html')) return 'html';
+  return 'text';
 }
 
 function detectContentType(body: string): string {
@@ -28,11 +38,18 @@ function detectContentType(body: string): string {
 export function BodyEditor({ body, onBodyChange, focused, detectedContentType }: BodyEditorProps) {
   const { colors } = useTheme();
   const contentType = detectedContentType ?? detectContentType(body);
+  const highlightLanguage = detectHighlightLanguage(contentType);
   const charCount = body.length;
   const textareaRef = useRef<TextareaRenderable>(null);
   const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [formatStatus, setFormatStatus] = useState<string | null>(null);
   const selectAllBindings: KeyBinding[] = [{ name: 'a', ctrl: true, action: 'select-all' }];
+
+  useTextareaSyntaxHighlight({
+    ref: textareaRef,
+    text: body,
+    language: highlightLanguage,
+  });
 
   const showFormatStatus = useCallback((status: string) => {
     setFormatStatus(status);

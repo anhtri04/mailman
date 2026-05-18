@@ -80,6 +80,21 @@ A terminal-based HTTP client built with Bun and OpenTUI.
   - Integrate Vercel's Browser to API skill
   - Scan a web and then build collections from it
 
+- [ ] **Clone and Sync from other API clients**
+
+- [ ] **Image Response**
+
+- [ ] **gRPC**
+
+- [ ] **WebSocket**
+
+- [ ] **MQTT**
+
+- [ ] **Scripting**
+
+- [ ] **Global Command**
+  - Call `mailman [argument]` 
+
 ### Medium Priority
 
 - [x] **Request History**
@@ -88,7 +103,7 @@ A terminal-based HTTP client built with Bun and OpenTUI.
   - Persist to `~/.mailman/history.json`
   - Modal viewer with search
 
-- [ ] **Body Pretty Print / Format**
+- [x] **Body Pretty Print / Format**
   - Auto-format JSON/XML in body editor
   - Minify button
   - Keyboard shortcut (e.g., Ctrl+Shift+F)
@@ -147,9 +162,11 @@ A terminal-based HTTP client built with Bun and OpenTUI.
   - Scan project and create API testing Collections automatically
   - Use command or directory path
 
-- [ ] **Auto Complete and Auto Formatting**
+- [x] **Auto Complete and Auto Formatting**
   - When typing user can get auto complete
   - Auto format the body request, query and variables using keyboard shortcut
+
+- [ ] **Nested Collection**
 
 ---
 

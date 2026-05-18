@@ -7,6 +7,7 @@ import {
   formatGraphQLQuery,
   formatGraphQLVariables,
 } from '../../../shared/utils/request-formatter';
+import { useTextareaSyntaxHighlight } from '../hooks/useTextareaSyntaxHighlight';
 
 type Tab = 'headers' | 'auth';
 type ActiveEditor = 'url' | 'query' | 'variables' | null;
@@ -66,6 +67,18 @@ export function GraphQLRequestPanel({
   const urlEditorFocused = focused && activeEditor === 'url';
   const queryEditorFocused = focused && activeEditor === 'query';
   const variablesEditorFocused = focused && activeEditor === 'variables';
+
+  useTextareaSyntaxHighlight({
+    ref: queryRef,
+    text: query,
+    language: 'graphql',
+  });
+
+  useTextareaSyntaxHighlight({
+    ref: variablesRef,
+    text: variables,
+    language: 'json',
+  });
 
   const handleTabClick = useCallback(
     (tab: Tab) => (e: { stopPropagation: () => void }) => {
