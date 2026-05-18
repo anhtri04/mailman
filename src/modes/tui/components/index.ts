@@ -1,5 +1,7 @@
 export { GraphQLRequestPanel } from './GraphQLRequestPanel';
 export { GraphQLResponsePanel } from './GraphQLResponsePanel';
+export { WebSocketRequestPanel } from './WebSocketRequestPanel';
+export { WebSocketResponsePanel } from './WebSocketResponsePanel';
 export { Modal } from './Modal';
 export { RequestPanel } from './RequestPanel';
 export { ResponsePanel } from './ResponsePanel';

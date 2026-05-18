@@ -35,7 +35,9 @@ export const colors = {
     POST: { bg: '#2e2516', text: '#c9a060' },
     PUT: { bg: '#152238', text: '#6094c0' },
     DELETE: { bg: '#2e1a1a', text: '#d47070' },
+    DEL: { bg: '#2e1a1a', text: '#d47070' },
     PATCH: { bg: '#1e1e30', text: '#8a7ed4' },
+    PTCH: { bg: '#1e1e30', text: '#8a7ed4' },
   },
 } as const;
 

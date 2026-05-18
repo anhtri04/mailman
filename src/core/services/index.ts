@@ -1,4 +1,6 @@
 export { sendGraphQLRequest } from './graphql-client';
+export { connectWebSocket, createProtocolMessage } from './websocket-client';
+export type { WebSocketHandlers, WebSocketRequestOptions } from './websocket-client';
 export type { ProtocolController, ProtocolExecutionResult } from './protocol-executor';
 export {
   buildRequestStats,

@@ -13,6 +13,7 @@ export type {
   HistoryRequestSnapshot,
   HistoryResponseSnapshot,
   HistorySSESummary,
+  ProtocolMessage,
   RequestOptions,
   NetworkStats,
   RequestSizeStats,

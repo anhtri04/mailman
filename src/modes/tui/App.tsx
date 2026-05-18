@@ -10,6 +10,8 @@ import {
   CatalogPanel,
   GraphQLRequestPanel,
   GraphQLResponsePanel,
+  WebSocketRequestPanel,
+  WebSocketResponsePanel,
   FileBrowser,
   HistoryModal,
   RequestStatsModal,
@@ -34,6 +36,8 @@ import {
   importCollectionsFromFile,
   loadHistory,
   appendHistoryEntry,
+  connectWebSocket,
+  createProtocolMessage,
 } from '../../core/services';
 import { parseCurl } from '../../shared/utils/curlUtility';
 import {
@@ -57,6 +61,8 @@ import type {
   RequestItemInput,
   Protocol,
   FocusArea,
+  ProtocolController,
+  ProtocolMessage,
 } from '../../core/types';
 import type { KeyBinding } from '@opentui/core';
 type Tab = 'headers' | 'body' | 'query' | 'auth';
@@ -87,6 +93,10 @@ export function App() {
     Record<string, { disconnect: () => void }>
   >({});
   const [graphqlResponses, setGraphqlResponses] = useState<Record<string, ResponseState>>({});
+  const [websocketResponses, setWebsocketResponses] = useState<Record<string, ResponseState>>({});
+  const [websocketControllers, setWebsocketControllers] = useState<
+    Record<string, ProtocolController>
+  >({});
   const [isLoading, setIsLoading] = useState(false);
   const [isCollectionCollapsed, setIsCollectionCollapsed] = useState(false);
   const [activeModal, setActiveModal] = useState<Tab | null>(null);
@@ -111,6 +121,9 @@ export function App() {
   const currentResponse = activeRequestId ? (restResponses[activeRequestId] ?? null) : null;
   const currentGraphqlResponse = activeRequestId
     ? (graphqlResponses[activeRequestId] ?? null)
+    : null;
+  const currentWebSocketResponse = activeRequestId
+    ? (websocketResponses[activeRequestId] ?? null)
     : null;
 
   const [showThemeSelector, setShowThemeSelector] = useState(false);
@@ -224,8 +237,9 @@ export function App() {
   useEffect(() => {
     return () => {
       Object.values(restStreamControllers).forEach((controller) => controller.disconnect());
+      Object.values(websocketControllers).forEach((controller) => controller.disconnect());
     };
-  }, [restStreamControllers]);
+  }, [restStreamControllers, websocketControllers]);
 
   const handleQuit = useCallback(() => {
     const cleanExit = (globalThis as any).__mailmanCleanExit;
@@ -489,6 +503,41 @@ export function App() {
     [activeCollectionId, activeRequestId, graphqlRequest, requestName],
   );
 
+  const addWebSocketHistoryEntry = useCallback(
+    (response: ResponseState) => {
+      if (!activeRequestId) return;
+      const startedAt = response.streamStartedAt ?? Date.now();
+      const endedAt = response.streamEndedAt ?? Date.now();
+      const durationMs = Math.max(0, endedAt - startedAt);
+      const messageCount = response.messages?.length ?? 0;
+      void appendHistoryEntry({
+        protocol: 'websocket',
+        collectionId: activeCollectionId ?? undefined,
+        requestId: activeRequestId,
+        requestName: requestName || undefined,
+        request: {
+          method: 'WEBSOCKET',
+          url: request.url,
+          headers: request.headers ?? {},
+          body: request.body,
+        },
+        response: {
+          status: response.status,
+          statusText: response.statusText,
+          body: `${messageCount} messages`,
+          headers: response.headers,
+          time: response.time || durationMs,
+          mode: 'websocket',
+          messageSummary: {
+            messageCount,
+            durationMs,
+          },
+        },
+      });
+    },
+    [activeCollectionId, activeRequestId, request.body, request.headers, request.url, requestName],
+  );
+
   const openFromHistory = useCallback(
     (entry: HistoryEntry) => {
       if (!entry.collectionId || !entry.requestId) {
@@ -517,6 +566,15 @@ export function App() {
           auth: entry.request.auth,
         });
         setGraphqlResponses((prev) => ({ ...prev, [matchedRequest.id]: entry.response }));
+      } else if (entry.protocol === 'websocket') {
+        setRequest({
+          method: 'WEBSOCKET',
+          url: entry.request.url,
+          headers: entry.request.headers,
+          body: entry.request.body ?? '',
+          auth: entry.request.auth,
+        });
+        setWebsocketResponses((prev) => ({ ...prev, [matchedRequest.id]: entry.response }));
       } else {
         setRequest({
           method: entry.request.method,
@@ -810,6 +868,168 @@ export function App() {
     });
   }, [activeRequestId]);
 
+  const appendWebSocketMessage = useCallback((requestId: string, message: ProtocolMessage) => {
+    setWebsocketResponses((prev) => {
+      const current = prev[requestId];
+      if (!current) return prev;
+      const messages = [...(current.messages ?? []), message];
+      const now = Date.now();
+      return {
+        ...prev,
+        [requestId]: {
+          ...current,
+          messages,
+          streamEventCount: messages.length,
+          time: now - (current.streamStartedAt ?? now),
+        },
+      };
+    });
+  }, []);
+
+  const updateWebSocketResponse = useCallback(
+    (requestId: string, updater: (response: ResponseState) => ResponseState) => {
+      setWebsocketResponses((prev) => {
+        const current = prev[requestId];
+        if (!current) return prev;
+        return { ...prev, [requestId]: updater(current) };
+      });
+    },
+    [],
+  );
+
+  const handleWebSocketConnect = useCallback(() => {
+    if (!activeRequestId || !request.url) return;
+
+    const requestId = activeRequestId;
+    websocketControllers[requestId]?.disconnect();
+
+    try {
+      const result = connectWebSocket(
+        {
+          url: request.url,
+          headers: request.headers ?? {},
+          initialMessage: request.body,
+        },
+        {
+          onOpen: () => {
+            updateWebSocketResponse(requestId, (current) => ({
+              ...current,
+              status: 101,
+              statusText: 'CONNECTED',
+              body: '(connected)',
+              isStreaming: true,
+              messages: [
+                ...(current.messages ?? []),
+                createProtocolMessage('system', 'Connected'),
+                ...(request.body?.trim()
+                  ? [createProtocolMessage('outbound', request.body, { initial: 'true' })]
+                  : []),
+              ],
+            }));
+          },
+          onMessage: (message) => appendWebSocketMessage(requestId, message),
+          onError: (message) => {
+            appendWebSocketMessage(requestId, createProtocolMessage('system', message));
+            updateWebSocketResponse(requestId, (current) => ({
+              ...current,
+              statusText: 'ERROR',
+              body: message,
+              isStreaming: false,
+              streamEndedAt: Date.now(),
+            }));
+          },
+          onClose: (code, reason) => {
+            const closeMessage = `Closed${code ? ` (${code})` : ''}${reason ? `: ${reason}` : ''}`;
+            appendWebSocketMessage(requestId, createProtocolMessage('system', closeMessage));
+            updateWebSocketResponse(requestId, (current) => {
+              const endedAt = Date.now();
+              const closedResponse: ResponseState = {
+                ...current,
+                statusText: 'CLOSED',
+                body: closeMessage,
+                isStreaming: false,
+                streamEndedAt: endedAt,
+                time: endedAt - (current.streamStartedAt ?? endedAt),
+              };
+              addWebSocketHistoryEntry(closedResponse);
+              return closedResponse;
+            });
+            setWebsocketControllers((prev) => {
+              const next = { ...prev };
+              delete next[requestId];
+              return next;
+            });
+          },
+        },
+      );
+
+      setWebsocketResponses((prev) => ({ ...prev, [requestId]: result.response }));
+      if (result.controller) {
+        setWebsocketControllers((prev) => ({ ...prev, [requestId]: result.controller! }));
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setWebsocketResponses((prev) => ({
+        ...prev,
+        [requestId]: {
+          mode: 'websocket',
+          status: 0,
+          statusText: 'ERROR',
+          body: message,
+          headers: {},
+          time: 0,
+          isStreaming: false,
+          streamEndedAt: Date.now(),
+          messages: [createProtocolMessage('system', message)],
+        },
+      }));
+    }
+  }, [
+    activeRequestId,
+    addWebSocketHistoryEntry,
+    appendWebSocketMessage,
+    request.body,
+    request.headers,
+    request.url,
+    updateWebSocketResponse,
+    websocketControllers,
+  ]);
+
+  const handleWebSocketSend = useCallback(() => {
+    if (!activeRequestId || !request.body?.trim()) return;
+    const controller = websocketControllers[activeRequestId];
+    if (!controller?.send) {
+      appendWebSocketMessage(
+        activeRequestId,
+        createProtocolMessage('system', 'WebSocket is not connected'),
+      );
+      return;
+    }
+    controller.send(request.body);
+    appendWebSocketMessage(activeRequestId, createProtocolMessage('outbound', request.body));
+  }, [activeRequestId, appendWebSocketMessage, request.body, websocketControllers]);
+
+  const handleWebSocketDisconnect = useCallback(() => {
+    if (!activeRequestId) return;
+    websocketControllers[activeRequestId]?.disconnect();
+  }, [activeRequestId, websocketControllers]);
+
+  const handleWebSocketClear = useCallback(() => {
+    if (!activeRequestId) return;
+    setWebsocketResponses((prev) => {
+      const current = prev[activeRequestId];
+      if (!current) return prev;
+      return {
+        ...prev,
+        [activeRequestId]: {
+          ...current,
+          messages: [],
+          streamEventCount: 0,
+        },
+      };
+    });
+  }, [activeRequestId]);
+
   const handleLoadRequest = useCallback((item: RequestItem, collectionId: string) => {
     if (item.protocol === 'graphql') {
       setGraphqlRequest({
@@ -914,19 +1134,33 @@ export function App() {
 
         {activeRequestId ? (
           currentProtocol === 'websocket' ? (
-            <box
-              style={{
-                flexDirection: 'column',
-                flexGrow: 1,
-                border: true,
-                borderColor: colors.border.default,
-                padding: 2,
-              }}
-            >
-              <text fg={colors.accent.primary}>
-                <strong>WebSocket Foundation Ready</strong>
-              </text>
-              <text fg={colors.text.muted}>WebSocket connect/send panels will be added next.</text>
+            <box style={{ flexDirection: 'row', height: '100%' }} key={activeRequestId}>
+              <box width="50%" style={{ flexDirection: 'column' }}>
+                <WebSocketRequestPanel
+                  focused={isFocused('request')}
+                  onFocus={() => handleFocusArea('request')}
+                  url={request.url}
+                  onUrlChange={handleUrlChange}
+                  message={request.body ?? ''}
+                  onMessageChange={handleBodyChange}
+                  headers={request.headers ?? {}}
+                  onOpenHeaders={() => setActiveModal('headers')}
+                  onConnect={handleWebSocketConnect}
+                  onSendMessage={handleWebSocketSend}
+                  onDisconnect={handleWebSocketDisconnect}
+                  connected={Boolean(currentWebSocketResponse?.isStreaming)}
+                  requestName={requestName}
+                  saveStatus={saveStatus}
+                />
+              </box>
+              <box width="50%" style={{ flexDirection: 'column' }}>
+                <WebSocketResponsePanel
+                  focused={isFocused('response')}
+                  onFocus={() => handleFocusArea('response')}
+                  response={currentWebSocketResponse}
+                  onClearMessages={handleWebSocketClear}
+                />
+              </box>
             </box>
           ) : currentProtocol === 'graphql' ? (
             <box style={{ flexDirection: 'row', height: '100%' }} key={activeRequestId}>

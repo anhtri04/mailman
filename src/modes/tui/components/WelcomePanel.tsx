@@ -119,8 +119,8 @@ export function WelcomePanel({ collection, onExportCollection }: WelcomePanelPro
                     <box style={{ flexDirection: 'row', gap: 1 }}>
                       <text
                         fg={
-                          colors.methods[label as keyof typeof colors.methods]
-                          ?.text ?? colors.text.primary
+                          colors.methods[label as keyof typeof colors.methods]?.text ??
+                          colors.text.primary
                         }
                       >
                         {label}

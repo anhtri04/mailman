@@ -1,6 +1,6 @@
-## Mailman v0.2.0
+## Mailman v0.2.4
 
-A terminal-based HTTP client built with Bun and OpenTUI.
+A terminal-based multi-protocol API client built with Bun and OpenTUI.
 
 ### Downloads
 
@@ -25,8 +25,10 @@ chmod +x mailman-linux-x64  # macOS/Linux only
 ### Features
 
 - Interactive TUI with mouse and keyboard support
+- REST, GraphQL, SSE response streaming, and WebSocket support
 - HTTP methods: GET, POST, PUT, DELETE, PATCH
 - Headers, body, query params, and auth editors
+- WebSocket connect, send, receive, disconnect, and message history
 - Syntax-highlighted response viewer
 - Collections with full CRUD
 - 37 built-in themes with live preview
@@ -34,9 +36,9 @@ chmod +x mailman-linux-x64  # macOS/Linux only
 
 ### What's Changed
 
-- GraphQL support is now first-class: protocol-aware request/response panels, variables handling, per-request response state, and GraphQL client/service test coverage.
-- Auth support now includes Basic and OAuth2 (client credentials + authorization code) with token refresh and async auth resolution across REST, SSE, and GraphQL request paths.
-- REST gained `text/event-stream` auto-detection with SSE parsing, incremental event rendering, and fixes to preserve events after stream completion.
-- Collection workflows improved with import support (Postman + Insomnia for REST/GraphQL), quick cURL parsing, per-request cURL copy, and richer welcome-panel collection summaries.
-- UI/UX updates include response-tab copy shortcuts (`Ctrl+C`), request history modal with redaction/search, global modal `[esc]` indicators, and multiple responsiveness/stability fixes.
-
+- Added WebSocket TUI client support with dedicated request and response panels.
+- WebSocket sessions now support connect, send, receive, disconnect, clear messages, and live inbound/outbound/system message rendering.
+- Added request-level protocol foundation for REST, GraphQL, and WebSocket requests.
+- Added WebSocket history summaries, including message count and session duration.
+- Kept SSE as part of REST response streaming instead of a standalone request protocol.
+- Added WebSocket service and TUI test coverage.
