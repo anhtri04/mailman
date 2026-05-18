@@ -25,4 +25,11 @@ describe('BodyEditor', () => {
     expect(componentString).toContain('chars');
     expect(componentString).toContain('onBodyChange');
   });
+
+  test('should support keyboard formatting shortcut', () => {
+    const componentString = BodyEditor.toString();
+    expect(componentString).toContain('key.ctrl && key.name === "f"');
+    expect(componentString).toContain('formatRequestBody');
+    expect(componentString).toContain('replaceText');
+  });
 });

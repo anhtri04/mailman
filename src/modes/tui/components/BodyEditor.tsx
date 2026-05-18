@@ -1,7 +1,8 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { KeyBinding, TextareaRenderable } from '@opentui/core';
-import { useKeyboard, useRenderer } from '@opentui/react';
+import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
+import { formatRequestBody } from '../../../shared/utils/request-formatter';
 
 interface BodyEditorProps {
   body: string;
@@ -26,39 +27,41 @@ function detectContentType(body: string): string {
 
 export function BodyEditor({ body, onBodyChange, focused, detectedContentType }: BodyEditorProps) {
   const { colors } = useTheme();
-  const borderColor = focused ? colors.accent.primary : colors.border.default;
   const contentType = detectedContentType ?? detectContentType(body);
   const charCount = body.length;
   const textareaRef = useRef<TextareaRenderable>(null);
+  const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [formatStatus, setFormatStatus] = useState<string | null>(null);
   const selectAllBindings: KeyBinding[] = [{ name: 'a', ctrl: true, action: 'select-all' }];
-  const renderer = useRenderer();
+
+  const showFormatStatus = useCallback((status: string) => {
+    setFormatStatus(status);
+    if (statusTimerRef.current) {
+      clearTimeout(statusTimerRef.current);
+    }
+    statusTimerRef.current = setTimeout(() => setFormatStatus(null), 1500);
+  }, []);
 
   useKeyboard((key) => {
-    if (key.ctrl && key.name === 'c') {
-      console.log('[DEBUG] Ctrl+C fired', { focused, hasRef: !!textareaRef.current });
-      if (textareaRef.current) {
-        const ev = textareaRef.current.editorView;
-        const evSel = ev.getSelection();
-        const evText = ev.getSelectedText();
-        const rbSel = textareaRef.current.getSelectedText();
-        const hasSel = textareaRef.current.hasSelection();
-        const plainText = textareaRef.current.plainText;
-        console.log('[DEBUG] editorView.getSelection():', evSel);
-        console.log('[DEBUG] editorView.getSelectedText():', JSON.stringify(evText));
-        console.log('[DEBUG] renderable.getSelectedText():', JSON.stringify(rbSel));
-        console.log('[DEBUG] renderable.hasSelection():', hasSel);
-        console.log('[DEBUG] plainText length:', plainText.length);
-        const selection = renderer.getSelection();
-        console.log('[DEBUG] renderer.hasSelection:', renderer.hasSelection);
-        console.log('[DEBUG] renderer.getSelection():', selection);
-        if (selection) {
-          console.log(
-            '[DEBUG] renderer.getSelection().getSelectedText():',
-            JSON.stringify(selection.getSelectedText()),
-          );
-        }
-      }
+    if (!focused || !(key.ctrl && key.name === 'f')) return;
+    key.preventDefault();
+    key.stopPropagation();
+
+    const currentBody = textareaRef.current?.plainText ?? body;
+    const result = formatRequestBody(currentBody, contentType);
+    if (result.error) {
+      showFormatStatus(result.error);
+      return;
     }
+
+    if (!result.changed) {
+      showFormatStatus('Already formatted');
+      return;
+    }
+
+    textareaRef.current?.replaceText(result.value);
+    onBodyChange(result.value);
+    showFormatStatus('Formatted ✓');
   });
 
   const handleContentChange = useCallback(() => {
@@ -87,7 +90,10 @@ export function BodyEditor({ body, onBodyChange, focused, detectedContentType }:
           marginBottom: 1,
         }}
       >
-        <text fg={colors.text.muted}>{contentType}</text>
+        <text fg={colors.text.muted}>
+          {contentType}
+          {formatStatus ? `  ${formatStatus}` : ''}
+        </text>
       </box>
 
       <box

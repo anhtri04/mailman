@@ -35,4 +35,14 @@ describe('GraphQLRequestPanel', () => {
     expect(componentString).toContain('onOpenAuth()');
     expect(componentString).toContain('[onFocus, activeTab, onOpenHeaders, onOpenAuth]');
   });
+
+  test('should format the active GraphQL editor with keyboard shortcut', () => {
+    const componentString = GraphQLRequestPanel.toString();
+    expect(componentString).toContain('key.ctrl && key.name === "f"');
+    expect(componentString).toContain('activeEditor === "query"');
+    expect(componentString).toContain('activeEditor === "variables"');
+    expect(componentString).toContain('formatGraphQLQuery');
+    expect(componentString).toContain('formatGraphQLVariables');
+    expect(componentString).toContain('replaceText');
+  });
 });

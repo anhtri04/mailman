@@ -9,6 +9,8 @@ export {
   parseJsonForHighlighting,
 } from './response-formatter';
 export type { ContentType } from './response-formatter';
+export { formatGraphQLQuery, formatGraphQLVariables, formatRequestBody } from './request-formatter';
+export type { FormatResult } from './request-formatter';
 export {
   copyTextToClipboard,
   getGraphqlTabCopyContent,

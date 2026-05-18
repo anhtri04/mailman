@@ -1,7 +1,12 @@
 import { useState, useCallback, useRef } from 'react';
 import type { KeyBinding, TextareaRenderable } from '@opentui/core';
+import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { AuthConfig } from '../../../types';
+import {
+  formatGraphQLQuery,
+  formatGraphQLVariables,
+} from '../../../shared/utils/request-formatter';
 
 type Tab = 'headers' | 'auth';
 type ActiveEditor = 'url' | 'query' | 'variables' | null;
@@ -36,9 +41,9 @@ export function GraphQLRequestPanel({
   variables,
   onVariablesChange,
   headers = {},
-  onHeadersChange,
+  onHeadersChange: _onHeadersChange,
   auth,
-  onAuthChange,
+  onAuthChange: _onAuthChange,
   onSend,
   onOpenHeaders,
   onOpenAuth,
@@ -48,11 +53,14 @@ export function GraphQLRequestPanel({
   const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab | null>(null);
   const [activeEditor, setActiveEditor] = useState<ActiveEditor>(null);
+  const [queryFormatStatus, setQueryFormatStatus] = useState<string | null>(null);
+  const [variablesFormatStatus, setVariablesFormatStatus] = useState<string | null>(null);
   const queryRef = useRef<TextareaRenderable>(null);
   const variablesRef = useRef<TextareaRenderable>(null);
+  const queryStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const variablesStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const selectAllBindings: KeyBinding[] = [{ name: 'a', ctrl: true, action: 'select-all' }];
 
-  const hasVariables = !!(variables && variables.trim().length > 0);
   const hasHeaders = Object.keys(headers).length > 0;
   const hasAuth = !!(auth && auth.type !== 'none');
   const urlEditorFocused = focused && activeEditor === 'url';
@@ -86,6 +94,61 @@ export function GraphQLRequestPanel({
       onVariablesChange(variablesRef.current.plainText);
     }
   }, [onVariablesChange]);
+
+  const showQueryFormatStatus = useCallback((status: string) => {
+    setQueryFormatStatus(status);
+    if (queryStatusTimerRef.current) {
+      clearTimeout(queryStatusTimerRef.current);
+    }
+    queryStatusTimerRef.current = setTimeout(() => setQueryFormatStatus(null), 1500);
+  }, []);
+
+  const showVariablesFormatStatus = useCallback((status: string) => {
+    setVariablesFormatStatus(status);
+    if (variablesStatusTimerRef.current) {
+      clearTimeout(variablesStatusTimerRef.current);
+    }
+    variablesStatusTimerRef.current = setTimeout(() => setVariablesFormatStatus(null), 1500);
+  }, []);
+
+  useKeyboard((key) => {
+    if (!focused || !(key.ctrl && key.name === 'f')) return;
+    key.preventDefault();
+    key.stopPropagation();
+
+    if (activeEditor === 'query') {
+      const currentQuery = queryRef.current?.plainText ?? query;
+      const result = formatGraphQLQuery(currentQuery);
+      if (result.error) {
+        showQueryFormatStatus(result.error);
+        return;
+      }
+      if (!result.changed) {
+        showQueryFormatStatus('Already formatted');
+        return;
+      }
+      queryRef.current?.replaceText(result.value);
+      onQueryChange(result.value);
+      showQueryFormatStatus('Formatted ✓');
+      return;
+    }
+
+    if (activeEditor === 'variables') {
+      const currentVariables = variablesRef.current?.plainText ?? variables;
+      const result = formatGraphQLVariables(currentVariables);
+      if (result.error) {
+        showVariablesFormatStatus(result.error);
+        return;
+      }
+      if (!result.changed) {
+        showVariablesFormatStatus('Already formatted');
+        return;
+      }
+      variablesRef.current?.replaceText(result.value);
+      onVariablesChange(result.value);
+      showVariablesFormatStatus('Formatted ✓');
+    }
+  });
 
   const renderTabButton = useCallback(
     (tab: Tab, label: string, hasData: boolean) => {
@@ -218,6 +281,7 @@ export function GraphQLRequestPanel({
       <box style={{ flexDirection: 'column', flexGrow: 1, marginTop: 1 }}>
         <text fg={colors.accent.primary}>
           <strong>Query</strong>
+          {queryFormatStatus ? `  ${queryFormatStatus}` : ''}
         </text>
         <box
           style={{
@@ -252,6 +316,7 @@ export function GraphQLRequestPanel({
       <box style={{ flexDirection: 'column', height: '60%' }}>
         <text fg={colors.accent.primary}>
           <strong>Variables</strong>
+          {variablesFormatStatus ? `  ${variablesFormatStatus}` : ''}
         </text>
         <box
           style={{
