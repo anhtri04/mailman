@@ -159,8 +159,8 @@ describe('importCollectionsFromFile', () => {
       });
 
       const result = await importCollectionsFromFile(path);
-      expect(result[0]?.protocol).toBe('graphql');
       const req = result[0]?.requests[0];
+      expect(req?.protocol).toBe('graphql');
       expect(req?.body).toBe('query GetUser($id: ID!) { user(id: $id) { name } }');
       expect(req?.variables).toBe(JSON.stringify({ id: '1' }));
     });
@@ -185,7 +185,7 @@ describe('importCollectionsFromFile', () => {
       });
 
       const result = await importCollectionsFromFile(path);
-      expect(result[0]?.protocol).toBe('rest');
+      expect(result[0]?.requests[0]?.protocol).toBe('rest');
       expect(result[0]?.requests).toHaveLength(2);
     });
 
@@ -219,7 +219,7 @@ describe('importCollectionsFromFile', () => {
       });
 
       const result = await importCollectionsFromFile(path);
-      expect(result[0]?.protocol).toBe('graphql');
+      expect(result[0]?.requests.every((request) => request.protocol === 'graphql')).toBe(true);
       expect(result[0]?.requests).toHaveLength(2);
     });
   });

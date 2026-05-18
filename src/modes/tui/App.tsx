@@ -54,6 +54,7 @@ import type {
   AuthConfig,
   Collection,
   RequestItem,
+  RequestItemInput,
   Protocol,
   FocusArea,
 } from '../../core/types';
@@ -96,7 +97,7 @@ export function App() {
   const [collectionModalMode, setCollectionModalMode] = useState<'new' | 'import'>('new');
   const [importError, setImportError] = useState<string | null>(null);
   const [newCollectionName, setNewCollectionName] = useState('');
-  const [newCollectionProtocol, setNewCollectionProtocol] = useState<Protocol>('rest');
+  const [newRequestProtocol, setNewRequestProtocol] = useState<Protocol>('rest');
   const [newRequestMethod, setNewRequestMethod] = useState('GET');
   const [newRequestName, setNewRequestName] = useState('');
   const [curlText, setCurlText] = useState('');
@@ -122,13 +123,15 @@ export function App() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
   const SSE_MAX_EVENTS = 500;
+  const requestProtocolOptions: Protocol[] = ['rest', 'graphql', 'websocket'];
 
   const selectAllBindings: KeyBinding[] = [{ name: 'a', ctrl: true, action: 'select-all' }];
 
   const activeCollection = activeCollectionId
     ? collections.find((c) => c.id === activeCollectionId)
     : undefined;
-  const currentProtocol = activeCollection?.protocol ?? 'rest';
+  const activeRequest = activeCollection?.requests.find((item) => item.id === activeRequestId);
+  const currentProtocol = activeRequest?.protocol ?? 'rest';
   const isStreamingResponse =
     currentResponse?.mode === 'sse' && (currentResponse.isStreaming ?? false);
 
@@ -300,20 +303,31 @@ export function App() {
           activeRequestId,
           currentProtocol === 'graphql'
             ? {
-                method: 'POST',
+                protocol: 'graphql',
+                name: requestName,
                 url: graphqlRequest.url,
-                headers: graphqlRequest.headers,
-                body: graphqlRequest.query,
+                query: graphqlRequest.query,
                 variables: graphqlRequest.variables,
+                headers: graphqlRequest.headers,
                 auth: graphqlRequest.auth,
               }
-            : {
-                method: request.method,
-                url: request.url,
-                headers: request.headers,
-                body: request.body,
-                auth: request.auth,
-              },
+            : currentProtocol === 'websocket'
+              ? {
+                  protocol: 'websocket',
+                  name: requestName,
+                  url: request.url,
+                  headers: request.headers ?? {},
+                  initialMessage: request.body ?? '',
+                }
+              : {
+                  protocol: 'rest',
+                  name: requestName,
+                  method: request.method,
+                  url: request.url,
+                  headers: request.headers ?? {},
+                  body: request.body ?? '',
+                  auth: request.auth,
+                },
         );
         const updated = await loadCollections();
         setCollections(updated);
@@ -442,7 +456,7 @@ export function App() {
         },
       });
     },
-    [activeCollectionId, activeRequestId, request, requestName],
+    [activeCollectionId, activeRequestId, currentProtocol, request, requestName],
   );
 
   const addGraphqlHistoryEntry = useCallback(
@@ -796,32 +810,35 @@ export function App() {
     });
   }, [activeRequestId]);
 
-  const handleLoadRequest = useCallback(
-    (item: RequestItem, collectionId: string) => {
-      const collection = collections.find((c) => c.id === collectionId);
-      if (collection?.protocol === 'graphql') {
-        setGraphqlRequest({
-          url: item.url,
-          query: item.body ?? '',
-          variables: item.variables ?? '',
-          headers: item.headers ?? {},
-          auth: item.auth,
-        });
-      } else {
-        setRequest({
-          method: item.method,
-          url: item.url,
-          headers: item.headers ?? {},
-          body: item.body ?? '',
-          auth: item.auth,
-        });
-      }
-      setRequestName(item.name);
-      setActiveRequestId(item.id);
-      setActiveCollectionId(collectionId);
-    },
-    [collections],
-  );
+  const handleLoadRequest = useCallback((item: RequestItem, collectionId: string) => {
+    if (item.protocol === 'graphql') {
+      setGraphqlRequest({
+        url: item.url,
+        query: item.query,
+        variables: item.variables,
+        headers: item.headers,
+        auth: item.auth,
+      });
+    } else if (item.protocol === 'websocket') {
+      setRequest({
+        method: 'CONNECT',
+        url: item.url,
+        headers: item.headers,
+        body: item.initialMessage,
+      });
+    } else {
+      setRequest({
+        method: item.method,
+        url: item.url,
+        headers: item.headers,
+        body: item.body,
+        auth: item.auth,
+      });
+    }
+    setRequestName(item.name);
+    setActiveRequestId(item.id);
+    setActiveCollectionId(collectionId);
+  }, []);
 
   const handleSelectCollection = useCallback((id: string | null) => {
     setActiveCollectionId(id);
@@ -896,7 +913,22 @@ export function App() {
         </box>
 
         {activeRequestId ? (
-          currentProtocol === 'graphql' ? (
+          currentProtocol === 'websocket' ? (
+            <box
+              style={{
+                flexDirection: 'column',
+                flexGrow: 1,
+                border: true,
+                borderColor: colors.border.default,
+                padding: 2,
+              }}
+            >
+              <text fg={colors.accent.primary}>
+                <strong>WebSocket Foundation Ready</strong>
+              </text>
+              <text fg={colors.text.muted}>WebSocket connect/send panels will be added next.</text>
+            </box>
+          ) : currentProtocol === 'graphql' ? (
             <box style={{ flexDirection: 'row', height: '100%' }} key={activeRequestId}>
               <box width="50%" style={{ flexDirection: 'column' }}>
                 <GraphQLRequestPanel
@@ -1104,53 +1136,6 @@ export function App() {
 
               {collectionModalMode === 'new' ? (
                 <box style={{ flexDirection: 'column', gap: 1 }}>
-                  <box style={{ flexDirection: 'row', gap: 1 }}>
-                    <box
-                      style={{
-                        border: true,
-                        borderColor:
-                          newCollectionProtocol === 'rest'
-                            ? colors.accent.primary
-                            : colors.border.default,
-                        paddingLeft: 2,
-                        paddingRight: 2,
-                      }}
-                      onMouseDown={() => setNewCollectionProtocol('rest')}
-                    >
-                      <text
-                        fg={
-                          newCollectionProtocol === 'rest'
-                            ? colors.accent.primary
-                            : colors.text.muted
-                        }
-                      >
-                        REST
-                      </text>
-                    </box>
-                    <box
-                      style={{
-                        border: true,
-                        borderColor:
-                          newCollectionProtocol === 'graphql'
-                            ? colors.accent.primary
-                            : colors.border.default,
-                        paddingLeft: 2,
-                        paddingRight: 2,
-                      }}
-                      onMouseDown={() => setNewCollectionProtocol('graphql')}
-                    >
-                      <text
-                        fg={
-                          newCollectionProtocol === 'graphql'
-                            ? colors.accent.primary
-                            : colors.text.muted
-                        }
-                      >
-                        GRAPHQL
-                      </text>
-                    </box>
-                  </box>
-
                   <box
                     style={{
                       border: true,
@@ -1179,13 +1164,12 @@ export function App() {
                       onMouseDown={() => {
                         if (newCollectionName.trim()) {
                           void (async () => {
-                            await addCollection(newCollectionName.trim(), newCollectionProtocol);
+                            await addCollection(newCollectionName.trim());
                             const updated = await loadCollections();
                             setCollections(updated);
                           })();
                           setCollectionModal(null);
                           setNewCollectionName('');
-                          setNewCollectionProtocol('rest');
                         }
                       }}
                     >
@@ -1202,7 +1186,6 @@ export function App() {
                       onMouseDown={() => {
                         setCollectionModal(null);
                         setNewCollectionName('');
-                        setNewCollectionProtocol('rest');
                       }}
                     >
                       <text fg={colors.text.muted}>Cancel</text>
@@ -1240,10 +1223,36 @@ export function App() {
           <Modal isOpen={true} onClose={() => setCollectionModal(null)} title="Add Request">
             <box style={{ flexDirection: 'column', gap: 1, padding: 1 }}>
               <box style={{ flexDirection: 'row', gap: 1, alignItems: 'center' }}>
-                <text fg={colors.text.muted}>Method:</text>
-                {activeCollection?.protocol === 'graphql' ? (
-                  <text fg={colors.accent.primary}>GRAPHQL</text>
-                ) : (
+                <text fg={colors.text.muted}>Protocol:</text>
+                {requestProtocolOptions.map((protocol) => (
+                  <box
+                    key={protocol}
+                    style={{
+                      border: true,
+                      borderColor:
+                        newRequestProtocol === protocol
+                          ? colors.accent.primary
+                          : colors.border.default,
+                      borderStyle: 'rounded',
+                      paddingLeft: 1,
+                      paddingRight: 1,
+                    }}
+                    onMouseDown={() => setNewRequestProtocol(protocol)}
+                  >
+                    <text
+                      fg={
+                        newRequestProtocol === protocol ? colors.accent.primary : colors.text.muted
+                      }
+                    >
+                      {protocol.toUpperCase()}
+                    </text>
+                  </box>
+                ))}
+              </box>
+
+              {newRequestProtocol === 'rest' && (
+                <box style={{ flexDirection: 'row', gap: 1, alignItems: 'center' }}>
+                  <text fg={colors.text.muted}>Method:</text>
                   <box
                     style={{
                       border: true,
@@ -1267,8 +1276,8 @@ export function App() {
                       {newRequestMethod}
                     </text>
                   </box>
-                )}
-              </box>
+                </box>
+              )}
 
               <box
                 style={{
@@ -1316,23 +1325,23 @@ export function App() {
                   }}
                   onMouseDown={() => {
                     if (newRequestName.trim() && activeCollectionId) {
+                      let selectedProtocol = newRequestProtocol;
                       let method = newRequestMethod;
                       let url = '';
-                      let headers: Record<string, string> | undefined;
-                      let body: string | undefined;
-                      let variables: string | undefined;
+                      let headers: Record<string, string> = {};
+                      let body = '';
+                      let variables = '';
 
                       if (curlText.trim()) {
                         try {
                           const parsed = parseCurl(curlText.trim());
                           method = parsed.method;
                           url = parsed.url;
-                          if (Object.keys(parsed.headers).length > 0) {
-                            headers = parsed.headers;
-                          }
+                          headers = parsed.headers;
                           if (parsed.protocol === 'graphql') {
+                            selectedProtocol = 'graphql';
                             body = parsed.query;
-                            variables = parsed.variables || undefined;
+                            variables = parsed.variables || '';
                           } else if (parsed.body) {
                             body = parsed.body;
                           }
@@ -1341,20 +1350,41 @@ export function App() {
                         }
                       }
 
+                      const requestInput: RequestItemInput =
+                        selectedProtocol === 'graphql'
+                          ? {
+                              protocol: 'graphql',
+                              name: newRequestName.trim(),
+                              url,
+                              query: body,
+                              variables,
+                              headers,
+                            }
+                          : selectedProtocol === 'websocket'
+                            ? {
+                                protocol: 'websocket',
+                                name: newRequestName.trim(),
+                                url,
+                                headers,
+                                initialMessage: body,
+                              }
+                            : {
+                                protocol: 'rest',
+                                method,
+                                name: newRequestName.trim(),
+                                url,
+                                headers,
+                                body,
+                              };
+
                       void (async () => {
-                        await addRequestToCollection(activeCollectionId, {
-                          method,
-                          name: newRequestName.trim(),
-                          url,
-                          headers,
-                          body,
-                          variables,
-                        });
+                        await addRequestToCollection(activeCollectionId, requestInput);
                         const updated = await loadCollections();
                         setCollections(updated);
                       })();
                       setCollectionModal(null);
                       setNewRequestName('');
+                      setNewRequestProtocol('rest');
                       setNewRequestMethod('GET');
                       setCurlText('');
                     }
@@ -1373,6 +1403,7 @@ export function App() {
                   onMouseDown={() => {
                     setCollectionModal(null);
                     setNewRequestName('');
+                    setNewRequestProtocol('rest');
                     setNewRequestMethod('GET');
                     setCurlText('');
                   }}

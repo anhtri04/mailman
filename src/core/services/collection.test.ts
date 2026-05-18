@@ -51,9 +51,7 @@ describe('collection persistence', () => {
   });
 
   test('save and load roundtrip', async () => {
-    const collections: Collection[] = [
-      { id: '1', name: 'Test Collection', requests: [], protocol: 'rest' },
-    ];
+    const collections: Collection[] = [{ id: '1', name: 'Test Collection', requests: [] }];
     await saveCollections(collections);
     const loaded = await loadCollections();
     expect(loaded).toEqual(collections);
@@ -81,10 +79,12 @@ describe('collection persistence', () => {
   test('addRequestToCollection adds request to existing collection', async () => {
     const collection = await addCollection('API Collection');
     const request = await addRequestToCollection(collection.id, {
+      protocol: 'rest',
       name: 'Get Users',
       method: 'GET',
       url: 'https://api.example.com/users',
       headers: { Authorization: 'Bearer token' },
+      body: '',
     });
 
     expect(request.name).toBe('Get Users');
@@ -109,9 +109,12 @@ describe('collection persistence', () => {
   test('deleteRequest removes request from collection', async () => {
     const collection = await addCollection('API Collection');
     const request = await addRequestToCollection(collection.id, {
+      protocol: 'rest',
       name: 'Get Users',
       method: 'GET',
       url: 'https://api.example.com/users',
+      headers: {},
+      body: '',
     });
 
     await deleteRequest(collection.id, request.id);
@@ -136,9 +139,12 @@ describe('collection persistence', () => {
   test('updateRequest updates fields on existing request', async () => {
     const collection = await addCollection('API Collection');
     const request = await addRequestToCollection(collection.id, {
+      protocol: 'rest',
       name: 'Get Users',
       method: 'GET',
       url: 'https://api.example.com/users',
+      headers: {},
+      body: '',
     });
 
     await updateRequest(collection.id, request.id, {
@@ -180,6 +186,7 @@ describe('collection persistence', () => {
   test('handles requests with body and auth', async () => {
     const collection = await addCollection('Auth Collection');
     const request = await addRequestToCollection(collection.id, {
+      protocol: 'rest',
       name: 'Create User',
       method: 'POST',
       url: 'https://api.example.com/users',

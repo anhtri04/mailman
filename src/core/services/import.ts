@@ -1,5 +1,5 @@
 import { readFile } from 'fs/promises';
-import type { Collection, RequestItem, Protocol } from '../types';
+import type { AuthConfig, Collection, RequestItem } from '../types';
 
 export async function importCollectionsFromFile(path: string): Promise<Collection[]> {
   const data = await readFile(path, 'utf-8');
@@ -70,25 +70,57 @@ function parsePostmanAuth(auth?: {
   type?: string;
   bearer?: Array<{ key: string; value: string }>;
   apikey?: Array<{ key: string; value: string }>;
-}): RequestItem['auth'] {
+}): AuthConfig | undefined {
   if (!auth?.type) return undefined;
   if (auth.type === 'bearer') {
-    const token =
-      auth.bearer?.find((kv: { key: string; value: string }) => kv.key === 'token')?.value ?? '';
+    const token = auth.bearer?.find((kv) => kv.key === 'token')?.value ?? '';
     return { type: 'bearer', token };
   }
   if (auth.type === 'apikey') {
-    const key =
-      auth.apikey?.find((kv: { key: string; value: string }) => kv.key === 'key')?.value ?? '';
-    const value =
-      auth.apikey?.find((kv: { key: string; value: string }) => kv.key === 'value')?.value ?? '';
+    const key = auth.apikey?.find((kv) => kv.key === 'key')?.value ?? '';
+    const value = auth.apikey?.find((kv) => kv.key === 'value')?.value ?? '';
     const location =
-      auth.apikey?.find((kv: { key: string; value: string }) => kv.key === 'in')?.value === 'query'
-        ? 'query'
-        : 'header';
-    return { type: 'api-key', key, value, location: location as 'header' | 'query' };
+      auth.apikey?.find((kv) => kv.key === 'in')?.value === 'query' ? 'query' : 'header';
+    return { type: 'api-key', key, value, location };
   }
   return undefined;
+}
+
+function toRequestItem(input: {
+  id: string;
+  name: string;
+  method: string;
+  url: string;
+  headers: Record<string, string>;
+  body: string;
+  variables?: string;
+  auth?: AuthConfig;
+  isGraphQL: boolean;
+}): RequestItem {
+  if (input.isGraphQL) {
+    return {
+      id: input.id,
+      name: input.name,
+      protocol: 'graphql',
+      url: input.url,
+      query: input.body,
+      body: input.body,
+      variables: input.variables ?? '',
+      headers: input.headers,
+      auth: input.auth,
+    };
+  }
+
+  return {
+    id: input.id,
+    name: input.name,
+    protocol: 'rest',
+    method: input.method,
+    url: input.url,
+    headers: input.headers,
+    body: input.body,
+    auth: input.auth,
+  };
 }
 
 function parsePostman(raw: Record<string, unknown>): Collection[] {
@@ -97,7 +129,7 @@ function parsePostman(raw: Record<string, unknown>): Collection[] {
   const items = flattenPostman((raw.item as PMItem[]) ?? []);
 
   const requests: RequestItem[] = items.map((item, i) => {
-    const rq = item.request!;
+    const rq = item.request;
     const method = (rq.method ?? 'GET').toUpperCase();
     const url = typeof rq.url === 'string' ? rq.url : (rq.url?.raw ?? '');
 
@@ -107,51 +139,37 @@ function parsePostman(raw: Record<string, unknown>): Collection[] {
     }
 
     let body = '';
-    let graphqlVariables: string | undefined;
+    let variables = '';
     if (rq.body?.mode === 'raw') {
       body = rq.body.raw ?? '';
     } else if (rq.body?.mode === 'urlencoded') {
       body = (rq.body.urlencoded ?? [])
-        .map(
-          (p: { key: string; value: string }) =>
-            `${encodeURIComponent(p.key)}=${encodeURIComponent(p.value)}`,
-        )
+        .map((p) => `${encodeURIComponent(p.key)}=${encodeURIComponent(p.value)}`)
         .join('&');
     } else if (rq.body?.mode === 'formdata') {
       body = '# multipart/form-data not supported';
     } else if (rq.body?.mode === 'graphql') {
       body = rq.body.graphql?.query ?? '';
-      graphqlVariables = rq.body.graphql?.variables ?? '';
+      variables = rq.body.graphql?.variables ?? '';
     }
 
-    const proto: Protocol =
-      rq.body?.mode === 'graphql' || url.includes('/graphql') || /^\s*query\s+\w+/.test(body)
-        ? 'graphql'
-        : 'rest';
+    const isGraphQL =
+      rq.body?.mode === 'graphql' || url.includes('/graphql') || /^\s*query\s+\w+/.test(body);
 
-    return {
+    return toRequestItem({
       id: `${Date.now()}-${i}`,
       name: item.name || 'Untitled',
       method,
       url,
-      headers: Object.keys(headers).length ? headers : undefined,
-      body: body || undefined,
+      headers,
+      body,
+      variables,
       auth: parsePostmanAuth(rq.auth),
-      variables: proto === 'graphql' ? (graphqlVariables ?? '') : undefined,
-    };
+      isGraphQL,
+    });
   });
 
-  const protocol: Protocol =
-    requests.length > 0 && requests.every((r) => r.variables !== undefined) ? 'graphql' : 'rest';
-
-  return [
-    {
-      id: Date.now().toString(),
-      name,
-      protocol,
-      requests,
-    },
-  ];
+  return [{ id: Date.now().toString(), name, requests }];
 }
 
 function parseInsomnia(raw: Record<string, unknown>): Collection[] {
@@ -182,12 +200,10 @@ function parseInsomnia(raw: Record<string, unknown>): Collection[] {
 
           let body = r.body?.text ?? '';
           let variables = '';
-          const proto: Protocol =
-            r.url?.includes('/graphql') || r.body?.mimeType === 'application/graphql'
-              ? 'graphql'
-              : 'rest';
+          const isGraphQL =
+            r.url?.includes('/graphql') || r.body?.mimeType === 'application/graphql';
 
-          if (proto === 'graphql') {
+          if (isGraphQL) {
             try {
               const parsed = JSON.parse(body);
               body = parsed.query ?? body;
@@ -197,29 +213,31 @@ function parseInsomnia(raw: Record<string, unknown>): Collection[] {
             }
           }
 
-          const auth =
+          const auth: AuthConfig | undefined =
             r.authentication?.type === 'bearer'
-              ? { type: 'bearer' as const, token: r.authentication.token ?? '' }
+              ? { type: 'bearer', token: r.authentication.token ?? '' }
               : r.authentication?.type === 'apikey'
                 ? {
-                    type: 'api-key' as const,
+                    type: 'api-key',
                     key: r.authentication.key ?? '',
                     value: r.authentication.value ?? '',
-                    location:
-                      r.authentication.addTo === 'query' ? ('query' as const) : ('header' as const),
+                    location: r.authentication.addTo === 'query' ? 'query' : 'header',
                   }
                 : undefined;
 
-          wsRequests.push({
-            id: `${Date.now()}-${wsRequests.length}`,
-            name: r.name || 'Untitled',
-            method: (r.method ?? 'GET').toUpperCase(),
-            url: r.url ?? '',
-            headers: Object.keys(headers).length ? headers : undefined,
-            body: body || undefined,
-            auth,
-            variables: proto === 'graphql' ? variables : undefined,
-          });
+          wsRequests.push(
+            toRequestItem({
+              id: `${Date.now()}-${wsRequests.length}`,
+              name: r.name || 'Untitled',
+              method: (r.method ?? 'GET').toUpperCase(),
+              url: r.url ?? '',
+              headers,
+              body,
+              variables,
+              auth,
+              isGraphQL,
+            }),
+          );
         }
       }
     };
@@ -227,14 +245,9 @@ function parseInsomnia(raw: Record<string, unknown>): Collection[] {
     collect(ws._id);
 
     if (wsRequests.length) {
-      const protocol: Protocol = wsRequests.every((r) => r.variables !== undefined)
-        ? 'graphql'
-        : 'rest';
-
       result.push({
         id: Date.now().toString(),
         name: ws.name || 'Imported Insomnia',
-        protocol,
         requests: wsRequests,
       });
     }

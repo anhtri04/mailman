@@ -31,6 +31,12 @@ function abbreviateMethod(method: string): string {
   }
 }
 
+function requestMethodLabel(request: RequestItem): string {
+  if (request.protocol === 'graphql') return 'GQL';
+  if (request.protocol === 'websocket') return 'WS';
+  return abbreviateMethod(request.method);
+}
+
 export function CollectionPanel({
   focused,
   onFocus,
@@ -244,8 +250,9 @@ export function CollectionPanel({
             {treeNodes.map((node) => {
               const isSelected = node.index === selectedIndex;
               const isCollection = node.type === 'collection';
+              const methodLabel = !isCollection ? requestMethodLabel(node.request) : '';
               const methodColors = !isCollection
-                ? colors.methods[node.request.method.toUpperCase() as keyof typeof colors.methods]
+                ? colors.methods[methodLabel as keyof typeof colors.methods]
                 : null;
 
               return (
@@ -294,9 +301,7 @@ export function CollectionPanel({
                           marginRight: 0.5,
                         }}
                       >
-                        <text fg={methodColors?.text ?? '#ffffff'}>
-                          {abbreviateMethod(node.request.method)}
-                        </text>
+                        <text fg={methodColors?.text ?? '#ffffff'}>{methodLabel}</text>
                       </box>
                       <text
                         fg={colors.text.primary}

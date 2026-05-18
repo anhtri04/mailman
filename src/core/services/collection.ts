@@ -2,7 +2,7 @@ import { mkdirSync, existsSync } from 'fs';
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { homedir } from 'os';
-import type { Collection, Protocol, RequestItem } from '../types';
+import type { Collection, RequestItem, RequestItemInput, RequestItemUpdate } from '../types';
 
 const MAILMAN_DIR = join(homedir(), '.mailman');
 const COLLECTIONS_FILE = join(MAILMAN_DIR, 'collections.json');
@@ -32,15 +32,11 @@ export async function saveCollections(collections: Collection[]): Promise<void> 
   await writeFile(COLLECTIONS_FILE, JSON.stringify(collections, null, 2), 'utf-8');
 }
 
-export async function addCollection(
-  name: string,
-  protocol: Protocol = 'rest',
-): Promise<Collection> {
+export async function addCollection(name: string): Promise<Collection> {
   const collections = await loadCollections();
   const newCollection: Collection = {
     id: Date.now().toString(),
     name,
-    protocol,
     requests: [],
   };
   collections.push(newCollection);
@@ -50,15 +46,12 @@ export async function addCollection(
 
 export async function addRequestToCollection(
   collectionId: string,
-  request: Omit<RequestItem, 'id'>,
+  request: RequestItemInput,
 ): Promise<RequestItem> {
   const collections = await loadCollections();
   const collection = collections.find((c) => c.id === collectionId);
   if (!collection) throw new Error(`Collection not found: ${collectionId}`);
-  const newRequest: RequestItem = {
-    id: Date.now().toString(),
-    ...request,
-  };
+  const newRequest = { id: Date.now().toString(), ...request } as RequestItem;
   collection.requests.push(newRequest);
   await saveCollections(collections);
   return newRequest;
@@ -81,7 +74,7 @@ export async function deleteRequest(collectionId: string, requestId: string): Pr
 export async function updateRequest(
   collectionId: string,
   requestId: string,
-  updates: Partial<Omit<RequestItem, 'id'>>,
+  updates: RequestItemUpdate,
 ): Promise<void> {
   const collections = await loadCollections();
   const collection = collections.find((c) => c.id === collectionId);

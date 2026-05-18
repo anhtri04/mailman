@@ -1,4 +1,5 @@
 export { sendGraphQLRequest } from './graphql-client';
+export type { ProtocolController, ProtocolExecutionResult } from './protocol-executor';
 export {
   buildRequestStats,
   calculateBodyBytes,

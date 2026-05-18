@@ -9,11 +9,23 @@ interface WelcomePanelProps {
   onExportCollection?: (collection: Collection) => void;
 }
 
+function requestMethodLabel(request: RequestItem): string {
+  if (request.protocol === 'graphql') return 'GQL';
+  if (request.protocol === 'websocket') return 'WS';
+  return request.method.toUpperCase();
+}
+
+function requestBody(request: RequestItem): string {
+  if (request.protocol === 'graphql') return request.query;
+  if (request.protocol === 'websocket') return request.initialMessage;
+  return request.body;
+}
+
 function buildMethodSummary(requests: RequestItem[]): string {
   const counts = new Map<string, number>();
 
   for (const req of requests) {
-    const method = req.method.toUpperCase();
+    const method = requestMethodLabel(req);
     counts.set(method, (counts.get(method) ?? 0) + 1);
   }
 
@@ -38,16 +50,20 @@ export function WelcomePanel({ collection, onExportCollection }: WelcomePanelPro
   }, [copyStatus]);
 
   const handleCopyCurl = async (request: RequestItem) => {
-    if (!collection) return;
+    if (request.protocol === 'websocket') {
+      setLastCopiedRequestName(request.name || request.url);
+      setCopyStatus('fail');
+      return;
+    }
 
     const copied = await copyCurl({
-      protocol: collection.protocol,
-      method: request.method,
+      protocol: request.protocol,
+      method: request.protocol === 'rest' ? request.method : 'GET',
       url: request.url,
       headers: request.headers,
-      body: request.body,
-      query: collection.protocol === 'graphql' ? request.body : undefined,
-      variables: request.variables,
+      body: requestBody(request),
+      query: request.protocol === 'graphql' ? request.query : undefined,
+      variables: request.protocol === 'graphql' ? request.variables : undefined,
     });
 
     setLastCopiedRequestName(request.name || request.url);
@@ -87,45 +103,53 @@ export function WelcomePanel({ collection, onExportCollection }: WelcomePanelPro
           </box>
         </box>
         <text fg={colors.text.muted} style={{ marginBottom: 1 }}>
-          {collection.protocol.toUpperCase()} | {collection.requests.length} requests
-          {methodSummary ? ` | ${methodSummary}` : ''}
+          {collection.requests.length} requests{methodSummary ? ` | ${methodSummary}` : ''}
         </text>
         <box style={{ flexDirection: 'column', gap: 0 }}>
           <box>
             <scrollbox>
-              {collection.requests.map((req) => (
-                <box key={req.id} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <box style={{ flexDirection: 'row', gap: 1 }}>
-                    <text
-                      fg={
-                        colors.methods[req.method.toUpperCase() as keyof typeof colors.methods]
-                          ?.text ?? colors.text.primary
-                      }
-                    >
-                      {req.method.toUpperCase()}
-                    </text>
-                    <text fg={colors.text.primary}>{req.name || req.url}</text>
-                    {req.auth && req.auth.type !== 'none' && <text fg={colors.text.dim}>auth</text>}
-                    {req.body && <text fg={colors.text.dim}>body</text>}
-                  </box>
+              {collection.requests.map((req) => {
+                const label = requestMethodLabel(req);
+                const body = requestBody(req);
+                return (
                   <box
-                    style={{
-                      border: true,
-                      borderColor: colors.border.default,
-                      borderStyle: 'rounded',
-                      paddingLeft: 1,
-                      paddingRight: 1,
-                      paddingTop: 0.5,
-                      paddingBottom: 0.5,
-                    }}
-                    onMouseDown={() => {
-                      void handleCopyCurl(req);
-                    }}
+                    key={req.id}
+                    style={{ flexDirection: 'row', justifyContent: 'space-between' }}
                   >
-                    <text fg={colors.text.muted}>cURL</text>
+                    <box style={{ flexDirection: 'row', gap: 1 }}>
+                      <text
+                        fg={
+                          colors.methods[label as keyof typeof colors.methods]
+                          ?.text ?? colors.text.primary
+                        }
+                      >
+                        {label}
+                      </text>
+                      <text fg={colors.text.primary}>{req.name || req.url}</text>
+                      {'auth' in req && req.auth && req.auth.type !== 'none' && (
+                        <text fg={colors.text.dim}>auth</text>
+                      )}
+                      {body && <text fg={colors.text.dim}>body</text>}
+                    </box>
+                    <box
+                      style={{
+                        border: true,
+                        borderColor: colors.border.default,
+                        borderStyle: 'rounded',
+                        paddingLeft: 1,
+                        paddingRight: 1,
+                        paddingTop: 0.5,
+                        paddingBottom: 0.5,
+                      }}
+                      onMouseDown={() => {
+                        void handleCopyCurl(req);
+                      }}
+                    >
+                      <text fg={colors.text.muted}>cURL</text>
+                    </box>
                   </box>
-                </box>
-              ))}
+                );
+              })}
               {collection.requests.length === 0 && (
                 <text fg={colors.text.muted}>No requests in this collection</text>
               )}

@@ -14,7 +14,7 @@ export function buildCollectionsCommands(): CliCommand[] {
         if (collections.length === 0) {
           return { message: 'No collections found.' };
         }
-        const lines = collections.map((c) => `${c.id}  ${c.name} (${c.protocol})`);
+        const lines = collections.map((c) => `${c.id}  ${c.name} (${c.requests.length} requests)`);
         return { message: lines.join('\n') };
       },
     },

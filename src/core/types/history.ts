@@ -8,6 +8,11 @@ export interface HistorySSESummary {
   durationMs: number;
 }
 
+export interface HistoryMessageSummary {
+  messageCount: number;
+  durationMs: number;
+}
+
 export interface HistoryRequestSnapshot {
   method: string;
   url: string;
@@ -24,8 +29,9 @@ export interface HistoryResponseSnapshot {
   headers: Record<string, string>;
   time: number;
   stats?: RequestStats;
-  mode?: 'single' | 'sse';
+  mode?: 'single' | 'sse' | 'websocket';
   sseSummary?: HistorySSESummary;
+  messageSummary?: HistoryMessageSummary;
 }
 
 export interface HistoryEntry {
