@@ -1,5 +1,4 @@
-import { useCallback, useMemo } from 'react';
-import { useKeyboard } from '@opentui/react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
 
 interface QueryParamsEditorProps {
@@ -8,36 +7,62 @@ interface QueryParamsEditorProps {
   onParamsChange: (params: Record<string, string>) => void;
 }
 
+interface QueryParamEntry {
+  id: string;
+  key: string;
+  value: string;
+}
+
+function parseParams(params: Record<string, string>): QueryParamEntry[] {
+  return Object.entries(params).map(([key, value], index) => ({
+    id: `param-${index}-${key}`,
+    key,
+    value,
+  }));
+}
+
+function serializeParams(entries: QueryParamEntry[]): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const entry of entries) {
+    const key = entry.key.trim();
+    if (key && entry.value !== '') {
+      result[key] = entry.value;
+    }
+  }
+  return result;
+}
+
+function getParamsSignature(params: Record<string, string>): string {
+  return JSON.stringify(Object.entries(params).sort(([a], [b]) => a.localeCompare(b)));
+}
+
 export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryParamsEditorProps) {
   const { colors } = useTheme();
-  // Parse base URL to separate path from query params
-  const { cleanUrl, existingParams } = useMemo(() => {
-    const urlParts = baseUrl.split('?');
-    const cleanUrl = urlParts[0] ?? '';
-    const queryString = urlParts[1] ?? '';
-    const existingParams: Record<string, string> = {};
+  const [entries, setEntries] = useState<QueryParamEntry[]>(() => parseParams(params));
+  const lastEmittedSignature = useRef(getParamsSignature(params));
 
-    if (queryString) {
-      const pairs = queryString.split('&');
-      for (const pair of pairs) {
-        const [key, value] = pair.split('=');
-        if (key && value) {
-          existingParams[decodeURIComponent(key)] = decodeURIComponent(value);
-        }
-      }
-    }
+  const cleanUrl = useMemo(() => baseUrl.split('?')[0] ?? '', [baseUrl]);
+  const paramsSignature = useMemo(() => getParamsSignature(params), [params]);
 
-    return { cleanUrl, existingParams };
-  }, [baseUrl]);
+  useEffect(() => {
+    if (paramsSignature === lastEmittedSignature.current) return;
+    setEntries(parseParams(params));
+    lastEmittedSignature.current = paramsSignature;
+  }, [params, paramsSignature]);
 
-  // Combine existing and new params
-  const allParams = useMemo(() => {
-    return { ...existingParams, ...params };
-  }, [existingParams, params]);
+  const updateEntries = useCallback(
+    (newEntries: QueryParamEntry[]) => {
+      setEntries(newEntries);
+      const serializedParams = serializeParams(newEntries);
+      lastEmittedSignature.current = getParamsSignature(serializedParams);
+      onParamsChange(serializedParams);
+    },
+    [onParamsChange],
+  );
 
-  // Build full URL with encoded params
+  // Build full URL with encoded, non-empty params
   const fullUrl = useMemo(() => {
-    const paramsList = Object.entries(allParams).filter(([, value]) => value !== '');
+    const paramsList = Object.entries(serializeParams(entries));
     if (paramsList.length === 0) return cleanUrl;
 
     const encodedParams = paramsList
@@ -45,46 +70,33 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
       .join('&');
 
     return `${cleanUrl}?${encodedParams}`;
-  }, [cleanUrl, allParams]);
-
-  // Convert params object to array for rendering
-  const paramsArray = useMemo(() => {
-    return Object.entries(params);
-  }, [params]);
+  }, [cleanUrl, entries]);
 
   const addParam = useCallback(() => {
-    const newKey = `param${Date.now()}`;
-    onParamsChange({ ...params, [newKey]: '' });
-  }, [params, onParamsChange]);
+    updateEntries([...entries, { id: `param-${Date.now()}`, key: '', value: '' }]);
+  }, [entries, updateEntries]);
 
   const removeParam = useCallback(
-    (key: string) => {
-      const newParams = { ...params };
-      delete newParams[key];
-      onParamsChange(newParams);
+    (id: string) => {
+      updateEntries(entries.filter((entry) => entry.id !== id));
     },
-    [params, onParamsChange],
+    [entries, updateEntries],
   );
 
   const updateParamKey = useCallback(
-    (oldKey: string, newKey: string) => {
-      if (oldKey === newKey) return;
-      const value = params[oldKey];
-      if (value !== undefined) {
-        const newParams = { ...params };
-        delete newParams[oldKey];
-        newParams[newKey] = value;
-        onParamsChange(newParams);
-      }
+    (id: string, newKey: string) => {
+      updateEntries(entries.map((entry) => (entry.id === id ? { ...entry, key: newKey } : entry)));
     },
-    [params, onParamsChange],
+    [entries, updateEntries],
   );
 
   const updateParamValue = useCallback(
-    (key: string, newValue: string) => {
-      onParamsChange({ ...params, [key]: newValue });
+    (id: string, newValue: string) => {
+      updateEntries(
+        entries.map((entry) => (entry.id === id ? { ...entry, value: newValue } : entry)),
+      );
     },
-    [params, onParamsChange],
+    [entries, updateEntries],
   );
 
   return (
@@ -100,11 +112,11 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
     >
       {/* Params List */}
       <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
-        {paramsArray.length === 0 ? (
+        {entries.length === 0 ? (
           <text fg={colors.text.muted}>No query parameters added.</text>
         ) : (
-          paramsArray.map(([key, value], index) => (
-            <box key={`${key}-${index}`} style={{ flexDirection: 'row', gap: 1 }}>
+          entries.map((entry) => (
+            <box key={entry.id} style={{ flexDirection: 'row', gap: 1 }}>
               {/* Key Input */}
               <box
                 style={{
@@ -118,8 +130,8 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
                 }}
               >
                 <input
-                  value={key}
-                  onInput={(newKey) => updateParamKey(key, newKey)}
+                  value={entry.key}
+                  onInput={(newKey) => updateParamKey(entry.id, newKey)}
                   placeholder="Key"
                 />
               </box>
@@ -139,8 +151,8 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
                 }}
               >
                 <input
-                  value={value}
-                  onInput={(newValue) => updateParamValue(key, newValue)}
+                  value={entry.value}
+                  onInput={(newValue) => updateParamValue(entry.id, newValue)}
                   placeholder="Value"
                 />
               </box>
@@ -155,7 +167,7 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
                   paddingTop: 0.5,
                   paddingBottom: 0.5,
                 }}
-                onMouseDown={() => removeParam(key)}
+                onMouseDown={() => removeParam(entry.id)}
               >
                 <text fg={colors.syntax.error}>-</text>
               </box>
