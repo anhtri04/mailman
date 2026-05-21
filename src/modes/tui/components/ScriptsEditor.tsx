@@ -84,6 +84,7 @@ export function ScriptsEditor({ protocol, scripts, onScriptsChange }: ScriptsEdi
   const afterRef = useRef<TextareaRenderable>(null);
   const selectAllBindings: KeyBinding[] = [{ name: 'a', ctrl: true, action: 'select-all' }];
   const beforeLabel = protocol === 'graphql' ? 'Before Query' : 'Before Request';
+  const [showSnippets, setShowSnippets] = useState(false);
   const snippets = [
     ...(protocol === 'graphql' ? GRAPHQL_SNIPPETS : REST_SNIPPETS),
     ...AFTER_SNIPPETS,
@@ -164,34 +165,54 @@ export function ScriptsEditor({ protocol, scripts, onScriptsChange }: ScriptsEdi
 
   return (
     <box style={{ flexDirection: 'column', gap: 1, padding: 1, height: '100%' }}>
-      <box style={{ flexDirection: 'column' }}>
-        <text fg={colors.text.muted}>Snippets</text>
-        <box style={{ flexDirection: 'row', gap: 1, flexWrap: 'wrap' }}>
-          {snippets.map((snippet) => (
-            <box
-              key={snippet.id}
-              style={{
-                border: true,
-                borderColor: colors.border.default,
-                borderStyle: 'rounded',
-                paddingLeft: 1,
-                paddingRight: 1,
-              }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                insertSnippet(snippet);
-              }}
-            >
-              <text fg={colors.text.muted}>{snippet.label}</text>
-            </box>
-          ))}
+      <scrollbox style={{ flexGrow: 1 }}>
+        <box
+          style={{
+            alignSelf: 'flex-start',
+            paddingLeft: 2,
+            paddingRight: 2,
+            paddingTop: 0.5,
+            paddingBottom: 0.5,
+            border: true,
+            borderColor: showSnippets ? colors.accent.primary : colors.border.default,
+          }}
+          onMouseDown={() => setShowSnippets(!showSnippets)}
+        >
+          <text fg={showSnippets ? colors.accent.primary : colors.text.muted}>
+            {showSnippets ? <strong>Hide Snippets</strong> : 'Snippet'}
+          </text>
         </box>
-      </box>
 
-      <box style={{ flexDirection: 'row', gap: 1, flexGrow: 1 }}>
-        {renderEditor('beforeRequest', beforeLabel, beforeRef, scripts.beforeRequest ?? '')}
-        {renderEditor('afterResponse', 'After Response', afterRef, scripts.afterResponse ?? '')}
-      </box>
+        {showSnippets && (
+          <box style={{ flexDirection: 'column', marginBottom: 1 }}>
+            <box style={{ flexDirection: 'row', gap: 1, flexWrap: 'wrap' }}>
+              {snippets.map((snippet) => (
+                <box
+                  key={snippet.id}
+                  style={{
+                    border: true,
+                    borderColor: colors.border.default,
+                    borderStyle: 'rounded',
+                    paddingLeft: 1,
+                    paddingRight: 1,
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    insertSnippet(snippet);
+                  }}
+                >
+                  <text fg={colors.text.muted}>{snippet.label}</text>
+                </box>
+              ))}
+            </box>
+          </box>
+        )}
+
+        <box style={{ flexDirection: 'row', gap: 1, flexGrow: 1 }}>
+          {renderEditor('beforeRequest', beforeLabel, beforeRef, scripts.beforeRequest ?? '')}
+          {renderEditor('afterResponse', 'After Response', afterRef, scripts.afterResponse ?? '')}
+        </box>
+      </scrollbox>
     </box>
   );
 }
