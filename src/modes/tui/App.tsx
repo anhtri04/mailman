@@ -54,6 +54,7 @@ import type {
 import type {
   HistoryEntry,
   RequestOptions,
+  RequestScripts,
   ResponseState,
   AuthConfig,
   Collection,
@@ -75,6 +76,7 @@ export function App() {
     url: '',
     headers: {},
     body: '',
+    scripts: {},
   });
   const [graphqlRequest, setGraphqlRequest] = useState<{
     url: string;
@@ -82,11 +84,13 @@ export function App() {
     variables: string;
     headers: Record<string, string>;
     auth?: AuthConfig;
+    scripts?: RequestScripts;
   }>({
     url: '',
     query: '',
     variables: '',
     headers: {},
+    scripts: {},
   });
   const [restResponses, setRestResponses] = useState<Record<string, ResponseState>>({});
   const [restStreamControllers, setRestStreamControllers] = useState<
@@ -324,6 +328,7 @@ export function App() {
                 variables: graphqlRequest.variables,
                 headers: graphqlRequest.headers,
                 auth: graphqlRequest.auth,
+                scripts: graphqlRequest.scripts,
               }
             : currentProtocol === 'websocket'
               ? {
@@ -341,6 +346,7 @@ export function App() {
                   headers: request.headers ?? {},
                   body: request.body ?? '',
                   auth: request.auth,
+                  scripts: request.scripts,
                 },
         );
         const updated = await loadCollections();
@@ -361,7 +367,9 @@ export function App() {
     request.body,
     request.headers,
     request.method,
+    request.scripts,
     request.url,
+    requestName,
   ]);
 
   const handleCopyResponse = useCallback(() => {
@@ -447,6 +455,7 @@ export function App() {
           headers: request.headers ?? {},
           body: request.body,
           auth: request.auth,
+          scripts: request.scripts,
         },
         response: {
           status: response.status,
@@ -456,6 +465,7 @@ export function App() {
           time: response.time,
           stats: response.stats,
           mode: response.mode,
+          scriptResults: response.scriptResults,
           sseSummary:
             response.mode === 'sse'
               ? {
@@ -488,6 +498,7 @@ export function App() {
           body: graphqlRequest.query,
           variables: graphqlRequest.variables,
           auth: graphqlRequest.auth,
+          scripts: graphqlRequest.scripts,
         },
         response: {
           status: response.status,
@@ -497,6 +508,7 @@ export function App() {
           time: response.time,
           stats: response.stats,
           mode: response.mode,
+          scriptResults: response.scriptResults,
         },
       });
     },
@@ -564,6 +576,7 @@ export function App() {
           variables: entry.request.variables ?? '',
           headers: entry.request.headers,
           auth: entry.request.auth,
+          scripts: entry.request.scripts,
         });
         setGraphqlResponses((prev) => ({ ...prev, [matchedRequest.id]: entry.response }));
       } else if (entry.protocol === 'websocket') {
@@ -582,6 +595,7 @@ export function App() {
           headers: entry.request.headers,
           body: entry.request.body ?? '',
           auth: entry.request.auth,
+          scripts: entry.request.scripts,
         });
         setRestResponses((prev) => ({ ...prev, [matchedRequest.id]: entry.response }));
       }
@@ -1038,6 +1052,7 @@ export function App() {
         variables: item.variables,
         headers: item.headers,
         auth: item.auth,
+        scripts: item.scripts,
       });
     } else if (item.protocol === 'websocket') {
       setRequest({
@@ -1053,6 +1068,7 @@ export function App() {
         headers: item.headers,
         body: item.body,
         auth: item.auth,
+        scripts: item.scripts,
       });
     }
     setRequestName(item.name);

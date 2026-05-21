@@ -17,6 +17,12 @@ export type {
 } from './history';
 export type { RequestOptions } from './request';
 export type {
+  RequestScripts,
+  ScriptAssertionResult,
+  ScriptExecutionResult,
+  ScriptExecutionSummary,
+} from './scripts';
+export type {
   NetworkStats,
   RequestSizeStats,
   RequestStats,

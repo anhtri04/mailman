@@ -202,4 +202,34 @@ describe('collection persistence', () => {
     expect(loaded[0]?.requests[0]?.body).toBe('{"name":"John"}');
     expect(loaded[0]?.requests[0]?.auth?.token).toBe('secret');
   });
+
+  test('persists request scripts on create and update', async () => {
+    const collection = await addCollection('Scripts Collection');
+    const request = await addRequestToCollection(collection.id, {
+      protocol: 'rest',
+      name: 'Scripted request',
+      method: 'POST',
+      url: 'https://api.example.com/users',
+      headers: {},
+      body: '{}',
+      scripts: {
+        beforeRequest: "request.headers['x-test'] = '1';",
+        afterResponse: "test('ok', () => expect(response.status).toBe(200));",
+      },
+    });
+
+    expect(request.scripts?.beforeRequest).toContain('x-test');
+
+    await updateRequest(collection.id, request.id, {
+      scripts: {
+        beforeRequest: "request.url += '?debug=true';",
+        afterResponse: "test('has body', () => expect(response.body).toBeTruthy());",
+      },
+    });
+
+    const loaded = await loadCollections();
+    const updated = loaded[0]?.requests[0];
+    expect(updated?.scripts?.beforeRequest).toBe("request.url += '?debug=true';");
+    expect(updated?.scripts?.afterResponse).toContain('has body');
+  });
 });

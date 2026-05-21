@@ -1,4 +1,4 @@
-import type { AuthConfig, RequestStats } from '../types';
+import type { AuthConfig, RequestScripts, RequestStats } from '../types';
 import { executeHttpRequest, resolveAuthToRequest } from './http-shared';
 
 export interface GraphQLRequestOptions {
@@ -8,6 +8,7 @@ export interface GraphQLRequestOptions {
   operationName?: string;
   headers?: Record<string, string>;
   auth?: AuthConfig;
+  scripts?: RequestScripts;
 }
 
 export async function sendGraphQLRequest(

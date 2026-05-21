@@ -1,4 +1,5 @@
 import type { AuthConfig } from './auth';
+import type { RequestScripts } from './scripts';
 
 export type Protocol = 'rest' | 'graphql' | 'websocket';
 
@@ -18,6 +19,7 @@ interface BaseRequestItem {
   body?: string;
   variables?: string;
   auth?: AuthConfig;
+  scripts?: RequestScripts;
 }
 
 export interface RestRequestItem extends BaseRequestItem {

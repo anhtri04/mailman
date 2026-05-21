@@ -195,4 +195,40 @@ describe('history persistence', () => {
     expect(history[0]?.requestName).toBe('Newest request');
     expect(history.some((entry) => entry.requestName === 'Request 299')).toBe(false);
   });
+
+  test('appendHistoryEntry preserves script snapshots and results', async () => {
+    await appendHistoryEntry({
+      protocol: 'rest',
+      collectionId: 'c1',
+      requestId: 'r1',
+      requestName: 'Scripted request',
+      request: {
+        method: 'GET',
+        url: 'https://example.com/scripted',
+        headers: {},
+        scripts: {
+          beforeRequest: "request.headers['x-test'] = '1';",
+          afterResponse: "test('ok', () => expect(response.status).toBe(200));",
+        },
+      },
+      response: {
+        status: 200,
+        statusText: 'OK',
+        body: 'ok',
+        headers: {},
+        time: 10,
+        scriptResults: {
+          afterResponse: {
+            success: true,
+            output: ['done'],
+            assertions: [{ name: 'ok', passed: true }],
+          },
+        },
+      },
+    });
+
+    const history = await loadHistory();
+    expect(history[0]?.request.scripts?.beforeRequest).toContain('x-test');
+    expect(history[0]?.response.scriptResults?.afterResponse?.assertions?.[0]?.passed).toBe(true);
+  });
 });

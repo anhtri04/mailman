@@ -1,6 +1,7 @@
 import type { AuthConfig } from './auth';
 import type { Protocol } from './collections';
 import type { RequestStats } from './request-stats';
+import type { RequestScripts, ScriptExecutionSummary } from './scripts';
 
 export interface HistorySSESummary {
   eventCount: number;
@@ -20,6 +21,7 @@ export interface HistoryRequestSnapshot {
   body?: string;
   variables?: string;
   auth?: AuthConfig;
+  scripts?: RequestScripts;
 }
 
 export interface HistoryResponseSnapshot {
@@ -32,6 +34,7 @@ export interface HistoryResponseSnapshot {
   mode?: 'single' | 'sse' | 'websocket';
   sseSummary?: HistorySSESummary;
   messageSummary?: HistoryMessageSummary;
+  scriptResults?: ScriptExecutionSummary;
 }
 
 export interface HistoryEntry {

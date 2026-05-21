@@ -1,6 +1,7 @@
 import type { AuthConfig } from './auth';
 import type { Protocol } from './collections';
 import type { RequestStats } from './request-stats';
+import type { ScriptExecutionSummary } from './scripts';
 
 export interface ProtocolMessage {
   id: string;
@@ -43,6 +44,7 @@ export interface ResponseState {
   messages?: ProtocolMessage[];
   sseEvents?: SSEEvent[];
   sseMeta?: SSEMeta;
+  scriptResults?: ScriptExecutionSummary;
 }
 
 export interface ProtocolController {
