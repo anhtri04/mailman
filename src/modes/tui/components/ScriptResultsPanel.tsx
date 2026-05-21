@@ -66,9 +66,11 @@ export function ScriptResultsPanel({ results }: ScriptResultsPanelProps) {
   }
 
   return (
-    <box style={{ flexDirection: 'column' }}>
-      {renderResult('Before Request', results.beforeRequest)}
-      {renderResult('After Response', results.afterResponse)}
-    </box>
+    <scrollbox>
+      <box style={{ flexDirection: 'column' }}>
+        {renderResult('Before Request', results.beforeRequest)}
+        {renderResult('After Response', results.afterResponse)}
+      </box>
+    </scrollbox>
   );
 }
