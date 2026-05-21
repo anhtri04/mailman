@@ -646,6 +646,45 @@ describe('http-client', () => {
       expect(result.updatedAuth?.oauth2?.accessToken).toBe('new-access');
       expect(result.updatedAuth?.oauth2?.refreshToken).toBe('new-refresh');
     });
+
+    test('should run scripts around REST request execution', async () => {
+      let capturedUrl: string | URL | Request | undefined;
+      let capturedInit: RequestInit | undefined;
+      const mockResponse = new Response('{"ok":true}', { status: 200, statusText: 'OK' });
+
+      globalThis.fetch = ((url: string | URL | Request, init?: RequestInit) => {
+        capturedUrl = url;
+        capturedInit = init;
+        return Promise.resolve(mockResponse);
+      }) as unknown as typeof fetch;
+
+      const result = await sendRequest({
+        method: 'POST',
+        url: 'https://example.com/api',
+        headers: {},
+        body: '{"name":"Jane"}',
+        scripts: {
+          beforeRequest: `
+            request.url += '?scripted=true';
+            request.headers['x-script'] = 'yes';
+            const body = JSON.parse(request.body);
+            body.fromScript = true;
+            request.body = JSON.stringify(body);
+          `,
+          afterResponse: `
+            test('status is ok', () => expect(response.status).toBe(200));
+            test('json body is ok', () => expect(response.json().ok).toBeTruthy());
+          `,
+        },
+      });
+
+      expect(capturedUrl).toBe('https://example.com/api?scripted=true');
+      expect(capturedInit?.headers).toEqual({ 'x-script': 'yes' });
+      expect(capturedInit?.body).toBe('{"name":"Jane","fromScript":true}');
+      expect(result.scriptResults?.beforeRequest?.success).toBe(true);
+      expect(result.scriptResults?.afterResponse?.assertions?.length).toBe(2);
+      expect(result.scriptResults?.afterResponse?.success).toBe(true);
+    });
   });
 
   describe('sendRequestWithStreaming', () => {

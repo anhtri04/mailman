@@ -529,6 +529,52 @@ describe('graphql-client', () => {
       });
     });
 
+    test('should run scripts around GraphQL request execution', async () => {
+      let capturedUrl: string | URL | Request | undefined;
+      let capturedInit: RequestInit | undefined;
+      const mockResponse = new Response('{"data":{"ok":true}}', {
+        status: 200,
+        statusText: 'OK',
+      });
+
+      globalThis.fetch = ((url: string | URL | Request, init?: RequestInit) => {
+        capturedUrl = url;
+        capturedInit = init;
+        return Promise.resolve(mockResponse);
+      }) as unknown as typeof fetch;
+
+      const result = await sendGraphQLRequest({
+        url: 'https://example.com/graphql',
+        query: '{ oldField }',
+        variables: '{"id":"1"}',
+        headers: {},
+        scripts: {
+          beforeRequest: `
+            request.url += '?scripted=true';
+            request.headers['x-script'] = 'yes';
+            request.query = '{ ok }';
+            const variables = JSON.parse(request.variables);
+            variables.fromScript = true;
+            request.variables = JSON.stringify(variables);
+          `,
+          afterResponse: `
+            test('graphql response is ok', () => expect(response.json().data.ok).toBe(true));
+          `,
+        },
+      });
+
+      expect(capturedUrl).toBe('https://example.com/graphql?scripted=true');
+      expect(capturedInit?.headers).toEqual({
+        'Content-Type': 'application/json',
+        'x-script': 'yes',
+      });
+      const requestBody = JSON.parse(capturedInit?.body as string);
+      expect(requestBody.query).toBe('{ ok }');
+      expect(requestBody.variables).toEqual({ id: '1', fromScript: true });
+      expect(result.scriptResults?.beforeRequest?.success).toBe(true);
+      expect(result.scriptResults?.afterResponse?.assertions?.[0]?.passed).toBe(true);
+    });
+
     test('should not include variables in payload when empty string', async () => {
       let capturedInit: RequestInit | undefined;
       const mockResponse = new Response('{}', { status: 200, statusText: 'OK' });
