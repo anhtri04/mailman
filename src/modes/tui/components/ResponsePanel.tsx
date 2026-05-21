@@ -7,6 +7,7 @@ import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { HeadersDisplay } from './HeadersDisplay';
 import { detectContentType, formatResponseBody } from '../../../shared/utils/response-formatter';
 import { MailmanLogo } from './MailmanLogo';
+import { ScriptResultsPanel } from './ScriptResultsPanel';
 
 interface ResponsePanelProps {
   focused: boolean;
@@ -45,6 +46,10 @@ export function ResponsePanel({
   const { colors } = useTheme();
   const borderColor = focused ? colors.accent.primary : colors.border.default;
   const isSSEMode = response?.mode === 'sse';
+  const hasScriptResults = !!(
+    response?.scriptResults?.beforeRequest || response?.scriptResults?.afterResponse
+  );
+  const availableTabs: RestResponseTab[] = hasScriptResults ? [...TABS, 'test'] : TABS;
 
   const contentType = useMemo(() => {
     if (!response) return 'text';
@@ -78,9 +83,9 @@ export function ResponsePanel({
           onActiveSseTabChange(nextTab);
         }
       } else {
-        const currentIndex = TABS.indexOf(activeTab);
-        const nextIndex = (currentIndex + 1) % TABS.length;
-        const nextTab = TABS[nextIndex];
+        const currentIndex = availableTabs.indexOf(activeTab);
+        const nextIndex = (currentIndex + 1) % availableTabs.length;
+        const nextTab = availableTabs[nextIndex];
         if (nextTab) {
           onActiveTabChange(nextTab);
         }
@@ -277,6 +282,7 @@ export function ResponsePanel({
                   {renderTabButton('body', 'Body')}
                   {renderTabButton('headers', 'Headers')}
                   {renderTabButton('raw', 'Raw')}
+                  {hasScriptResults && renderTabButton('test', 'Test')}
                 </>
               )}
             </box>
@@ -307,6 +313,12 @@ export function ResponsePanel({
               {((!isSSEMode && activeTab === 'raw') || (isSSEMode && activeSseTab === 'raw')) && (
                 <scrollbox style={{ flexGrow: 1 }}>
                   <text fg={colors.text.primary}>{response.body}</text>
+                </scrollbox>
+              )}
+
+              {!isSSEMode && activeTab === 'test' && (
+                <scrollbox style={{ flexGrow: 1 }}>
+                  <ScriptResultsPanel results={response.scriptResults} />
                 </scrollbox>
               )}
 

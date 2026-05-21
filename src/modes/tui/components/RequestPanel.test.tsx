@@ -21,8 +21,9 @@ describe('RequestPanel', () => {
     expect(componentString).toContain('onOpenBody()');
     expect(componentString).toContain('onOpenQuery()');
     expect(componentString).toContain('onOpenAuth()');
+    expect(componentString).toContain('onOpenScripts()');
     expect(componentString).toContain(
-      '[onFocus, activeTab, onOpenHeaders, onOpenBody, onOpenQuery, onOpenAuth]',
+      '[onFocus, activeTab, onOpenHeaders, onOpenBody, onOpenQuery, onOpenAuth, onOpenScripts]',
     );
   });
 });

@@ -6,6 +6,7 @@ import { Modal } from './Modal';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { HeadersDisplay } from './HeadersDisplay';
 import { detectContentType, formatResponseBody } from '../../../shared/utils/response-formatter';
+import { ScriptResultsPanel } from './ScriptResultsPanel';
 
 interface ResponseModalProps {
   response: ResponseState;
@@ -29,6 +30,10 @@ export function ResponseModal({
   const formattedBody = useMemo(() => {
     return formatResponseBody(response.body, contentType);
   }, [response, contentType]);
+
+  const hasScriptResults = !!(
+    response.scriptResults?.beforeRequest || response.scriptResults?.afterResponse
+  );
 
   const contentSize = useMemo(() => {
     const bytes = new TextEncoder().encode(response.body).length;
@@ -80,6 +85,7 @@ export function ResponseModal({
           {renderTabButton('body', 'Body')}
           {renderTabButton('headers', 'Headers')}
           {renderTabButton('raw', 'Raw')}
+          {hasScriptResults && renderTabButton('test', 'Test')}
         </box>
 
         <scrollbox style={{ flexGrow: 1 }}>
@@ -99,6 +105,8 @@ export function ResponseModal({
           )}
 
           {activeTab === 'raw' && <text fg={colors.text.primary}>{response.body}</text>}
+
+          {activeTab === 'test' && <ScriptResultsPanel results={response.scriptResults} />}
         </scrollbox>
       </box>
     </Modal>

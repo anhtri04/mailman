@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
-import type { AuthConfig } from '../../../types';
+import type { AuthConfig, RequestScripts } from '../../../types';
 
-type Tab = 'headers' | 'body' | 'query' | 'auth';
+type Tab = 'headers' | 'body' | 'query' | 'auth' | 'scripts';
 type ActiveEditor = 'url' | null;
 
 interface RequestPanelProps {
@@ -19,10 +19,12 @@ interface RequestPanelProps {
   onBodyChange: (body: string) => void;
   queryParams?: Record<string, string>;
   auth?: AuthConfig;
+  scripts?: RequestScripts;
   onOpenHeaders: () => void;
   onOpenBody: () => void;
   onOpenQuery: () => void;
   onOpenAuth: () => void;
+  onOpenScripts: () => void;
   requestName?: string;
   saveStatus?: 'idle' | 'saved' | 'error';
 }
@@ -43,10 +45,12 @@ export function RequestPanel({
   onBodyChange,
   queryParams = {},
   auth,
+  scripts,
   onOpenHeaders,
   onOpenBody,
   onOpenQuery,
   onOpenAuth,
+  onOpenScripts,
   requestName,
   saveStatus = 'idle',
 }: RequestPanelProps) {
@@ -61,6 +65,7 @@ export function RequestPanel({
   const hasBody = !!body && body.trim().length > 0;
   const hasQuery = Object.keys(queryParams).length > 0;
   const hasAuth = !!auth && auth.type !== 'none';
+  const hasScripts = !!scripts?.beforeRequest?.trim() || !!scripts?.afterResponse?.trim();
 
   const handleTabClick = useCallback(
     (tab: Tab) => (e: { stopPropagation: () => void }) => {
@@ -75,10 +80,11 @@ export function RequestPanel({
         else if (tab === 'body') onOpenBody();
         else if (tab === 'query') onOpenQuery();
         else if (tab === 'auth') onOpenAuth();
+        else if (tab === 'scripts') onOpenScripts();
       }
       onFocus(); // Focus the Request Panel if clicking its Tabs
     },
-    [onFocus, activeTab, onOpenHeaders, onOpenBody, onOpenQuery, onOpenAuth],
+    [onFocus, activeTab, onOpenHeaders, onOpenBody, onOpenQuery, onOpenAuth, onOpenScripts],
   );
 
   const renderTabButton = useCallback(
@@ -215,6 +221,7 @@ export function RequestPanel({
         {renderTabButton('body', 'Body', hasBody)}
         {renderTabButton('query', 'Query', hasQuery)}
         {renderTabButton('auth', 'Auth', hasAuth)}
+        {renderTabButton('scripts', 'Scripts', hasScripts)}
 
         <box
           style={{

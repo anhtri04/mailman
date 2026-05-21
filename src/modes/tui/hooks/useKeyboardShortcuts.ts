@@ -1,6 +1,6 @@
 import { useKeyboard } from '@opentui/react';
 
-type EditorModal = 'headers' | 'body' | 'query' | 'auth' | null;
+type EditorModal = 'headers' | 'body' | 'query' | 'auth' | 'scripts' | null;
 type CollectionModal = 'import' | 'add' | 'export' | null;
 
 interface UseKeyboardShortcutsState {

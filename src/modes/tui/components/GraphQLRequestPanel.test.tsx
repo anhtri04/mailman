@@ -20,12 +20,14 @@ describe('GraphQLRequestPanel', () => {
     expect(componentString).toContain('Enter GraphQL query or mutation...');
   });
 
-  test('should provide headers and auth tab controls', () => {
+  test('should provide headers, auth, and scripts tab controls', () => {
     const componentString = GraphQLRequestPanel.toString();
     expect(componentString).toContain('renderTabButton("headers", "Headers"');
     expect(componentString).toContain('renderTabButton("auth", "Auth"');
+    expect(componentString).toContain('renderTabButton("scripts", "Scripts"');
     expect(componentString).toContain('onOpenHeaders');
     expect(componentString).toContain('onOpenAuth');
+    expect(componentString).toContain('onOpenScripts');
   });
 
   test('should focus request panel when clicking GraphQL request tabs', () => {
@@ -33,7 +35,10 @@ describe('GraphQLRequestPanel', () => {
     expect(componentString).toContain('onFocus()');
     expect(componentString).toContain('onOpenHeaders()');
     expect(componentString).toContain('onOpenAuth()');
-    expect(componentString).toContain('[onFocus, activeTab, onOpenHeaders, onOpenAuth]');
+    expect(componentString).toContain('onOpenScripts()');
+    expect(componentString).toContain(
+      '[onFocus, activeTab, onOpenHeaders, onOpenAuth, onOpenScripts]',
+    );
   });
 
   test('should format the active GraphQL editor with keyboard shortcut', () => {

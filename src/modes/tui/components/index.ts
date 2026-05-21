@@ -19,3 +19,5 @@ export { FileBrowser } from './FileBrowser';
 export { CatalogPanel } from './CatalogPanel';
 export { HistoryModal } from './HistoryModal';
 export { RequestStatsModal } from './RequestStatsModal';
+export { ScriptsEditor } from './ScriptsEditor';
+export { ScriptResultsPanel } from './ScriptResultsPanel';

@@ -15,6 +15,7 @@ import {
   FileBrowser,
   HistoryModal,
   RequestStatsModal,
+  ScriptsEditor,
 } from './components';
 import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
@@ -66,7 +67,7 @@ import type {
   ProtocolMessage,
 } from '../../core/types';
 import type { KeyBinding } from '@opentui/core';
-type Tab = 'headers' | 'body' | 'query' | 'auth';
+type Tab = 'headers' | 'body' | 'query' | 'auth' | 'scripts';
 
 export function App() {
   const { setFocus, isFocused, focusedArea } = useFocus();
@@ -626,6 +627,10 @@ export function App() {
     setRequest((prev) => ({ ...prev, auth }));
   }, []);
 
+  const handleScriptsChange = useCallback((scripts: RequestScripts) => {
+    setRequest((prev) => ({ ...prev, scripts }));
+  }, []);
+
   // GraphQL state handlers
   const handleGraphqlUrlChange = useCallback((url: string) => {
     setGraphqlRequest((prev) => ({ ...prev, url }));
@@ -645,6 +650,10 @@ export function App() {
 
   const handleGraphqlAuthChange = useCallback((auth: AuthConfig) => {
     setGraphqlRequest((prev) => ({ ...prev, auth }));
+  }, []);
+
+  const handleGraphqlScriptsChange = useCallback((scripts: RequestScripts) => {
+    setGraphqlRequest((prev) => ({ ...prev, scripts }));
   }, []);
 
   const handleGraphqlSend = useCallback(async () => {
@@ -1193,10 +1202,12 @@ export function App() {
                   headers={graphqlRequest.headers}
                   onHeadersChange={handleGraphqlHeadersChange}
                   auth={graphqlRequest.auth}
+                  scripts={graphqlRequest.scripts}
                   onAuthChange={handleGraphqlAuthChange}
                   onSend={handleGraphqlSend}
                   onOpenHeaders={() => setActiveModal('headers')}
                   onOpenAuth={() => setActiveModal('auth')}
+                  onOpenScripts={() => setActiveModal('scripts')}
                   requestName={requestName}
                   saveStatus={saveStatus}
                 />
@@ -1232,10 +1243,12 @@ export function App() {
                   onBodyChange={handleBodyChange}
                   queryParams={queryParams}
                   auth={request.auth}
+                  scripts={request.scripts}
                   onOpenHeaders={() => setActiveModal('headers')}
                   onOpenBody={() => setActiveModal('body')}
                   onOpenQuery={() => setActiveModal('query')}
                   onOpenAuth={() => setActiveModal('auth')}
+                  onOpenScripts={() => setActiveModal('scripts')}
                   requestName={requestName}
                   saveStatus={saveStatus}
                 />
@@ -1327,6 +1340,22 @@ export function App() {
               auth={currentProtocol === 'graphql' ? graphqlRequest.auth : request.auth}
               onAuthChange={
                 currentProtocol === 'graphql' ? handleGraphqlAuthChange : handleAuthChange
+              }
+            />
+          </Modal>
+        )}
+
+        {activeModal === 'scripts' && (
+          <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Scripts">
+            <ScriptsEditor
+              protocol={currentProtocol === 'graphql' ? 'graphql' : 'rest'}
+              scripts={
+                currentProtocol === 'graphql'
+                  ? (graphqlRequest.scripts ?? {})
+                  : (request.scripts ?? {})
+              }
+              onScriptsChange={
+                currentProtocol === 'graphql' ? handleGraphqlScriptsChange : handleScriptsChange
               }
             />
           </Modal>

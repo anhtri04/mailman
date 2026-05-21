@@ -26,7 +26,7 @@ function createActionLog() {
     setShowResponseModal: (show: boolean) => calls.push(`setShowResponseModal:${String(show)}`),
     setShowRequestStatsModal: (show: boolean) =>
       calls.push(`setShowRequestStatsModal:${String(show)}`),
-    setActiveModal: (modal: 'headers' | 'body' | 'query' | 'auth' | null) =>
+    setActiveModal: (modal: 'headers' | 'body' | 'query' | 'auth' | 'scripts' | null) =>
       calls.push(`setActiveModal:${String(modal)}`),
     setCollectionModal: (modal: 'import' | 'add' | 'export' | null) =>
       calls.push(`setCollectionModal:${String(modal)}`),

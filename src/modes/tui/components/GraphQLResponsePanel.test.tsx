@@ -9,11 +9,12 @@ describe('GraphQLResponsePanel', () => {
 
   test('should include GraphQL response tabs', () => {
     const componentString = GraphQLResponsePanel.toString();
-    expect(componentString).toContain('TABS.indexOf(activeTab)');
+    expect(componentString).toContain('availableTabs.indexOf(activeTab)');
     expect(componentString).toContain('renderTabButton("body", "Body")');
     expect(componentString).toContain('renderTabButton("headers", "Headers")');
     expect(componentString).toContain('renderTabButton("raw", "Raw")');
     expect(componentString).toContain('renderTabButton("errors", "Errors")');
+    expect(componentString).toContain('renderTabButton("test", "Test")');
   });
 
   test('should parse and render GraphQL errors metadata', () => {

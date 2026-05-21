@@ -1,9 +1,9 @@
 import { detectContentType, formatResponseBody } from './response-formatter';
 import type { ResponseState } from '../../core/types';
 
-export type RestResponseTab = 'body' | 'headers' | 'raw';
+export type RestResponseTab = 'body' | 'headers' | 'raw' | 'test';
 export type SseResponseTab = 'events' | 'headers' | 'raw';
-export type GraphqlResponseTab = 'body' | 'headers' | 'raw' | 'errors';
+export type GraphqlResponseTab = 'body' | 'headers' | 'raw' | 'errors' | 'test';
 
 function formatHeaders(headers: Record<string, string>): string {
   return Object.entries(headers)
@@ -31,6 +31,28 @@ function formatSseEvents(response: ResponseState): string {
       return lines.join('\n');
     })
     .join('\n\n');
+}
+
+function formatScriptResults(response: ResponseState): string {
+  const results = response.scriptResults;
+  if (!results?.beforeRequest && !results?.afterResponse)
+    return 'No scripts were run for this response.';
+
+  return [
+    results.beforeRequest
+      ? `Before Request: ${results.beforeRequest.success ? 'passed' : 'failed'}${results.beforeRequest.error ? `\nError: ${results.beforeRequest.error}` : ''}`
+      : 'Before Request: not run',
+    results.afterResponse
+      ? `After Response: ${results.afterResponse.success ? 'passed' : 'failed'}${results.afterResponse.error ? `\nError: ${results.afterResponse.error}` : ''}\n${(
+          results.afterResponse.assertions ?? []
+        )
+          .map(
+            (assertion) =>
+              `${assertion.passed ? '✓' : '✗'} ${assertion.name}${assertion.message ? ` - ${assertion.message}` : ''}`,
+          )
+          .join('\n')}`
+      : 'After Response: not run',
+  ].join('\n\n');
 }
 
 function formatGraphqlErrors(response: ResponseState): string {
@@ -89,6 +111,10 @@ export function getRestTabCopyContent(
     return formatHeaders(response.headers);
   }
 
+  if (tab === 'test') {
+    return formatScriptResults(response);
+  }
+
   if (tab === 'raw') {
     return response.body;
   }
@@ -100,6 +126,10 @@ export function getRestTabCopyContent(
 export function getGraphqlTabCopyContent(response: ResponseState, tab: GraphqlResponseTab): string {
   if (tab === 'headers') {
     return formatHeaders(response.headers);
+  }
+
+  if (tab === 'test') {
+    return formatScriptResults(response);
   }
 
   if (tab === 'raw') {

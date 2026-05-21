@@ -2,14 +2,14 @@ import { useState, useCallback, useRef } from 'react';
 import type { KeyBinding, TextareaRenderable } from '@opentui/core';
 import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
-import type { AuthConfig } from '../../../types';
+import type { AuthConfig, RequestScripts } from '../../../types';
 import {
   formatGraphQLQuery,
   formatGraphQLVariables,
 } from '../../../shared/utils/request-formatter';
 import { useTextareaSyntaxHighlight } from '../hooks/useTextareaSyntaxHighlight';
 
-type Tab = 'headers' | 'auth';
+type Tab = 'headers' | 'auth' | 'scripts';
 type ActiveEditor = 'url' | 'query' | 'variables' | null;
 
 interface GraphQLRequestPanelProps {
@@ -24,10 +24,12 @@ interface GraphQLRequestPanelProps {
   headers?: Record<string, string>;
   onHeadersChange: (headers: Record<string, string>) => void;
   auth?: AuthConfig;
+  scripts?: RequestScripts;
   onAuthChange: (auth: AuthConfig) => void;
   onSend: () => void;
   onOpenHeaders: () => void;
   onOpenAuth: () => void;
+  onOpenScripts: () => void;
   requestName?: string;
   saveStatus?: 'idle' | 'saved' | 'error';
 }
@@ -44,10 +46,12 @@ export function GraphQLRequestPanel({
   headers = {},
   onHeadersChange: _onHeadersChange,
   auth,
+  scripts,
   onAuthChange: _onAuthChange,
   onSend,
   onOpenHeaders,
   onOpenAuth,
+  onOpenScripts,
   requestName,
   saveStatus = 'idle',
 }: GraphQLRequestPanelProps) {
@@ -64,6 +68,7 @@ export function GraphQLRequestPanel({
 
   const hasHeaders = Object.keys(headers).length > 0;
   const hasAuth = !!(auth && auth.type !== 'none');
+  const hasScripts = !!scripts?.beforeRequest?.trim() || !!scripts?.afterResponse?.trim();
   const urlEditorFocused = focused && activeEditor === 'url';
   const queryEditorFocused = focused && activeEditor === 'query';
   const variablesEditorFocused = focused && activeEditor === 'variables';
@@ -90,10 +95,11 @@ export function GraphQLRequestPanel({
         setActiveTab(tab);
         if (tab === 'headers') onOpenHeaders();
         else if (tab === 'auth') onOpenAuth();
+        else if (tab === 'scripts') onOpenScripts();
       }
       onFocus(); // Focus the Request Panel if clicking its Tabs
     },
-    [onFocus, activeTab, onOpenHeaders, onOpenAuth],
+    [onFocus, activeTab, onOpenHeaders, onOpenAuth, onOpenScripts],
   );
 
   const handleQueryChange = useCallback(() => {
@@ -267,6 +273,7 @@ export function GraphQLRequestPanel({
         <box style={{ flexDirection: 'row' }}>
           {renderTabButton('headers', 'Headers', hasHeaders)}
           {renderTabButton('auth', 'Auth', hasAuth)}
+          {renderTabButton('scripts', 'Scripts', hasScripts)}
         </box>
         <box
           style={{

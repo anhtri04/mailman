@@ -1,6 +1,6 @@
 import type { FocusArea, Protocol } from '../../../core/types';
 
-type EditorModal = 'headers' | 'body' | 'query' | 'auth' | null;
+type EditorModal = 'headers' | 'body' | 'query' | 'auth' | 'scripts' | null;
 type CollectionModal = 'import' | 'add' | 'export' | null;
 
 export type InstructionContextKey =
@@ -13,6 +13,7 @@ export type InstructionContextKey =
   | 'app.blocked.editorModal.body'
   | 'app.blocked.editorModal.query'
   | 'app.blocked.editorModal.auth'
+  | 'app.blocked.editorModal.scripts'
   | 'app.blocked.collectionModal.import'
   | 'app.blocked.collectionModal.add'
   | 'app.blocked.collectionModal.export'
@@ -88,6 +89,11 @@ export const INSTRUCTION_CATALOG: Record<InstructionContextKey, string[]> = {
     'Esc Close modals / go back',
     'Edit authentication settings',
     'Ctrl+S Save request changes',
+  ],
+  'app.blocked.editorModal.scripts': [
+    'Esc Close modals / go back',
+    'Edit before and after scripts',
+    'Use snippets for common script templates',
   ],
   'app.blocked.collectionModal.import': [
     'Esc Close modals / go back',

@@ -6,6 +6,7 @@ import type { GraphqlResponseTab } from '../../../shared/utils/responseCopyUtili
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { HeadersDisplay } from './HeadersDisplay';
 import { MailmanLogo } from './MailmanLogo';
+import { ScriptResultsPanel } from './ScriptResultsPanel';
 
 interface GraphQLResponsePanelProps {
   focused: boolean;
@@ -34,6 +35,10 @@ export function GraphQLResponsePanel({
 }: GraphQLResponsePanelProps) {
   const { colors } = useTheme();
   const borderColor = focused ? colors.accent.primary : colors.border.default;
+  const hasScriptResults = !!(
+    response?.scriptResults?.beforeRequest || response?.scriptResults?.afterResponse
+  );
+  const availableTabs: GraphqlResponseTab[] = hasScriptResults ? [...TABS, 'test'] : TABS;
 
   const parsedBody = useMemo(() => {
     if (!response) return null;
@@ -75,9 +80,9 @@ export function GraphQLResponsePanel({
     } else if (key.name === 'escape' && isExpanded) {
       onToggleExpand(false);
     } else if (focused && key.name === 'tab' && !isExpanded) {
-      const currentIndex = TABS.indexOf(activeTab);
-      const nextIndex = (currentIndex + 1) % TABS.length;
-      const nextTab = TABS[nextIndex];
+      const currentIndex = availableTabs.indexOf(activeTab);
+      const nextIndex = (currentIndex + 1) % availableTabs.length;
+      const nextTab = availableTabs[nextIndex];
       if (nextTab) {
         onActiveTabChange(nextTab);
       }
@@ -194,6 +199,7 @@ export function GraphQLResponsePanel({
               {renderTabButton('headers', 'Headers')}
               {renderTabButton('raw', 'Raw')}
               {renderTabButton('errors', 'Errors')}
+              {hasScriptResults && renderTabButton('test', 'Test')}
             </box>
 
             <box style={{ flexGrow: 1, marginTop: 1 }}>
@@ -212,6 +218,12 @@ export function GraphQLResponsePanel({
               {activeTab === 'raw' && (
                 <scrollbox style={{ flexGrow: 1 }}>
                   <text fg={colors.text.primary}>{response.body}</text>
+                </scrollbox>
+              )}
+
+              {activeTab === 'test' && (
+                <scrollbox style={{ flexGrow: 1 }}>
+                  <ScriptResultsPanel results={response.scriptResults} />
                 </scrollbox>
               )}
 
