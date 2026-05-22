@@ -1110,15 +1110,70 @@ export function App() {
     setActiveRequestId(null);
   }, []);
 
-  const handleDeleteItem = useCallback(async (collectionId: string, requestId?: string) => {
-    if (requestId) {
-      await deleteRequest(collectionId, requestId);
-    } else {
-      await deleteCollection(collectionId);
-    }
-    const updated = await loadCollections();
-    setCollections(updated);
-  }, []);
+  const handleDeleteItem = useCallback(
+    (collectionId: string, requestId?: string) => {
+      const collection = collections.find((item) => item.id === collectionId);
+      const requestItem = requestId
+        ? collection?.requests.find((item) => item.id === requestId)
+        : undefined;
+      const targetName = requestItem?.name || collection?.name || 'selected item';
+      const targetType = requestId ? 'request' : 'collection';
+
+      setNotification({
+        title: `Delete ${targetType}?`,
+        message: `Are you sure you want to delete ${targetName}? This action cannot be undone.`,
+        variant: 'warning',
+        actions: [
+          {
+            label: 'No',
+            variant: 'secondary',
+            onPress: () => setNotification(null),
+          },
+          {
+            label: 'Yes',
+            variant: 'danger',
+            onPress: () => {
+              setNotification(null);
+              void (async () => {
+                try {
+                  if (requestId) {
+                    await deleteRequest(collectionId, requestId);
+                    if (activeRequestId === requestId) {
+                      setActiveRequestId(null);
+                    }
+                  } else {
+                    await deleteCollection(collectionId);
+                    if (activeCollectionId === collectionId) {
+                      setActiveCollectionId(null);
+                      setActiveRequestId(null);
+                    }
+                  }
+                  const updated = await loadCollections();
+                  setCollections(updated);
+                } catch (error) {
+                  const message = error instanceof Error ? error.message : String(error);
+                  console.error(`Failed to delete ${targetType}:`, message);
+                  setNotification({
+                    title: `Delete ${targetType} failed`,
+                    message,
+                    variant: 'error',
+                    actions: [
+                      {
+                        label: 'OK',
+                        variant: 'primary',
+                        onPress: () => setNotification(null),
+                      },
+                    ],
+                  });
+                }
+              })();
+            },
+          },
+        ],
+      });
+    },
+    [activeCollectionId, activeRequestId, collections],
+  );
 
   return (
     <box
