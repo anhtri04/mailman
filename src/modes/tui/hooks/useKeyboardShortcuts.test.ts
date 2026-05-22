@@ -8,6 +8,7 @@ function createState(overrides: Record<string, unknown> = {}) {
     showHistoryModal: false,
     showResponseModal: false,
     showRequestStatsModal: false,
+    showNotification: false,
     activeModal: null,
     collectionModal: null,
     hasActiveRequest: false,
@@ -26,6 +27,7 @@ function createActionLog() {
     setShowResponseModal: (show: boolean) => calls.push(`setShowResponseModal:${String(show)}`),
     setShowRequestStatsModal: (show: boolean) =>
       calls.push(`setShowRequestStatsModal:${String(show)}`),
+    setShowNotification: (show: boolean) => calls.push(`setShowNotification:${String(show)}`),
     setActiveModal: (modal: 'headers' | 'body' | 'query' | 'auth' | 'scripts' | null) =>
       calls.push(`setActiveModal:${String(modal)}`),
     setCollectionModal: (modal: 'import' | 'add' | 'export' | null) =>
@@ -99,5 +101,17 @@ describe('handleKeyboardShortcut', () => {
     );
 
     expect(calls).toEqual(['setActiveModal:null']);
+  });
+
+  test('closes notification on Escape', () => {
+    const { actions, calls } = createActionLog();
+
+    handleKeyboardShortcut(
+      { ctrl: false, name: 'escape' },
+      createState({ showNotification: true }),
+      actions,
+    );
+
+    expect(calls).toEqual(['setShowNotification:false']);
   });
 });

@@ -5,6 +5,7 @@ import {
   ResponsePanel,
   CollectionPanel,
   Modal,
+  Notification,
   ResponseModal,
   WelcomePanel,
   CatalogPanel,
@@ -23,6 +24,7 @@ import { QueryParamsEditor } from './components/QueryParamsEditor';
 import { AuthEditor } from './components/AuthEditor';
 import { ThemeSelector } from './components/ThemeSelector';
 import { useTheme } from '../../shared/theme/ThemeProvider';
+import type { NotificationAction, NotificationVariant } from './components';
 import {
   sendRequest,
   sendRequestWithStreaming,
@@ -68,6 +70,13 @@ import type {
 } from '../../core/types';
 import type { KeyBinding } from '@opentui/core';
 type Tab = 'headers' | 'body' | 'query' | 'auth' | 'scripts';
+
+type AppNotification = {
+  title: string;
+  message?: string;
+  variant?: NotificationVariant;
+  actions?: NotificationAction[];
+};
 
 export function App() {
   const { setFocus, isFocused, focusedArea } = useFocus();
@@ -135,6 +144,7 @@ export function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showRequestStatsModal, setShowRequestStatsModal] = useState(false);
+  const [notification, setNotification] = useState<AppNotification | null>(null);
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [showResponseModal, setShowResponseModal] = useState(false);
@@ -284,6 +294,11 @@ export function App() {
       return;
     }
 
+    if (notification) {
+      setNotification(null);
+      return;
+    }
+
     if (showThemeSelector) {
       setShowThemeSelector(false);
     }
@@ -294,6 +309,7 @@ export function App() {
     showHistoryModal,
     showResponseModal,
     showRequestStatsModal,
+    notification,
     showThemeSelector,
   ]);
 
@@ -420,6 +436,7 @@ export function App() {
       showHistoryModal,
       showResponseModal,
       showRequestStatsModal,
+      showNotification: Boolean(notification),
       activeModal,
       collectionModal,
       hasActiveRequest: Boolean(activeRequestId),
@@ -432,6 +449,9 @@ export function App() {
       setShowHistoryModal,
       setShowResponseModal,
       setShowRequestStatsModal,
+      setShowNotification: (show: boolean) => {
+        if (!show) setNotification(null);
+      },
       setActiveModal,
       setCollectionModal,
       resetHistoryError: () => setHistoryError(null),
@@ -1115,7 +1135,7 @@ export function App() {
         style={{ flexDirection: 'column', height: '100%' }}
       >
         <CollectionPanel
-          focused={isFocused('collections') && !collectionModal && !activeModal}
+          focused={isFocused('collections') && !collectionModal && !activeModal && !notification}
           onFocus={() => handleFocusArea('collections')}
           isCollapsed={isCollectionCollapsed}
           onToggleCollapse={() => setIsCollectionCollapsed((prev) => !prev)}
@@ -1745,6 +1765,17 @@ export function App() {
             />
           </Modal>
         )}
+        {notification && (
+          <Notification
+            isOpen={true}
+            title={notification.title}
+            message={notification.message}
+            variant={notification.variant}
+            actions={notification.actions}
+            onClose={() => setNotification(null)}
+          />
+        )}
+
         {/* Theme Selector Modal */}
         <ThemeSelector isOpen={showThemeSelector} onClose={() => setShowThemeSelector(false)} />
       </box>

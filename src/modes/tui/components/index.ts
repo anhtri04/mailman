@@ -3,6 +3,8 @@ export { GraphQLResponsePanel } from './GraphQLResponsePanel';
 export { WebSocketRequestPanel } from './WebSocketRequestPanel';
 export { WebSocketResponsePanel } from './WebSocketResponsePanel';
 export { Modal } from './Modal';
+export { Notification } from './Notification';
+export type { NotificationAction, NotificationVariant } from './Notification';
 export { RequestPanel } from './RequestPanel';
 export { ResponsePanel } from './ResponsePanel';
 export { CollectionPanel } from './CollectionPanel';
