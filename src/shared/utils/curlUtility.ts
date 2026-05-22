@@ -271,7 +271,15 @@ export function parseCurl(curlString: string): ParsedCurl {
   return { protocol, method, url, headers, body, query, variables };
 }
 
-function escapeCurlArg(value: string): string {
+function escapeCurlArg(
+  value: string,
+  platform: typeof process.platform = process.platform,
+): string {
+  if (platform === 'win32') {
+    const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    return `"${escaped}"`;
+  }
+
   if (!value.includes("'")) {
     return `'${value}'`;
   }
@@ -279,19 +287,22 @@ function escapeCurlArg(value: string): string {
   return `"${escaped}"`;
 }
 
-export function buildCurl(input: CurlInput): string {
-  const parts: string[] = ['curl'];
+export function buildCurl(
+  input: CurlInput,
+  platform: typeof process.platform = process.platform,
+): string {
+  const parts: string[] = [platform === 'win32' ? 'curl.exe' : 'curl'];
 
   if (input.protocol === 'graphql') {
     parts.push('-X POST');
-    parts.push(escapeCurlArg(input.url));
+    parts.push(escapeCurlArg(input.url, platform));
 
     const headers = input.headers ?? {};
     for (const [key, value] of Object.entries(headers)) {
-      parts.push(`-H ${escapeCurlArg(`${key}: ${value}`)}`);
+      parts.push(`-H ${escapeCurlArg(`${key}: ${value}`, platform)}`);
     }
     if (!headers['Content-Type'] && !headers['content-type']) {
-      parts.push(`-H ${escapeCurlArg('Content-Type: application/json')}`);
+      parts.push(`-H ${escapeCurlArg('Content-Type: application/json', platform)}`);
     }
 
     const graphqlBody: Record<string, unknown> = {
@@ -304,19 +315,19 @@ export function buildCurl(input: CurlInput): string {
         graphqlBody.variables = input.variables;
       }
     }
-    parts.push(`-d ${escapeCurlArg(JSON.stringify(graphqlBody))}`);
+    parts.push(`-d ${escapeCurlArg(JSON.stringify(graphqlBody), platform)}`);
   } else {
     const method = input.method.toUpperCase();
     parts.push(`-X ${method}`);
-    parts.push(escapeCurlArg(input.url));
+    parts.push(escapeCurlArg(input.url, platform));
 
     const headers = input.headers ?? {};
     for (const [key, value] of Object.entries(headers)) {
-      parts.push(`-H ${escapeCurlArg(`${key}: ${value}`)}`);
+      parts.push(`-H ${escapeCurlArg(`${key}: ${value}`, platform)}`);
     }
 
     if (input.body) {
-      parts.push(`-d ${escapeCurlArg(input.body)}`);
+      parts.push(`-d ${escapeCurlArg(input.body, platform)}`);
     }
   }
 

@@ -1,4 +1,4 @@
-import { test, expect, describe, mock } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { detectCurl, detectProtocol, parseCurl, buildCurl, copyCurl } from './curlUtility';
 
 describe('detectCurl', () => {
@@ -229,9 +229,11 @@ describe('buildCurl', () => {
       method: 'GET',
       url: 'https://example.com/api',
     });
-    expect(result).toContain('curl');
+    expect(result).toContain(process.platform === 'win32' ? 'curl.exe' : 'curl');
     expect(result).toContain('-X GET');
-    expect(result).toContain("'https://example.com/api'");
+    expect(result).toContain(
+      process.platform === 'win32' ? '"https://example.com/api"' : "'https://example.com/api'",
+    );
   });
 
   test('builds POST curl with body', () => {
@@ -243,7 +245,9 @@ describe('buildCurl', () => {
     });
     expect(result).toContain('-X POST');
     expect(result).toContain('-d');
-    expect(result).toContain('{"key":"value"}');
+    expect(result).toContain(
+      process.platform === 'win32' ? '{\\"key\\":\\"value\\"}' : '{"key":"value"}',
+    );
   });
 
   test('builds curl with headers', () => {
@@ -256,8 +260,16 @@ describe('buildCurl', () => {
         Authorization: 'Bearer abc',
       },
     });
-    expect(result).toContain("-H 'Content-Type: application/json'");
-    expect(result).toContain("-H 'Authorization: Bearer abc'");
+    expect(result).toContain(
+      process.platform === 'win32'
+        ? '-H "Content-Type: application/json"'
+        : "-H 'Content-Type: application/json'",
+    );
+    expect(result).toContain(
+      process.platform === 'win32'
+        ? '-H "Authorization: Bearer abc"'
+        : "-H 'Authorization: Bearer abc'",
+    );
   });
 
   test('builds curl with body containing single quotes using double quotes', () => {
@@ -279,7 +291,11 @@ describe('buildCurl', () => {
       query: '{ users { name } }',
     });
     expect(result).toContain('-X POST');
-    expect(result).toContain("'https://example.com/graphql'");
+    expect(result).toContain(
+      process.platform === 'win32'
+        ? '"https://example.com/graphql"'
+        : "'https://example.com/graphql'",
+    );
     expect(result).toContain('-H');
     expect(result).toContain('Content-Type: application/json');
     expect(result).toContain('-d');
@@ -294,8 +310,8 @@ describe('buildCurl', () => {
       variables: '{"limit":10}',
     });
     expect(result).toContain('-d');
-    expect(result).toContain('"query"');
-    expect(result).toContain('"variables"');
+    expect(result).toContain(process.platform === 'win32' ? '\\"query\\"' : '"query"');
+    expect(result).toContain(process.platform === 'win32' ? '\\"variables\\"' : '"variables"');
   });
 
   test('builds PATCH curl', () => {
@@ -306,6 +322,36 @@ describe('buildCurl', () => {
       body: '{"updated":true}',
     });
     expect(result).toContain('-X PATCH');
+  });
+
+  test('builds Windows cmd-compatible curl', () => {
+    const result = buildCurl(
+      {
+        protocol: 'rest',
+        method: 'GET',
+        url: 'https://jsonplaceholder.typicode.com/users',
+        headers: { Accept: 'application/json' },
+      },
+      'win32',
+    );
+    expect(result).toBe(
+      'curl.exe -X GET "https://jsonplaceholder.typicode.com/users" -H "Accept: application/json"',
+    );
+  });
+
+  test('builds POSIX-compatible curl', () => {
+    const result = buildCurl(
+      {
+        protocol: 'rest',
+        method: 'GET',
+        url: 'https://jsonplaceholder.typicode.com/users',
+        headers: { Accept: 'application/json' },
+      },
+      'linux',
+    );
+    expect(result).toBe(
+      "curl -X GET 'https://jsonplaceholder.typicode.com/users' -H 'Accept: application/json'",
+    );
   });
 });
 
