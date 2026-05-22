@@ -66,6 +66,11 @@ export interface MailmanColors {
     POST: { bg: string; text: string };
     PUT: { bg: string; text: string };
     DELETE: { bg: string; text: string };
+    DEL: { bg: string; text: string };
     PATCH: { bg: string; text: string };
+    PTCH: { bg: string; text: string };
+    GQL: { bg: string; text: string };
+    WS: { bg: string; text: string };
+    WSS: { bg: string; text: string };
   };
 }

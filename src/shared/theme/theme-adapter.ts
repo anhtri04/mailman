@@ -42,7 +42,12 @@ export function adaptTheme(theme: OpencodeTheme): MailmanColors {
       POST: { bg: adjustLightness(p.warning, -35), text: p.warning },
       PUT: { bg: adjustLightness(p.info, -35), text: p.info },
       DELETE: { bg: adjustLightness(p.error, -35), text: p.error },
+      DEL: { bg: adjustLightness(p.error, -35), text: p.error },
       PATCH: { bg: adjustLightness(accent, -35), text: accent },
+      PTCH: { bg: adjustLightness(accent, -35), text: accent },
+      GQL: { bg: adjustLightness(p.info, -35), text: p.info },
+      WS: { bg: adjustLightness(accent, -35), text: accent },
+      WSS: { bg: adjustLightness(accent, -35), text: accent },
     },
   };
 }

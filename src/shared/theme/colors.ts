@@ -38,6 +38,9 @@ export const colors = {
     DEL: { bg: '#2e1a1a', text: '#d47070' },
     PATCH: { bg: '#1e1e30', text: '#8a7ed4' },
     PTCH: { bg: '#1e1e30', text: '#8a7ed4' },
+    GQL: { bg: '#152238', text: '#6094c0' },
+    WS: { bg: '#1e1e30', text: '#8a7ed4' },
+    WSS: { bg: '#1e1e30', text: '#8a7ed4' },
   },
 } as const;
 

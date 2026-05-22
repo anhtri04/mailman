@@ -33,7 +33,7 @@ function abbreviateMethod(method: string): string {
 
 function requestMethodLabel(request: RequestItem): string {
   if (request.protocol === 'graphql') return 'GQL';
-  if (request.protocol === 'websocket') return 'WS';
+  if (request.protocol === 'websocket') return 'WSS';
   return abbreviateMethod(request.method);
 }
 
