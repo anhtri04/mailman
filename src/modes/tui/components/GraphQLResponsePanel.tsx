@@ -75,7 +75,7 @@ export function GraphQLResponsePanel({
   }, [response]);
 
   useKeyboard((key) => {
-    if (key.name === 'space' && response && !isExpanded) {
+    if (key.name === 'space' && response && !isExpanded && focused) {
       onToggleExpand(true);
     } else if (key.name === 'escape' && isExpanded) {
       onToggleExpand(false);
