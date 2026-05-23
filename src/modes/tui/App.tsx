@@ -1590,6 +1590,7 @@ export function App() {
                       borderStyle: 'rounded',
                       paddingLeft: 1,
                       paddingRight: 1,
+                      paddingBottom: 0.5
                     }}
                     onMouseDown={() => setNewRequestProtocol(protocol)}
                   >
@@ -1614,6 +1615,7 @@ export function App() {
                       borderStyle: 'rounded',
                       paddingLeft: 1,
                       paddingRight: 1,
+                      paddingBottom: 0.5
                     }}
                     onMouseDown={() => {
                       const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
@@ -1639,6 +1641,7 @@ export function App() {
                   borderColor: colors.border.default,
                   borderStyle: 'rounded',
                   paddingLeft: 1,
+                  paddingBottom: 0.5
                 }}
               >
                 <input
@@ -1676,6 +1679,7 @@ export function App() {
                     borderStyle: 'rounded',
                     paddingLeft: 2,
                     paddingRight: 2,
+                    paddingBottom: 0.5
                   }}
                   onMouseDown={() => {
                     if (newRequestName.trim() && activeCollectionId) {
@@ -1753,6 +1757,7 @@ export function App() {
                     borderStyle: 'rounded',
                     paddingLeft: 2,
                     paddingRight: 2,
+                    paddingBottom: 0.5
                   }}
                   onMouseDown={() => {
                     setCollectionModal(null);
