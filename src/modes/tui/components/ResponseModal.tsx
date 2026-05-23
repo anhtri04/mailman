@@ -1,26 +1,36 @@
 import { useMemo, useCallback } from 'react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { ResponseState } from '../../../types';
-import type { RestResponseTab } from '../../../shared/utils/responseCopyUtility';
+import type {
+  GraphqlResponseTab,
+  RestResponseTab,
+} from '../../../shared/utils/responseCopyUtility';
 import { Modal } from './Modal';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { HeadersDisplay } from './HeadersDisplay';
 import { detectContentType, formatResponseBody } from '../../../shared/utils/response-formatter';
 import { ScriptResultsPanel } from './ScriptResultsPanel';
 
-interface ResponseModalProps {
+type ResponseModalTab = GraphqlResponseTab | RestResponseTab;
+
+type ResponseModalProps = {
   response: ResponseState;
   onClose: () => void;
-  activeTab: RestResponseTab;
-  onActiveTabChange: (tab: RestResponseTab) => void;
-}
+} & (
+  | {
+      variant?: 'rest';
+      activeTab: RestResponseTab;
+      onActiveTabChange: (tab: RestResponseTab) => void;
+    }
+  | {
+      variant: 'graphql';
+      activeTab: GraphqlResponseTab;
+      onActiveTabChange: (tab: GraphqlResponseTab) => void;
+    }
+);
 
-export function ResponseModal({
-  response,
-  onClose,
-  activeTab,
-  onActiveTabChange,
-}: ResponseModalProps) {
+export function ResponseModal(props: ResponseModalProps) {
+  const { response, onClose } = props;
   const { colors } = useTheme();
 
   const contentType = useMemo(() => {
@@ -28,8 +38,16 @@ export function ResponseModal({
   }, [response]);
 
   const formattedBody = useMemo(() => {
+    if (props.variant === 'graphql') {
+      try {
+        return JSON.stringify(JSON.parse(response.body), null, 2);
+      } catch {
+        return response.body;
+      }
+    }
+
     return formatResponseBody(response.body, contentType);
-  }, [response, contentType]);
+  }, [response, contentType, props.variant]);
 
   const hasScriptResults = !!(
     response.scriptResults?.beforeRequest || response.scriptResults?.afterResponse
@@ -42,9 +60,38 @@ export function ResponseModal({
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   }, [response]);
 
+  const graphqlErrors = useMemo(() => {
+    if (props.variant !== 'graphql') return [];
+
+    try {
+      const parsed = JSON.parse(response.body) as {
+        errors?: Array<{
+          message?: string;
+          path?: (string | number)[];
+          locations?: Array<{ line: number; column: number }>;
+        }>;
+      };
+
+      return Array.isArray(parsed.errors) ? parsed.errors : [];
+    } catch {
+      return [];
+    }
+  }, [response.body, props.variant]);
+
+  const isGraphqlJson = useMemo(() => {
+    if (props.variant !== 'graphql') return true;
+
+    try {
+      JSON.parse(response.body);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [response.body, props.variant]);
+
   const renderTabButton = useCallback(
-    (tab: RestResponseTab, label: string) => {
-      const isActive = activeTab === tab;
+    (tab: ResponseModalTab, label: string, onSelect: () => void) => {
+      const isActive = props.activeTab === tab;
       return (
         <box
           style={{
@@ -57,7 +104,7 @@ export function ResponseModal({
           }}
           onMouseDown={(e: { stopPropagation: () => void }) => {
             e.stopPropagation();
-            onActiveTabChange(tab);
+            onSelect();
           }}
         >
           <text fg={isActive ? colors.accent.primary : colors.text.muted}>
@@ -66,7 +113,7 @@ export function ResponseModal({
         </box>
       );
     },
-    [activeTab, onActiveTabChange],
+    [colors, props.activeTab],
   );
 
   return (
@@ -81,32 +128,88 @@ export function ResponseModal({
           <text fg={colors.text.muted}>{response.time}ms</text>
         </box>
 
-        <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1 }}>
-          {renderTabButton('body', 'Body')}
-          {renderTabButton('headers', 'Headers')}
-          {renderTabButton('raw', 'Raw')}
-          {hasScriptResults && renderTabButton('test', 'Test')}
-        </box>
+        {props.variant === 'graphql' ? (
+          <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1 }}>
+            {renderTabButton('body', 'Body', () => props.onActiveTabChange('body'))}
+            {renderTabButton('headers', 'Headers', () => props.onActiveTabChange('headers'))}
+            {renderTabButton('raw', 'Raw', () => props.onActiveTabChange('raw'))}
+            {renderTabButton(
+              'errors',
+              graphqlErrors.length > 0 ? `Errors (${graphqlErrors.length})` : 'Errors',
+              () => props.onActiveTabChange('errors'),
+            )}
+            {hasScriptResults &&
+              renderTabButton('test', 'Test', () => props.onActiveTabChange('test'))}
+          </box>
+        ) : (
+          <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1 }}>
+            {renderTabButton('body', 'Body', () => props.onActiveTabChange('body'))}
+            {renderTabButton('headers', 'Headers', () => props.onActiveTabChange('headers'))}
+            {renderTabButton('raw', 'Raw', () => props.onActiveTabChange('raw'))}
+            {hasScriptResults &&
+              renderTabButton('test', 'Test', () => props.onActiveTabChange('test'))}
+          </box>
+        )}
 
         <scrollbox style={{ flexGrow: 1 }}>
-          {activeTab === 'body' && (
+          {props.activeTab === 'body' && (
             <SyntaxHighlighter
               code={formattedBody}
               language={
-                contentType === 'json' || contentType === 'xml' || contentType === 'html'
-                  ? contentType
-                  : 'text'
+                props.variant === 'graphql'
+                  ? 'json'
+                  : contentType === 'json' || contentType === 'xml' || contentType === 'html'
+                    ? contentType
+                    : 'text'
               }
             />
           )}
 
-          {activeTab === 'headers' && response.headers && (
+          {props.activeTab === 'headers' && response.headers && (
             <HeadersDisplay headers={response.headers} />
           )}
 
-          {activeTab === 'raw' && <text fg={colors.text.primary}>{response.body}</text>}
+          {props.activeTab === 'raw' && <text fg={colors.text.primary}>{response.body}</text>}
 
-          {activeTab === 'test' && <ScriptResultsPanel results={response.scriptResults} />}
+          {props.activeTab === 'test' && <ScriptResultsPanel results={response.scriptResults} />}
+
+          {props.variant === 'graphql' &&
+            props.activeTab === 'errors' &&
+            (graphqlErrors.length > 0 ? (
+              <box style={{ flexDirection: 'column', gap: 1 }}>
+                {graphqlErrors.map((error, index) => (
+                  <box
+                    key={index}
+                    style={{
+                      flexDirection: 'column',
+                      border: true,
+                      borderColor: colors.syntax.error,
+                      padding: 1,
+                      marginBottom: 1,
+                    }}
+                  >
+                    <text fg={colors.syntax.error}>
+                      <strong>{error.message ?? 'Unknown GraphQL error'}</strong>
+                    </text>
+                    {error.path && error.path.length > 0 && (
+                      <text fg={colors.text.muted} style={{ marginTop: 0.5 }}>
+                        Path: {error.path.join('.')}
+                      </text>
+                    )}
+                    {error.locations && error.locations.length > 0 && (
+                      <text fg={colors.text.muted} style={{ marginTop: 0.5 }}>
+                        Location: line {error.locations[0]!.line}, column{' '}
+                        {error.locations[0]!.column}
+                      </text>
+                    )}
+                  </box>
+                ))}
+              </box>
+            ) : isGraphqlJson ? (
+              <text fg={colors.syntax.success}>No GraphQL errors found.</text>
+            ) : (
+              <text fg={colors.text.muted}>Unable to parse response as JSON.</text>
+            ))}
         </scrollbox>
       </box>
     </Modal>

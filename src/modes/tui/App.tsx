@@ -381,11 +381,12 @@ export function App() {
 
     if (!responseToCopy) return;
 
-    const content = showResponseModal
-      ? getRestTabCopyContent(responseToCopy, modalActiveTab, restActiveSseTab)
-      : currentProtocol === 'graphql'
+    const content =
+      currentProtocol === 'graphql'
         ? getGraphqlTabCopyContent(responseToCopy, graphqlActiveTab)
-        : getRestTabCopyContent(responseToCopy, restActiveTab, restActiveSseTab);
+        : showResponseModal
+          ? getRestTabCopyContent(responseToCopy, modalActiveTab, restActiveSseTab)
+          : getRestTabCopyContent(responseToCopy, restActiveTab, restActiveSseTab);
 
     void (async () => {
       const copied = await copyTextToClipboard(content);
@@ -1454,7 +1455,16 @@ export function App() {
           </Modal>
         )}
         {/* Response Expanded Modal - rendered at App level for full screen sizing */}
-        {showResponseModal && currentResponse && (
+        {showResponseModal && currentProtocol === 'graphql' && currentGraphqlResponse && (
+          <ResponseModal
+            variant="graphql"
+            response={currentGraphqlResponse}
+            onClose={() => setShowResponseModal(false)}
+            activeTab={graphqlActiveTab}
+            onActiveTabChange={setGraphqlActiveTab}
+          />
+        )}
+        {showResponseModal && currentProtocol !== 'graphql' && currentResponse && (
           <ResponseModal
             response={currentResponse}
             onClose={() => setShowResponseModal(false)}
