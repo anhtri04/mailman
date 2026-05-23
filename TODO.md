@@ -86,11 +86,11 @@ A terminal-based HTTP client built with Bun and OpenTUI.
 
 - [ ] **gRPC**
 
-- [ ] **WebSocket**
+- [x] **WebSocket**
 
 - [ ] **MQTT**
 
-- [ ] **Scripting**
+- [x] **Scripting**
 
 - [ ] **Global Command**
   - Call `mailman [argument]` 
