@@ -13,10 +13,11 @@ import {
   GraphQLResponsePanel,
   WebSocketRequestPanel,
   WebSocketResponsePanel,
-  FileBrowser,
   HistoryModal,
   RequestStatsModal,
   ScriptsEditor,
+  CollectionImportView,
+  RequestAddingView,
 } from './components';
 import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
@@ -30,19 +31,14 @@ import {
   sendRequestWithStreaming,
   sendGraphQLRequest,
   loadCollections,
-  saveCollections,
-  addCollection,
-  addRequestToCollection,
   updateRequest,
   deleteCollection,
   deleteRequest,
-  importCollectionsFromFile,
   loadHistory,
   appendHistoryEntry,
   connectWebSocket,
   createProtocolMessage,
 } from '../../core/services';
-import { parseCurl } from '../../shared/utils/curlUtility';
 import {
   copyTextToClipboard,
   getGraphqlTabCopyContent,
@@ -62,13 +58,10 @@ import type {
   AuthConfig,
   Collection,
   RequestItem,
-  RequestItemInput,
-  Protocol,
   FocusArea,
   ProtocolController,
   ProtocolMessage,
 } from '../../core/types';
-import type { KeyBinding } from '@opentui/core';
 type Tab = 'headers' | 'body' | 'query' | 'auth' | 'scripts';
 
 type AppNotification = {
@@ -118,13 +111,6 @@ export function App() {
   const [requestName, setRequestName] = useState<string>('');
 
   const [collectionModal, setCollectionModal] = useState<'import' | 'add' | 'export' | null>(null);
-  const [collectionModalMode, setCollectionModalMode] = useState<'new' | 'import'>('new');
-  const [importError, setImportError] = useState<string | null>(null);
-  const [newCollectionName, setNewCollectionName] = useState('');
-  const [newRequestProtocol, setNewRequestProtocol] = useState<Protocol>('rest');
-  const [newRequestMethod, setNewRequestMethod] = useState('GET');
-  const [newRequestName, setNewRequestName] = useState('');
-  const [curlText, setCurlText] = useState('');
   const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [restActiveTab, setRestActiveTab] = useState<RestResponseTab>('body');
@@ -151,10 +137,6 @@ export function App() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
   const SSE_MAX_EVENTS = 500;
-  const requestProtocolOptions: Protocol[] = ['rest', 'graphql', 'websocket'];
-
-  const selectAllBindings: KeyBinding[] = [{ name: 'a', ctrl: true, action: 'select-all' }];
-
   const activeCollection = activeCollectionId
     ? collections.find((c) => c.id === activeCollectionId)
     : undefined;
@@ -269,7 +251,6 @@ export function App() {
 
     if (collectionModal) {
       setCollectionModal(null);
-      setImportError(null);
       return;
     }
 
@@ -1199,15 +1180,10 @@ export function App() {
           onSelectCollection={handleSelectCollection}
           onOpenImportModal={() => {
             setFocus(null);
-            setNewCollectionName('');
-            setCollectionModalMode('new');
             setCollectionModal('import');
           }}
           onOpenAddModal={(collectionId: string) => {
             setActiveCollectionId(collectionId);
-            setNewRequestMethod('GET');
-            setNewRequestName('');
-            setCurlText('');
             setCollectionModal('add');
           }}
           onDeleteItem={handleDeleteItem}
@@ -1438,340 +1414,20 @@ export function App() {
 
         {/* Collection Modals - rendered at App level for full screen sizing */}
         {collectionModal === 'import' && (
-          <Modal
+          <CollectionImportView
             isOpen={true}
-            onClose={() => {
-              setCollectionModal(null);
-              setImportError(null);
-            }}
-            title="Collection"
-          >
-            <box style={{ flexDirection: 'column', gap: 1, padding: 1, height: '100%' }}>
-              <box style={{ flexDirection: 'row', gap: 1 }}>
-                <box
-                  style={{
-                    border: true,
-                    borderColor:
-                      collectionModalMode === 'new' ? colors.accent.primary : colors.border.default,
-                    paddingLeft: 2,
-                    paddingRight: 2,
-                  }}
-                  onMouseDown={() => setCollectionModalMode('new')}
-                >
-                  <text
-                    fg={collectionModalMode === 'new' ? colors.accent.primary : colors.text.muted}
-                    style={{ paddingTop: 0.5, paddingBottom: 0.5 }}
-                  >
-                    New
-                  </text>
-                </box>
-                <box
-                  style={{
-                    border: true,
-                    borderColor:
-                      collectionModalMode === 'import'
-                        ? colors.accent.primary
-                        : colors.border.default,
-                    paddingLeft: 2,
-                    paddingRight: 2,
-                  }}
-                  onMouseDown={() => setCollectionModalMode('import')}
-                >
-                  <text
-                    fg={
-                      collectionModalMode === 'import' ? colors.accent.primary : colors.text.muted
-                    }
-                    style={{ paddingTop: 0.5, paddingBottom: 0.5 }}
-                  >
-                    Import
-                  </text>
-                </box>
-              </box>
-
-              {collectionModalMode === 'new' ? (
-                <box style={{ flexDirection: 'column', gap: 1 }}>
-                  <box
-                    style={{
-                      border: true,
-                      borderColor: colors.border.default,
-                      borderStyle: 'rounded',
-                      paddingLeft: 1,
-                    }}
-                  >
-                    <input
-                      placeholder="Collection name..."
-                      value={newCollectionName}
-                      onInput={(val: string) => setNewCollectionName(val)}
-                      focused={true}
-                      keyBindings={selectAllBindings}
-                    />
-                  </box>
-                  <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
-                    <box
-                      style={{
-                        border: true,
-                        borderColor: colors.accent.primary,
-                        borderStyle: 'rounded',
-                        paddingLeft: 2,
-                        paddingRight: 2,
-                      }}
-                      onMouseDown={() => {
-                        if (newCollectionName.trim()) {
-                          void (async () => {
-                            await addCollection(newCollectionName.trim());
-                            const updated = await loadCollections();
-                            setCollections(updated);
-                          })();
-                          setCollectionModal(null);
-                          setNewCollectionName('');
-                        }
-                      }}
-                    >
-                      <text fg={colors.accent.primary}>Create</text>
-                    </box>
-                    <box
-                      style={{
-                        border: true,
-                        borderColor: colors.border.default,
-                        borderStyle: 'rounded',
-                        paddingLeft: 2,
-                        paddingRight: 2,
-                      }}
-                      onMouseDown={() => {
-                        setCollectionModal(null);
-                        setNewCollectionName('');
-                      }}
-                    >
-                      <text fg={colors.text.muted}>Cancel</text>
-                    </box>
-                  </box>
-                </box>
-              ) : (
-                <FileBrowser
-                  startPath="~"
-                  fileFilter={(item) => item.isDirectory || item.name.endsWith('.json')}
-                  onSelectFile={(path) => {
-                    void (async () => {
-                      try {
-                        const imported = await importCollectionsFromFile(path);
-                        if (!imported.length) throw new Error('No collections found');
-                        const existing = await loadCollections();
-                        await saveCollections([...existing, ...imported]);
-                        setCollections(await loadCollections());
-                        setCollectionModal(null);
-                        setImportError(null);
-                      } catch (e) {
-                        setImportError(e instanceof Error ? e.message : String(e));
-                      }
-                    })();
-                  }}
-                  onCancel={() => setCollectionModal(null)}
-                />
-              )}
-              {importError && <text fg={colors.syntax.error}>{importError}</text>}
-            </box>
-          </Modal>
+            onClose={() => setCollectionModal(null)}
+            onCollectionsChange={setCollections}
+          />
         )}
 
-        {collectionModal === 'add' && activeCollectionId && (
-          <Modal isOpen={true} onClose={() => setCollectionModal(null)} title="Add Request">
-            <box style={{ flexDirection: 'column', gap: 1, padding: 1 }}>
-              <box style={{ flexDirection: 'row', gap: 1, alignItems: 'center' }}>
-                <text fg={colors.text.muted}>Protocol:</text>
-                {requestProtocolOptions.map((protocol) => (
-                  <box
-                    key={protocol}
-                    style={{
-                      border: true,
-                      borderColor:
-                        newRequestProtocol === protocol
-                          ? colors.accent.primary
-                          : colors.border.default,
-                      borderStyle: 'rounded',
-                      paddingLeft: 1,
-                      paddingRight: 1,
-                      paddingBottom: 0.5
-                    }}
-                    onMouseDown={() => setNewRequestProtocol(protocol)}
-                  >
-                    <text
-                      fg={
-                        newRequestProtocol === protocol ? colors.accent.primary : colors.text.muted
-                      }
-                    >
-                      {protocol.toUpperCase()}
-                    </text>
-                  </box>
-                ))}
-              </box>
-
-              {newRequestProtocol === 'rest' && (
-                <box style={{ flexDirection: 'row', gap: 1, alignItems: 'center' }}>
-                  <text fg={colors.text.muted}>Method:</text>
-                  <box
-                    style={{
-                      border: true,
-                      borderColor: colors.border.default,
-                      borderStyle: 'rounded',
-                      paddingLeft: 1,
-                      paddingRight: 1,
-                      paddingBottom: 0.5
-                    }}
-                    onMouseDown={() => {
-                      const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
-                      const idx = METHODS.indexOf(newRequestMethod);
-                      setNewRequestMethod(METHODS[(idx + 1) % METHODS.length]!);
-                    }}
-                  >
-                    <text
-                      fg={
-                        colors.methods[newRequestMethod as keyof typeof colors.methods]?.text ??
-                        colors.text.primary
-                      }
-                    >
-                      {newRequestMethod}
-                    </text>
-                  </box>
-                </box>
-              )}
-
-              <box
-                style={{
-                  border: true,
-                  borderColor: colors.border.default,
-                  borderStyle: 'rounded',
-                  paddingLeft: 1,
-                  paddingBottom: 0.5
-                }}
-              >
-                <input
-                  placeholder="Request name..."
-                  value={newRequestName}
-                  onInput={(val: string) => setNewRequestName(val)}
-                  focused={true}
-                  keyBindings={selectAllBindings}
-                />
-              </box>
-
-              <text fg={colors.text.muted}>Quick Curl (Optional):</text>
-              <box
-                style={{
-                  border: true,
-                  borderColor: colors.border.default,
-                  borderStyle: 'rounded',
-                  paddingLeft: 1,
-                  height: 6,
-                }}
-              >
-                <input
-                  placeholder={`curl -X GET https://api.example.com -H "Accept: application/json"`}
-                  value={curlText}
-                  onInput={(val: string) => setCurlText(val)}
-                  keyBindings={selectAllBindings}
-                />
-              </box>
-
-              <box style={{ flexDirection: 'row', gap: 1, marginTop: 1 }}>
-                <box
-                  style={{
-                    border: true,
-                    borderColor: colors.accent.primary,
-                    borderStyle: 'rounded',
-                    paddingLeft: 2,
-                    paddingRight: 2,
-                    paddingBottom: 0.5
-                  }}
-                  onMouseDown={() => {
-                    if (newRequestName.trim() && activeCollectionId) {
-                      let selectedProtocol = newRequestProtocol;
-                      let method = newRequestMethod;
-                      let url = '';
-                      let headers: Record<string, string> = {};
-                      let body = '';
-                      let variables = '';
-
-                      if (curlText.trim()) {
-                        try {
-                          const parsed = parseCurl(curlText.trim());
-                          method = parsed.method;
-                          url = parsed.url;
-                          headers = parsed.headers;
-                          if (parsed.protocol === 'graphql') {
-                            selectedProtocol = 'graphql';
-                            body = parsed.query;
-                            variables = parsed.variables || '';
-                          } else if (parsed.body) {
-                            body = parsed.body;
-                          }
-                        } catch {
-                          // parsing failed, falls through to use manual method
-                        }
-                      }
-
-                      const requestInput: RequestItemInput =
-                        selectedProtocol === 'graphql'
-                          ? {
-                              protocol: 'graphql',
-                              name: newRequestName.trim(),
-                              url,
-                              query: body,
-                              variables,
-                              headers,
-                            }
-                          : selectedProtocol === 'websocket'
-                            ? {
-                                protocol: 'websocket',
-                                name: newRequestName.trim(),
-                                url,
-                                headers,
-                                initialMessage: body,
-                              }
-                            : {
-                                protocol: 'rest',
-                                method,
-                                name: newRequestName.trim(),
-                                url,
-                                headers,
-                                body,
-                              };
-
-                      void (async () => {
-                        await addRequestToCollection(activeCollectionId, requestInput);
-                        const updated = await loadCollections();
-                        setCollections(updated);
-                      })();
-                      setCollectionModal(null);
-                      setNewRequestName('');
-                      setNewRequestProtocol('rest');
-                      setNewRequestMethod('GET');
-                      setCurlText('');
-                    }
-                  }}
-                >
-                  <text fg={colors.accent.primary}>Add</text>
-                </box>
-                <box
-                  style={{
-                    border: true,
-                    borderColor: colors.border.default,
-                    borderStyle: 'rounded',
-                    paddingLeft: 2,
-                    paddingRight: 2,
-                    paddingBottom: 0.5
-                  }}
-                  onMouseDown={() => {
-                    setCollectionModal(null);
-                    setNewRequestName('');
-                    setNewRequestProtocol('rest');
-                    setNewRequestMethod('GET');
-                    setCurlText('');
-                  }}
-                >
-                  <text fg={colors.text.muted}>Cancel</text>
-                </box>
-              </box>
-            </box>
-          </Modal>
+        {collectionModal === 'add' && (
+          <RequestAddingView
+            isOpen={true}
+            activeCollectionId={activeCollectionId}
+            onClose={() => setCollectionModal(null)}
+            onCollectionsChange={setCollections}
+          />
         )}
 
         {collectionModal === 'export' && (

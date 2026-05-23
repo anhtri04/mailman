@@ -23,3 +23,5 @@ export { HistoryModal } from './HistoryModal';
 export { RequestStatsModal } from './RequestStatsModal';
 export { ScriptsEditor } from './ScriptsEditor';
 export { ScriptResultsPanel } from './ScriptResultsPanel';
+export { CollectionImportView } from './CollectionImportView';
+export { RequestAddingView } from './RequestAddingView';
