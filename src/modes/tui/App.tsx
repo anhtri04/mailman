@@ -97,7 +97,7 @@ export function App() {
   });
   const [restResponses, setRestResponses] = useState<Record<string, ResponseState>>({});
   const [restStreamControllers, setRestStreamControllers] = useState<
-    Record<string, { disconnect: () => void }>
+    Record<string, ProtocolController>
   >({});
   const [graphqlResponses, setGraphqlResponses] = useState<Record<string, ResponseState>>({});
   const [websocketResponses, setWebsocketResponses] = useState<Record<string, ResponseState>>({});
@@ -720,23 +720,32 @@ export function App() {
   const handleSend = useCallback(async () => {
     if (!request.url || !activeRequestId) return;
 
+    const requestId = activeRequestId;
+    const streamSessionId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    let registeredController: ProtocolController | undefined;
+    restStreamControllers[requestId]?.disconnect();
     setIsLoading(true);
 
     try {
       const streamResult = await sendRequestWithStreaming(request, {
+        onController: (controller) => {
+          registeredController = controller;
+          setRestStreamControllers((prev) => ({ ...prev, [requestId]: controller }));
+        },
         onOpen: (initial) => {
           setIsLoading(false);
           const isSSE = (initial.headers['content-type'] ?? '').includes('text/event-stream');
           if (isSSE) {
             setRestResponses((prev) => ({
               ...prev,
-              [activeRequestId]: {
+              [requestId]: {
                 ...initial,
                 body: '(streaming)',
                 mode: 'sse',
                 isStreaming: true,
                 streamStartedAt: Date.now(),
                 streamEventCount: 0,
+                streamSessionId,
                 sseEvents: [],
                 sseMeta: { droppedEvents: 0 },
               },
@@ -745,14 +754,21 @@ export function App() {
         },
         onEvent: (event) => {
           setRestResponses((prev) => {
-            const current = prev[activeRequestId];
-            if (!current || current.mode !== 'sse') return prev;
+            const current = prev[requestId];
+            if (
+              !current ||
+              current.mode !== 'sse' ||
+              !current.isStreaming ||
+              current.streamSessionId !== streamSessionId
+            ) {
+              return prev;
+            }
             const events = [...(current.sseEvents ?? []), event];
             const dropped = Math.max(0, events.length - SSE_MAX_EVENTS);
             const nextEvents = dropped > 0 ? events.slice(dropped) : events;
             return {
               ...prev,
-              [activeRequestId]: {
+              [requestId]: {
                 ...current,
                 sseEvents: nextEvents,
                 streamEventCount: (current.streamEventCount ?? 0) + 1,
@@ -770,11 +786,11 @@ export function App() {
         onError: (message) => {
           setIsLoading(false);
           setRestResponses((prev) => {
-            const current = prev[activeRequestId];
-            if (!current) return prev;
+            const current = prev[requestId];
+            if (!current || current.streamSessionId !== streamSessionId) return prev;
             return {
               ...prev,
-              [activeRequestId]: {
+              [requestId]: {
                 ...current,
                 body: `Error: ${message}`,
                 isStreaming: false,
@@ -785,11 +801,13 @@ export function App() {
         },
         onComplete: () => {
           setRestResponses((prev) => {
-            const current = prev[activeRequestId];
-            if (!current || current.mode !== 'sse') return prev;
+            const current = prev[requestId];
+            if (!current || current.mode !== 'sse' || current.streamSessionId !== streamSessionId) {
+              return prev;
+            }
             return {
               ...prev,
-              [activeRequestId]: {
+              [requestId]: {
                 ...current,
                 isStreaming: false,
                 streamEndedAt: Date.now(),
@@ -803,14 +821,13 @@ export function App() {
         setRequest((prev) => ({ ...prev, auth: streamResult.updatedAuth }));
       }
 
-      setRestStreamControllers((prev) => ({ ...prev, [activeRequestId]: streamResult.controller }));
-
       setRestResponses((prev) => {
-        const current = prev[activeRequestId];
+        const current = prev[requestId];
         if (current?.mode === 'sse') {
+          if (current.streamSessionId !== streamSessionId) return prev;
           return {
             ...prev,
-            [activeRequestId]: {
+            [requestId]: {
               ...current,
               body: streamResult.response.body,
               headers: streamResult.response.headers,
@@ -823,12 +840,13 @@ export function App() {
             },
           };
         }
-        return { ...prev, [activeRequestId]: streamResult.response };
+        return { ...prev, [requestId]: streamResult.response };
       });
       addRestHistoryEntry(streamResult.response);
       setRestStreamControllers((prev) => {
+        if (registeredController && prev[requestId] !== registeredController) return prev;
         const next = { ...prev };
-        delete next[activeRequestId];
+        delete next[requestId];
         return next;
       });
     } catch (error) {
@@ -843,13 +861,13 @@ export function App() {
       };
       setRestResponses((prev) => ({
         ...prev,
-        [activeRequestId]: errorResponse,
+        [requestId]: errorResponse,
       }));
       addRestHistoryEntry(errorResponse);
     } finally {
       setIsLoading(false);
     }
-  }, [request, activeRequestId, addRestHistoryEntry]);
+  }, [request, activeRequestId, addRestHistoryEntry, restStreamControllers]);
 
   const handleDisconnectStream = useCallback(() => {
     if (!activeRequestId) return;

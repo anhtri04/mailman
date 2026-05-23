@@ -244,6 +244,7 @@ export interface SSEStreamHandlers {
     initial: Pick<ResponseState, 'status' | 'statusText' | 'headers' | 'time' | 'stats'>,
   ) => void;
   onEvent: (event: SSEEvent) => void;
+  onController?: (controller: SSEStreamController) => void;
   onError?: (message: string) => void;
   onComplete?: () => void;
 }
@@ -356,11 +357,21 @@ export async function executeHttpStreamRequest(
   const startTime = Date.now();
 
   const controller = new AbortController();
+  let reader:
+    | {
+        read: () => Promise<{ done: boolean; value?: Uint8Array }>;
+        cancel: (reason?: unknown) => Promise<void>;
+      }
+    | undefined;
+  let disconnected = false;
   const streamController: SSEStreamController = {
     disconnect: () => {
+      disconnected = true;
       controller.abort();
+      void reader?.cancel().catch(() => {});
     },
   };
+  handlers.onController?.(streamController);
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
@@ -432,7 +443,7 @@ export async function executeHttpStreamRequest(
       };
     }
 
-    const reader = response.body?.getReader();
+    reader = response.body?.getReader();
     if (!reader) {
       const endTime = Date.now();
       return {
@@ -472,8 +483,9 @@ export async function executeHttpStreamRequest(
       onComment: () => {},
     });
 
-    while (true) {
+    while (!disconnected && !controller.signal.aborted) {
       const { done, value } = await reader.read();
+      if (disconnected || controller.signal.aborted) break;
       if (done) {
         parser.flush();
         handlers.onComplete?.();
@@ -517,14 +529,16 @@ export async function executeHttpStreamRequest(
   } catch (error) {
     clearTimeout(timeoutId);
     const { type, message } = classifyError(error);
-    handlers.onError?.(message);
     const endTime = Date.now();
-    const body = `Error: ${message}`;
+    const body = disconnected ? '(disconnected)' : `Error: ${message}`;
     const totalMs = endTime - startTime;
+    if (!disconnected) {
+      handlers.onError?.(message);
+    }
     return {
       response: {
         status: 0,
-        statusText: type.toUpperCase(),
+        statusText: disconnected ? 'DISCONNECTED' : type.toUpperCase(),
         body,
         headers: {},
         time: totalMs,
@@ -534,7 +548,7 @@ export async function executeHttpStreamRequest(
           timings: { totalMs },
           errorType: type,
         }),
-        mode: 'single',
+        mode: disconnected ? 'sse' : 'single',
         isStreaming: false,
       },
       controller: streamController,

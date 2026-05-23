@@ -41,6 +41,7 @@ export interface ResponseState {
   streamStartedAt?: number;
   streamEndedAt?: number;
   streamEventCount?: number;
+  streamSessionId?: string;
   messages?: ProtocolMessage[];
   sseEvents?: SSEEvent[];
   sseMeta?: SSEMeta;

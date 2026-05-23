@@ -112,10 +112,14 @@ describe('http-shared', () => {
 
   describe('executeHttpStreamRequest', () => {
     test('returns stats for non-SSE streaming API responses', async () => {
-      let opened: Pick<
-        ResponseState,
-        'status' | 'statusText' | 'headers' | 'time' | 'stats'
-      > | null = null;
+      let resolveOpened: (
+        initial: Pick<ResponseState, 'status' | 'statusText' | 'headers' | 'time' | 'stats'>,
+      ) => void;
+      const openedPromise = new Promise<
+        Pick<ResponseState, 'status' | 'statusText' | 'headers' | 'time' | 'stats'>
+      >((resolve) => {
+        resolveOpened = resolve;
+      });
 
       globalThis.fetch = (() =>
         Promise.resolve(
@@ -134,18 +138,60 @@ describe('http-shared', () => {
         },
         {
           onOpen: (initial) => {
-            opened = initial;
+            resolveOpened(initial);
           },
           onEvent: () => {},
         },
       );
 
-      expect(opened?.status).toBe(200);
-      expect(opened?.stats?.timings.ttfbMs).toBeGreaterThanOrEqual(0);
+      const openedInitial = await openedPromise;
+      expect(openedInitial.status).toBe(200);
+      expect(openedInitial.stats?.timings.ttfbMs).toBeGreaterThanOrEqual(0);
       expect(result.response.mode).toBe('single');
       expect(result.response.body).toBe('plain response');
       expect(result.response.stats?.responseSize.bodyBytes).toBe(bytes('plain response'));
       expect(result.response.stats?.timings.downloadMs).toBeGreaterThanOrEqual(0);
+    });
+
+    test('exposes stream controller before request settles and handles disconnect', async () => {
+      let streamController: { disconnect: () => void } | undefined;
+      let errorCalled = false;
+
+      globalThis.fetch = ((_: string | URL | Request, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => {
+            reject(new DOMException('Aborted', 'AbortError'));
+          });
+        })) as unknown as typeof fetch;
+
+      const resultPromise = executeHttpStreamRequest(
+        {
+          url: 'https://example.com/events',
+          method: 'GET',
+          headers: {},
+        },
+        {
+          onOpen: () => {},
+          onEvent: () => {},
+          onController: (controller) => {
+            streamController = controller;
+          },
+          onError: () => {
+            errorCalled = true;
+          },
+        },
+      );
+
+      expect(streamController).toBeDefined();
+      streamController?.disconnect();
+
+      const result = await resultPromise;
+
+      expect(errorCalled).toBe(false);
+      expect(result.response.statusText).toBe('DISCONNECTED');
+      expect(result.response.body).toBe('(disconnected)');
+      expect(result.response.mode).toBe('sse');
+      expect(result.response.isStreaming).toBe(false);
     });
 
     test('parses SSE events and returns final stream stats', async () => {
