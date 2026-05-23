@@ -1,4 +1,4 @@
-## Mailman v0.2.4
+## Mailman v0.2.5
 
 A terminal-based multi-protocol API client built with Bun and OpenTUI.
 
@@ -27,8 +27,9 @@ chmod +x mailman-linux-x64  # macOS/Linux only
 - Interactive TUI with mouse and keyboard support
 - REST, GraphQL, SSE response streaming, and WebSocket support
 - HTTP methods: GET, POST, PUT, DELETE, PATCH
-- Headers, body, query params, and auth editors
+- Headers, body, query params, auth, and script editors
 - WebSocket connect, send, receive, disconnect, and message history
+- Pre-request and post-response scripts with test result viewing
 - Syntax-highlighted response viewer
 - Collections with full CRUD
 - 37 built-in themes with live preview
@@ -36,9 +37,13 @@ chmod +x mailman-linux-x64  # macOS/Linux only
 
 ### What's Changed
 
-- Added WebSocket TUI client support with dedicated request and response panels.
-- WebSocket sessions now support connect, send, receive, disconnect, clear messages, and live inbound/outbound/system message rendering.
-- Added request-level protocol foundation for REST, GraphQL, and WebSocket requests.
-- Added WebSocket history summaries, including message count and session duration.
-- Kept SSE as part of REST response streaming instead of a standalone request protocol.
-- Added WebSocket service and TUI test coverage.
+- Added request scripts support, including script types, persistence, collection/history plumbing, and request execution integration for REST and GraphQL.
+- Added TUI script editing and test result panels, including scrollable results and show/hide controls for script snippets.
+- Added an in-app notification panel with `info`, `success`, `warning`, and `error` variants.
+- Added delete confirmation notifications for safer destructive actions.
+- Added more built-in header presets for faster request setup.
+- Fixed query params editor draft row handling.
+- Fixed platform-specific cURL copy formatting.
+- Fixed TUI collection method label colors and add request modal input padding.
+- Refactored collection import and request adding views out of `App.tsx` for better maintainability.
+- Expanded automated test coverage for scripts, notifications, cURL formatting, and extracted TUI views.
