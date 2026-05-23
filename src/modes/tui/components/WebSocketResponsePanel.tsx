@@ -83,7 +83,7 @@ export function WebSocketResponsePanel({
       </box>
 
       <scrollbox style={{ flexGrow: 1 }}>
-        <box style={{ flexDirection: 'column', gap: 0 }}>
+        <box style={{ flexDirection: 'column', gap: 0, backgroundColor: colors.bg.panel }}>
           {messages.map((message) => {
             const fg =
               message.direction === 'inbound'

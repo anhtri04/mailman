@@ -202,7 +202,7 @@ export function GraphQLResponsePanel({
               {hasScriptResults && renderTabButton('test', 'Test')}
             </box>
 
-            <box style={{ flexGrow: 1, marginTop: 1 }}>
+            <box style={{ flexGrow: 1, marginTop: 1, backgroundColor: colors.bg.panel }}>
               {activeTab === 'body' && (
                 <scrollbox style={{ flexGrow: 1 }}>
                   <SyntaxHighlighter code={formattedBody} language="json" />

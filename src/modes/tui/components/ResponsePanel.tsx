@@ -288,7 +288,7 @@ export function ResponsePanel({
             </box>
 
             {/* Tab Content */}
-            <box style={{ flexGrow: 1, marginTop: 1 }}>
+            <box style={{ flexGrow: 1, marginTop: 1, backgroundColor: colors.bg.panel }}>
               {!isSSEMode && activeTab === 'body' && (
                 <scrollbox style={{ flexGrow: 1 }}>
                   <SyntaxHighlighter
