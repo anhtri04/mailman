@@ -66,8 +66,8 @@ export function handleKeyboardShortcut(
   actions: UseKeyboardShortcutsActions,
 ): void {
   if (key.name === 'escape') {
+    // ThemeSelector owns Escape so it can cancel previewed theme changes before closing.
     if (state.showThemeSelector) {
-      actions.setShowThemeSelector(false);
       return;
     }
 

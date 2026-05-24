@@ -114,4 +114,16 @@ describe('handleKeyboardShortcut', () => {
 
     expect(calls).toEqual(['setShowNotification:false']);
   });
+
+  test('does not close theme selector on Escape from global shortcuts', () => {
+    const { actions, calls } = createActionLog();
+
+    handleKeyboardShortcut(
+      { ctrl: false, name: 'escape' },
+      createState({ showThemeSelector: true }),
+      actions,
+    );
+
+    expect(calls).toEqual([]);
+  });
 });
