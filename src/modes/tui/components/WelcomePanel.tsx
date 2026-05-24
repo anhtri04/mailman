@@ -129,6 +129,9 @@ export function WelcomePanel({ collection, onExportCollection }: WelcomePanelPro
                       {'auth' in req && req.auth && req.auth.type !== 'none' && (
                         <text fg={colors.text.dim}>auth</text>
                       )}
+                      {(req.scripts?.beforeRequest || req.scripts?.afterResponse) && (
+                        <text fg={colors.text.dim}>scripts</text>
+                      )}
                       {body && <text fg={colors.text.dim}>body</text>}
                     </box>
                     <box
