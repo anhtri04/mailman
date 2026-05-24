@@ -83,6 +83,8 @@ A terminal-based HTTP client built with Bun and OpenTUI.
 - [ ] **Clone and Sync from other API clients**
 
 - [ ] **Image Response**
+  - Need to wait for the official support from OpennTUI
+  - Optional: Can use opentui/webgpu to render image instead
 
 - [ ] **gRPC**
 
