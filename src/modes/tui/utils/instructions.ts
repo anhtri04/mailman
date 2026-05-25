@@ -127,7 +127,7 @@ export const INSTRUCTION_CATALOG: Record<InstructionContextKey, string[]> = {
   ],
   'request.active.rest.request': [
     'URL bar: type an endpoint and press Enter to send',
-    'H / B / Q / A buttons edit headers, body, query, or auth',
+    'Ctrl+R Request History',
     'Ctrl+S Save request changes',
   ],
   'request.active.rest.response': [
