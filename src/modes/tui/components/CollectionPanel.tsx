@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
+import { getListViewport } from '../../../shared/utils';
 import type { Collection, RequestItem } from '../../../types';
 
 interface CollectionPanelProps {
@@ -36,6 +37,8 @@ function requestMethodLabel(request: RequestItem): string {
   if (request.protocol === 'websocket') return 'WSS';
   return abbreviateMethod(request.method);
 }
+
+const MAX_VISIBLE_COLLECTION_ROWS = 27;
 
 export function CollectionPanel({
   focused,
@@ -78,6 +81,11 @@ export function CollectionPanel({
     }
     return nodes;
   }, [collections, expandedCollections]);
+
+  const { visibleItems: visibleTreeNodes } = getListViewport(treeNodes, {
+    selectedIndex: Math.max(0, selectedIndex),
+    maxVisibleRows: MAX_VISIBLE_COLLECTION_ROWS,
+  });
 
   const selectedNode = treeNodes[selectedIndex];
 
@@ -247,7 +255,7 @@ export function CollectionPanel({
       {!isCollapsed && (
         <box style={{ flexDirection: 'column', flexGrow: 1, gap: 0, overflow: 'hidden' }}>
           <scrollbox style={{ flexGrow: 1 }}>
-            {treeNodes.map((node) => {
+            {visibleTreeNodes.map((node) => {
               const isSelected = node.index === selectedIndex;
               const isCollection = node.type === 'collection';
               const methodLabel = !isCollection ? requestMethodLabel(node.request) : '';
