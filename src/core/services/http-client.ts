@@ -1,6 +1,7 @@
 import type { RequestOptions, RequestStats, ScriptExecutionSummary } from '../types';
 import { executeHttpRequest, executeHttpStreamRequest, resolveAuthToRequest } from './http-shared';
 import type { SSEStreamHandlers, StreamExecutionResult } from './http-shared';
+import { buildRequestBody, emptyRequestBody } from './request-body';
 import { ScriptService } from './scripts';
 
 const scriptService = new ScriptService();
@@ -25,12 +26,17 @@ export async function sendRequest(
   // GET and HEAD requests should not include a body
   const shouldExcludeBody = scriptedOptions.method === 'GET' || scriptedOptions.method === 'HEAD';
 
+  const builtBody = shouldExcludeBody
+    ? { headers }
+    : buildRequestBody(scriptedOptions.body ?? emptyRequestBody(), headers);
+
   const result = await executeHttpRequest(
     {
       url,
       method: scriptedOptions.method,
-      headers,
-      body: shouldExcludeBody ? undefined : scriptedOptions.body,
+      headers: builtBody.headers,
+      body: builtBody.body,
+      statsBody: builtBody.statsBody,
     },
     timeoutMs,
   );
@@ -64,12 +70,17 @@ export async function sendRequestWithStreaming(
   const { url, headers, updatedAuth } = await resolveAuthToRequest(scriptedOptions);
   const shouldExcludeBody = scriptedOptions.method === 'GET' || scriptedOptions.method === 'HEAD';
 
+  const builtBody = shouldExcludeBody
+    ? { headers }
+    : buildRequestBody(scriptedOptions.body ?? emptyRequestBody(), headers);
+
   const streamResult = await executeHttpStreamRequest(
     {
       url,
       method: scriptedOptions.method,
-      headers,
-      body: shouldExcludeBody ? undefined : scriptedOptions.body,
+      headers: builtBody.headers,
+      body: builtBody.body,
+      statsBody: builtBody.statsBody,
     },
     {
       ...handlers,

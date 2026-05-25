@@ -1,5 +1,6 @@
 import { readFile } from 'fs/promises';
-import type { AuthConfig, Collection, RequestItem } from '../types';
+import type { AuthConfig, Collection, RequestBody, RequestItem } from '../types';
+import { rawRequestBody } from './request-body';
 
 export async function importCollectionsFromFile(path: string): Promise<Collection[]> {
   const data = await readFile(path, 'utf-8');
@@ -35,6 +36,7 @@ type PMLeafItem = {
       mode?: string;
       raw?: string;
       urlencoded?: Array<{ key: string; value: string }>;
+      formdata?: Array<{ key: string; value?: string; src?: string; type?: string }>;
       graphql?: {
         query?: string;
         variables?: string;
@@ -92,7 +94,7 @@ function toRequestItem(input: {
   method: string;
   url: string;
   headers: Record<string, string>;
-  body: string;
+  body: string | RequestBody;
   variables?: string;
   auth?: AuthConfig;
   isGraphQL: boolean;
@@ -103,8 +105,7 @@ function toRequestItem(input: {
       name: input.name,
       protocol: 'graphql',
       url: input.url,
-      query: input.body,
-      body: input.body,
+      query: typeof input.body === 'string' ? input.body : '',
       variables: input.variables ?? '',
       headers: input.headers,
       auth: input.auth,
@@ -118,7 +119,7 @@ function toRequestItem(input: {
     method: input.method,
     url: input.url,
     headers: input.headers,
-    body: input.body,
+    body: typeof input.body === 'string' ? rawRequestBody(input.body) : input.body,
     auth: input.auth,
   };
 }
@@ -138,23 +139,50 @@ function parsePostman(raw: Record<string, unknown>): Collection[] {
       if (h.key) headers[h.key] = h.value ?? '';
     }
 
-    let body = '';
+    let body: string | RequestBody = '';
     let variables = '';
     if (rq.body?.mode === 'raw') {
       body = rq.body.raw ?? '';
     } else if (rq.body?.mode === 'urlencoded') {
-      body = (rq.body.urlencoded ?? [])
-        .map((p) => `${encodeURIComponent(p.key)}=${encodeURIComponent(p.value)}`)
-        .join('&');
+      body = {
+        mode: 'urlencoded',
+        fields: (rq.body.urlencoded ?? []).map((p, index) => ({
+          id: `${Date.now()}-urlencoded-${index}`,
+          enabled: true,
+          key: p.key,
+          value: p.value,
+        })),
+      };
     } else if (rq.body?.mode === 'formdata') {
-      body = '# multipart/form-data not supported';
+      body = {
+        mode: 'multipart',
+        fields: (rq.body.formdata ?? []).map((p, index) => {
+          if (p.type === 'file') {
+            return {
+              id: `${Date.now()}-formdata-${index}`,
+              enabled: true,
+              kind: 'file' as const,
+              name: p.key,
+              filePath: p.src ?? '',
+            };
+          }
+          return {
+            id: `${Date.now()}-formdata-${index}`,
+            enabled: true,
+            kind: 'text' as const,
+            name: p.key,
+            value: p.value ?? '',
+          };
+        }),
+      };
     } else if (rq.body?.mode === 'graphql') {
       body = rq.body.graphql?.query ?? '';
       variables = rq.body.graphql?.variables ?? '';
     }
 
+    const bodyText = typeof body === 'string' ? body : '';
     const isGraphQL =
-      rq.body?.mode === 'graphql' || url.includes('/graphql') || /^\s*query\s+\w+/.test(body);
+      rq.body?.mode === 'graphql' || url.includes('/graphql') || /^\s*query\s+\w+/.test(bodyText);
 
     return toRequestItem({
       id: `${Date.now()}-${i}`,

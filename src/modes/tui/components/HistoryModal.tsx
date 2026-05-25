@@ -3,6 +3,7 @@ import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
 import { getListViewport } from '../../../shared/utils';
 import type { HistoryEntry } from '../../../types';
+import { summarizeRequestBody } from '../../../core/services';
 
 interface HistoryModalProps {
   entries: HistoryEntry[];
@@ -32,7 +33,7 @@ export function HistoryModal({ entries, onOpenEntry, errorMessage }: HistoryModa
         String(entry.response.status),
         entry.response.statusText,
         entry.response.body,
-        entry.request.body ?? '',
+        entry.request.body ? summarizeRequestBody(entry.request.body) : '',
       ]
         .join(' ')
         .toLowerCase();

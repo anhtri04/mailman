@@ -46,7 +46,10 @@ describe('ScriptService', () => {
     expect(result.result?.output).toEqual(['mutated request']);
     expect(result.request.url).toBe('https://example.com/users?debug=true');
     expect(result.request.headers?.['x-script']).toBe('1');
-    expect(result.request.body).toBe('{"name":"Jane","scripted":true}');
+    expect(result.request.body).toEqual({
+      mode: 'raw',
+      content: '{"name":"Jane","scripted":true}',
+    });
   });
 
   test('does not apply before request mutations when script throws', async () => {

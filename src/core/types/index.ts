@@ -15,7 +15,19 @@ export type {
   HistoryResponseSnapshot,
   HistorySSESummary,
 } from './history';
-export type { RequestOptions } from './request';
+export type {
+  FileRequestBody,
+  MultipartField,
+  MultipartFileField,
+  MultipartRequestBody,
+  MultipartTextField,
+  RawRequestBody,
+  RequestBody,
+  RequestBodyMode,
+  RequestOptions,
+  UrlEncodedField,
+  UrlEncodedRequestBody,
+} from './request';
 export type {
   RequestScripts,
   ScriptAssertionResult,

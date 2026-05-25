@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { emptyRequestBody } from '../../../core/services';
 import type { CliOutputEntry, CliSessionState } from '../types';
 
 const initialState: CliSessionState = {
@@ -11,7 +12,7 @@ const initialState: CliSessionState = {
     method: 'GET',
     url: '',
     headers: {},
-    body: '',
+    body: emptyRequestBody(),
   },
   collections: [],
   lastResponse: null,

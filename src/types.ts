@@ -14,6 +14,8 @@ export type {
   HistoryResponseSnapshot,
   HistorySSESummary,
   ProtocolMessage,
+  RequestBody,
+  RequestBodyMode,
   RequestOptions,
   RequestScripts,
   ScriptAssertionResult,

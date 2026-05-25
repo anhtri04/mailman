@@ -1,35 +1,33 @@
 import { describe, expect, test } from 'bun:test';
 import { BodyEditor } from './BodyEditor';
 
+const source = await Bun.file(import.meta.dir + '/BodyEditor.tsx').text();
+
 describe('BodyEditor', () => {
   test('should export BodyEditor component', () => {
     expect(BodyEditor).toBeDefined();
     expect(typeof BodyEditor).toBe('function');
   });
 
-  test('should include select-all key binding for textarea', () => {
-    const componentString = BodyEditor.toString();
-    expect(componentString).toContain('action: "select-all"');
-    expect(componentString).toContain('keyBindings: selectAllBindings');
+  test('should expose all body modes', () => {
+    expect(source).toContain("mode: 'none'");
+    expect(source).toContain("mode: 'raw'");
+    expect(source).toContain("mode: 'urlencoded'");
+    expect(source).toContain("mode: 'file'");
+    expect(source).toContain("mode: 'multipart'");
   });
 
-  test('should use detected or inferred content type', () => {
-    const componentString = BodyEditor.toString();
-    expect(componentString).toContain('detectedContentType ?? detectContentType(body)');
-    expect(componentString).toContain('contentType');
+  test('should include raw textarea behavior', () => {
+    expect(source).toContain("action: 'select-all'");
+    expect(source).toContain('Enter request body...');
+    expect(source).toContain('formatRequestBody');
+    expect(source).toContain('replaceText');
   });
 
-  test('should show body editor metadata and counters', () => {
-    const componentString = BodyEditor.toString();
-    expect(componentString).toContain('Enter request body...');
-    expect(componentString).toContain('chars');
-    expect(componentString).toContain('onBodyChange');
-  });
-
-  test('should support keyboard formatting shortcut', () => {
-    const componentString = BodyEditor.toString();
-    expect(componentString).toContain('key.ctrl && key.name === "f"');
-    expect(componentString).toContain('formatRequestBody');
-    expect(componentString).toContain('replaceText');
+  test('should embed file browser for file-based body modes', () => {
+    expect(source).toContain('FileBrowser');
+    expect(source).toContain('onSelectFile');
+    expect(source).toContain('setShowBrowser(false)');
+    expect(source).toContain('setBrowsingFor(null)');
   });
 });

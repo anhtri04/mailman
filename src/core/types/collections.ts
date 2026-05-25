@@ -1,4 +1,5 @@
 import type { AuthConfig } from './auth';
+import type { RequestBody } from './request';
 import type { RequestScripts } from './scripts';
 
 export type Protocol = 'rest' | 'graphql' | 'websocket';
@@ -16,7 +17,7 @@ interface BaseRequestItem {
   url: string;
   headers: Record<string, string>;
   method?: string;
-  body?: string;
+  body?: RequestBody;
   variables?: string;
   auth?: AuthConfig;
   scripts?: RequestScripts;
@@ -25,7 +26,7 @@ interface BaseRequestItem {
 export interface RestRequestItem extends BaseRequestItem {
   protocol: 'rest';
   method: string;
-  body: string;
+  body: RequestBody;
 }
 
 export interface GraphQLRequestItem extends BaseRequestItem {
@@ -33,13 +34,11 @@ export interface GraphQLRequestItem extends BaseRequestItem {
   query: string;
   variables: string;
   method?: 'POST';
-  body?: string;
 }
 
 export interface WebSocketRequestItem extends BaseRequestItem {
   protocol: 'websocket';
   initialMessage: string;
-  body?: string;
 }
 
 export type RequestItem = RestRequestItem | GraphQLRequestItem | WebSocketRequestItem;

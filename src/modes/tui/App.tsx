@@ -38,6 +38,9 @@ import {
   appendHistoryEntry,
   connectWebSocket,
   createProtocolMessage,
+  emptyRequestBody,
+  rawRequestBody,
+  summarizeRequestBody,
 } from '../../core/services';
 import {
   copyTextToClipboard,
@@ -52,6 +55,7 @@ import type {
 } from '../../shared/utils/responseCopyUtility';
 import type {
   HistoryEntry,
+  RequestBody,
   RequestOptions,
   RequestScripts,
   ResponseState,
@@ -78,7 +82,7 @@ export function App() {
     method: 'GET',
     url: '',
     headers: {},
-    body: '',
+    body: emptyRequestBody(),
     scripts: {},
   });
   const [graphqlRequest, setGraphqlRequest] = useState<{
@@ -334,7 +338,7 @@ export function App() {
                   name: requestName,
                   url: request.url,
                   headers: request.headers ?? {},
-                  initialMessage: request.body ?? '',
+                  initialMessage: summarizeRequestBody(request.body ?? emptyRequestBody()),
                 }
               : {
                   protocol: 'rest',
@@ -342,7 +346,7 @@ export function App() {
                   method: request.method,
                   url: request.url,
                   headers: request.headers ?? {},
-                  body: request.body ?? '',
+                  body: request.body,
                   auth: request.auth,
                   scripts: request.scripts,
                 },
@@ -498,7 +502,7 @@ export function App() {
           method: 'POST',
           url: graphqlRequest.url,
           headers: graphqlRequest.headers,
-          body: graphqlRequest.query,
+          body: rawRequestBody(graphqlRequest.query),
           variables: graphqlRequest.variables,
           auth: graphqlRequest.auth,
           scripts: graphqlRequest.scripts,
@@ -575,7 +579,7 @@ export function App() {
       if (entry.protocol === 'graphql') {
         setGraphqlRequest({
           url: entry.request.url,
-          query: entry.request.body ?? '',
+          query: entry.request.body ? summarizeRequestBody(entry.request.body) : '',
           variables: entry.request.variables ?? '',
           headers: entry.request.headers,
           auth: entry.request.auth,
@@ -587,7 +591,7 @@ export function App() {
           method: 'WEBSOCKET',
           url: entry.request.url,
           headers: entry.request.headers,
-          body: entry.request.body ?? '',
+          body: entry.request.body ?? emptyRequestBody(),
           auth: entry.request.auth,
         });
         setWebsocketResponses((prev) => ({ ...prev, [matchedRequest.id]: entry.response }));
@@ -596,7 +600,7 @@ export function App() {
           method: entry.request.method,
           url: entry.request.url,
           headers: entry.request.headers,
-          body: entry.request.body ?? '',
+          body: entry.request.body ?? emptyRequestBody(),
           auth: entry.request.auth,
           scripts: entry.request.scripts,
         });
@@ -621,8 +625,12 @@ export function App() {
     setRequest((prev) => ({ ...prev, headers }));
   }, []);
 
-  const handleBodyChange = useCallback((body: string) => {
+  const handleBodyChange = useCallback((body: RequestBody) => {
     setRequest((prev) => ({ ...prev, body }));
+  }, []);
+
+  const handleMessageChange = useCallback((message: string) => {
+    setRequest((prev) => ({ ...prev, body: rawRequestBody(message) }));
   }, []);
 
   const handleAuthChange = useCallback((auth: AuthConfig) => {
@@ -944,6 +952,7 @@ export function App() {
     if (!activeRequestId || !request.url) return;
 
     const requestId = activeRequestId;
+    const initialMessage = summarizeRequestBody(request.body ?? emptyRequestBody());
     websocketControllers[requestId]?.disconnect();
 
     try {
@@ -951,7 +960,7 @@ export function App() {
         {
           url: request.url,
           headers: request.headers ?? {},
-          initialMessage: request.body,
+          initialMessage,
         },
         {
           onOpen: () => {
@@ -964,8 +973,8 @@ export function App() {
               messages: [
                 ...(current.messages ?? []),
                 createProtocolMessage('system', 'Connected'),
-                ...(request.body?.trim()
-                  ? [createProtocolMessage('outbound', request.body, { initial: 'true' })]
+                ...(initialMessage.trim()
+                  ? [createProtocolMessage('outbound', initialMessage, { initial: 'true' })]
                   : []),
               ],
             }));
@@ -1039,7 +1048,8 @@ export function App() {
   ]);
 
   const handleWebSocketSend = useCallback(() => {
-    if (!activeRequestId || !request.body?.trim()) return;
+    const message = summarizeRequestBody(request.body ?? emptyRequestBody());
+    if (!activeRequestId || !message.trim()) return;
     const controller = websocketControllers[activeRequestId];
     if (!controller?.send) {
       appendWebSocketMessage(
@@ -1048,8 +1058,8 @@ export function App() {
       );
       return;
     }
-    controller.send(request.body);
-    appendWebSocketMessage(activeRequestId, createProtocolMessage('outbound', request.body));
+    controller.send(message);
+    appendWebSocketMessage(activeRequestId, createProtocolMessage('outbound', message));
   }, [activeRequestId, appendWebSocketMessage, request.body, websocketControllers]);
 
   const handleWebSocketDisconnect = useCallback(() => {
@@ -1088,7 +1098,7 @@ export function App() {
         method: 'CONNECT',
         url: item.url,
         headers: item.headers,
-        body: item.initialMessage,
+        body: rawRequestBody(item.initialMessage),
       });
     } else {
       setRequest({
@@ -1236,8 +1246,8 @@ export function App() {
                   onFocus={() => handleFocusArea('request')}
                   url={request.url}
                   onUrlChange={handleUrlChange}
-                  message={request.body ?? ''}
-                  onMessageChange={handleBodyChange}
+                  message={summarizeRequestBody(request.body ?? emptyRequestBody())}
+                  onMessageChange={handleMessageChange}
                   headers={request.headers ?? {}}
                   onOpenHeaders={() => setActiveModal('headers')}
                   onConnect={handleWebSocketConnect}
@@ -1309,7 +1319,7 @@ export function App() {
                   onSend={handleSend}
                   headers={request.headers}
                   onHeadersChange={handleHeadersChange}
-                  body={request.body}
+                  body={request.body ?? emptyRequestBody()}
                   onBodyChange={handleBodyChange}
                   queryParams={queryParams}
                   auth={request.auth}
@@ -1390,7 +1400,11 @@ export function App() {
 
         {activeModal === 'body' && (
           <Modal isOpen={true} onClose={() => setActiveModal(null)} title="Request Body">
-            <BodyEditor body={request.body ?? ''} onBodyChange={handleBodyChange} focused={true} />
+            <BodyEditor
+              body={request.body ?? emptyRequestBody()}
+              onBodyChange={handleBodyChange}
+              focused={true}
+            />
           </Modal>
         )}
 

@@ -28,7 +28,10 @@ describe('parseUnifiedInput', () => {
     expect(parsed.protocol).toBe('graphql');
     expect(parsed.request.method).toBe('POST');
     expect(parsed.request.url).toBe('https://example.com/graphql');
-    expect(parsed.request.body).toBe(JSON.stringify({ query: '{ viewer { login } }' }));
+    expect(parsed.request.body).toEqual({
+      mode: 'raw',
+      content: JSON.stringify({ query: '{ viewer { login } }' }),
+    });
   });
 
   test('parses SSE request', () => {

@@ -12,6 +12,15 @@ export {
 } from './request-stats';
 export { sendRequest, sendRequestWithStreaming } from './http-client';
 export {
+  buildRequestBody,
+  emptyRequestBody,
+  normalizeRequestBody,
+  rawRequestBody,
+  requestBodyHasContent,
+  summarizeRequestBody,
+} from './request-body';
+export type { BuiltRequestBody, FetchBody } from './request-body';
+export {
   loadCollections,
   saveCollections,
   addCollection,

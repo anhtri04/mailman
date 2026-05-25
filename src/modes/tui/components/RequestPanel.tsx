@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
-import type { AuthConfig, RequestScripts } from '../../../types';
+import type { AuthConfig, RequestBody, RequestScripts } from '../../../types';
+import { requestBodyHasContent } from '../../../core/services';
 
 type Tab = 'headers' | 'body' | 'query' | 'auth' | 'scripts';
 type ActiveEditor = 'url' | null;
@@ -15,8 +16,8 @@ interface RequestPanelProps {
   onSend: () => void;
   headers?: Record<string, string>;
   onHeadersChange: (headers: Record<string, string>) => void;
-  body?: string;
-  onBodyChange: (body: string) => void;
+  body: RequestBody;
+  onBodyChange: (body: RequestBody) => void;
   queryParams?: Record<string, string>;
   auth?: AuthConfig;
   scripts?: RequestScripts;
@@ -41,7 +42,7 @@ export function RequestPanel({
   onSend,
   headers = {},
   onHeadersChange,
-  body = '',
+  body,
   onBodyChange,
   queryParams = {},
   auth,
@@ -62,7 +63,7 @@ export function RequestPanel({
 
   // Check if each section has data for indicator
   const hasHeaders = Object.keys(headers).length > 0;
-  const hasBody = !!body && body.trim().length > 0;
+  const hasBody = requestBodyHasContent(body);
   const hasQuery = Object.keys(queryParams).length > 0;
   const hasAuth = !!auth && auth.type !== 'none';
   const hasScripts = !!scripts?.beforeRequest?.trim() || !!scripts?.afterResponse?.trim();

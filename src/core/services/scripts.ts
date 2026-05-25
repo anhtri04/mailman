@@ -1,6 +1,7 @@
-import type { RequestOptions, RequestScripts, ResponseState } from '../types';
+import type { RequestBody, RequestOptions, RequestScripts, ResponseState } from '../types';
 import type { GraphQLRequestOptions } from './graphql-client';
 import type { ScriptAssertionResult, ScriptExecutionResult } from '../types';
+import { normalizeRequestBody, rawRequestBody, summarizeRequestBody } from './request-body';
 
 type ScriptRequestContext = RequestOptions | GraphQLRequestOptions;
 
@@ -113,7 +114,9 @@ function createRequestContext<TRequest extends ScriptRequestContext>(
   };
 
   if ('method' in request && request.method) base.method = request.method;
-  if ('body' in request && typeof request.body === 'string') base.body = request.body;
+  if ('body' in request) {
+    base.body = request.body ? summarizeRequestBody(normalizeRequestBody(request.body)) : '';
+  }
   if ('query' in request) base.query = request.query;
   if ('variables' in request) base.variables = request.variables;
   if ('operationName' in request) base.operationName = request.operationName;
@@ -134,7 +137,7 @@ function applyRequestContext<TRequest extends ScriptRequestContext>(
     updates.method = context.method;
   }
   if ('body' in original && typeof context.body === 'string') {
-    updates.body = context.body;
+    updates.body = rawRequestBody(context.body) as RequestBody;
   }
   if ('query' in original && typeof context.query === 'string') {
     updates.query = context.query;

@@ -3,6 +3,7 @@ import { copyCurl } from '../../../shared/utils/curlUtility';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
 import { MailmanLogo } from './MailmanLogo';
 import type { Collection, RequestItem } from '../../../types';
+import { summarizeRequestBody } from '../../../core/services';
 
 interface WelcomePanelProps {
   collection?: Collection;
@@ -18,7 +19,7 @@ function requestMethodLabel(request: RequestItem): string {
 function requestBody(request: RequestItem): string {
   if (request.protocol === 'graphql') return request.query;
   if (request.protocol === 'websocket') return request.initialMessage;
-  return request.body;
+  return request.body ? summarizeRequestBody(request.body) : '';
 }
 
 function buildMethodSummary(requests: RequestItem[]): string {

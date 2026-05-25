@@ -41,6 +41,7 @@ import { createSSEParser } from './sse-parser';
 import { buildRequestStats } from './request-stats';
 import type { AuthConfig } from '../types';
 import type { RequestStats, ResponseState, SSEEvent } from '../types';
+import type { FetchBody } from './request-body';
 
 interface ResolvedAuthRequest {
   url: string;
@@ -236,7 +237,8 @@ export interface HttpExecutionOptions {
   url: string;
   method: string;
   headers: Record<string, string>;
-  body?: string;
+  body?: FetchBody;
+  statsBody?: string;
 }
 
 export interface SSEStreamHandlers {
@@ -265,6 +267,15 @@ function headersFromResponse(response: Response): Record<string, string> {
     responseHeaders[key] = value;
   });
   return responseHeaders;
+}
+
+function statsRequest(options: HttpExecutionOptions) {
+  return {
+    url: options.url,
+    method: options.method,
+    headers: options.headers,
+    body: options.statsBody ?? (typeof options.body === 'string' ? options.body : undefined),
+  };
 }
 
 export async function executeHttpRequest(
@@ -311,7 +322,7 @@ export async function executeHttpRequest(
       headers: responseHeaders,
       time: totalMs,
       stats: buildRequestStats({
-        request: options,
+        request: statsRequest(options),
         response: {
           url: response.url,
           redirected: response.redirected,
@@ -340,7 +351,7 @@ export async function executeHttpRequest(
       headers: {},
       time: totalMs,
       stats: buildRequestStats({
-        request: options,
+        request: statsRequest(options),
         response: { headers: {}, body },
         timings: { totalMs },
         errorType: type,
@@ -393,7 +404,7 @@ export async function executeHttpStreamRequest(
       headers,
       time: initialTime,
       stats: buildRequestStats({
-        request: options,
+        request: statsRequest(options),
         response: {
           url: response.url,
           redirected: response.redirected,
@@ -423,7 +434,7 @@ export async function executeHttpStreamRequest(
           body,
           time: totalMs,
           stats: buildRequestStats({
-            request: options,
+            request: statsRequest(options),
             response: {
               url: response.url,
               redirected: response.redirected,
@@ -454,7 +465,7 @@ export async function executeHttpStreamRequest(
           headers,
           time: endTime - startTime,
           stats: buildRequestStats({
-            request: options,
+            request: statsRequest(options),
             response: {
               url: response.url,
               redirected: response.redirected,
@@ -508,7 +519,7 @@ export async function executeHttpStreamRequest(
         body,
         time: totalMs,
         stats: buildRequestStats({
-          request: options,
+          request: statsRequest(options),
           response: {
             url: response.url,
             redirected: response.redirected,
@@ -543,7 +554,7 @@ export async function executeHttpStreamRequest(
         headers: {},
         time: totalMs,
         stats: buildRequestStats({
-          request: options,
+          request: statsRequest(options),
           response: { headers: {}, body },
           timings: { totalMs },
           errorType: type,

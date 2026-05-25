@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { KeyBinding } from '@opentui/core';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
-import { addRequestToCollection, loadCollections } from '../../../core/services';
+import { addRequestToCollection, loadCollections, rawRequestBody } from '../../../core/services';
 import type { Collection, Protocol, RequestItemInput } from '../../../core/types';
 import { parseCurl } from '../../../shared/utils/curlUtility';
 import { Modal } from './Modal';
@@ -89,7 +89,7 @@ export function RequestAddingView({
               name: newRequestName.trim(),
               url,
               headers,
-              body,
+              body: rawRequestBody(body),
             };
 
     void (async () => {

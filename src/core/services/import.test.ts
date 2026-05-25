@@ -81,7 +81,13 @@ describe('importCollectionsFromFile', () => {
 
       const result = await importCollectionsFromFile(path);
       const req = result[0]?.requests[0];
-      expect(req?.body).toBe('name=Alice&age=30');
+      expect(req?.body).toEqual({
+        mode: 'urlencoded',
+        fields: expect.arrayContaining([
+          expect.objectContaining({ enabled: true, key: 'name', value: 'Alice' }),
+          expect.objectContaining({ enabled: true, key: 'age', value: '30' }),
+        ]),
+      });
     });
 
     test('raw body and unsupported auth are handled', async () => {
@@ -102,7 +108,7 @@ describe('importCollectionsFromFile', () => {
 
       const result = await importCollectionsFromFile(path);
       const req = result[0]?.requests[0];
-      expect(req?.body).toBe('{"name":"Bob"}');
+      expect(req?.body).toEqual({ mode: 'raw', content: '{"name":"Bob"}' });
       expect(req?.auth).toBeUndefined();
     });
 
@@ -161,7 +167,7 @@ describe('importCollectionsFromFile', () => {
       const result = await importCollectionsFromFile(path);
       const req = result[0]?.requests[0];
       expect(req?.protocol).toBe('graphql');
-      expect(req?.body).toBe('query GetUser($id: ID!) { user(id: $id) { name } }');
+      expect(req?.query).toBe('query GetUser($id: ID!) { user(id: $id) { name } }');
       expect(req?.variables).toBe(JSON.stringify({ id: '1' }));
     });
 
@@ -282,7 +288,7 @@ describe('importCollectionsFromFile', () => {
 
       const result = await importCollectionsFromFile(path);
       const req = result[0]?.requests[0];
-      expect(req?.body).toBe('query GetUser { user { id } }');
+      expect(req?.query).toBe('query GetUser { user { id } }');
       expect(req?.variables).toBe(JSON.stringify({ id: '1' }));
     });
 

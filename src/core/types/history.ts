@@ -1,5 +1,6 @@
 import type { AuthConfig } from './auth';
 import type { Protocol } from './collections';
+import type { RequestBody } from './request';
 import type { RequestStats } from './request-stats';
 import type { RequestScripts, ScriptExecutionSummary } from './scripts';
 
@@ -18,7 +19,7 @@ export interface HistoryRequestSnapshot {
   method: string;
   url: string;
   headers: Record<string, string>;
-  body?: string;
+  body?: RequestBody;
   variables?: string;
   auth?: AuthConfig;
   scripts?: RequestScripts;

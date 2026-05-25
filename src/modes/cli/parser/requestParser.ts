@@ -1,4 +1,5 @@
 import type { RequestOptions } from '../../../core/types';
+import { rawRequestBody } from '../../../core/services';
 import type { ParsedRequest } from '../types';
 import { lexInput, type InputToken } from './lexer';
 
@@ -64,7 +65,7 @@ function parseRestRequest(raw: string, tokens: InputToken[]): ParsedRequest {
     method,
     url,
     headers: {},
-    body: '',
+    body: rawRequestBody(),
   };
 
   applyOptions(request, tokens.slice(4), 'rest');
@@ -89,7 +90,7 @@ function parseGraphQLRequest(
       Accept: 'application/json',
       'Content-Type': 'application/json',
     },
-    body: '',
+    body: rawRequestBody(),
   };
 
   const graphql: { query?: string; variables?: unknown; operationName?: string } = {};
@@ -99,7 +100,7 @@ function parseGraphQLRequest(
     throw new Error('Missing GraphQL query. Usage: http graphql URL --query QUERY');
   }
 
-  request.body = JSON.stringify(graphql);
+  request.body = rawRequestBody(JSON.stringify(graphql));
   return { kind: 'request', raw, request, protocol };
 }
 
@@ -115,7 +116,7 @@ function parseSseRequest(raw: string, tokens: InputToken[]): ParsedRequest {
     headers: {
       Accept: 'text/event-stream',
     },
-    body: '',
+    body: rawRequestBody(),
   };
 
   applyOptions(request, tokens.slice(3), 'sse');
@@ -166,11 +167,11 @@ function applyOptions(
       case '--data':
       case '-d':
         ensureProtocol(protocol, ['rest'], option);
-        request.body = value;
+        request.body = rawRequestBody(value);
         break;
       case '--json':
         ensureProtocol(protocol, ['rest'], option);
-        request.body = value;
+        request.body = rawRequestBody(value);
         request.headers = {
           ...request.headers,
           'Content-Type': request.headers?.['Content-Type'] ?? 'application/json',
