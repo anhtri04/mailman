@@ -65,6 +65,8 @@ function iconButton(label: string, onPress: () => void, color: string, borderCol
         borderStyle: 'rounded',
         paddingLeft: 1,
         paddingRight: 1,
+        minHeight: 3,
+        flexShrink: 0,
       }}
       onMouseDown={onPress}
     >
@@ -123,8 +125,10 @@ function RawBodyEditor({
   }, [body, onBodyChange]);
 
   return (
-    <box style={{ flexDirection: 'column', flexGrow: 1 }}>
-      <box style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 1 }}>
+    <box style={{ flexDirection: 'column', flexGrow: 1, minHeight: 0 }}>
+      <box
+        style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 1, flexShrink: 0 }}
+      >
         <text fg={colors.text.muted}>
           {highlightLanguage}
           {formatStatus ? `  ${formatStatus}` : ''}
@@ -133,12 +137,13 @@ function RawBodyEditor({
       <box
         style={{
           flexGrow: 1,
+          minHeight: 0,
           border: true,
           borderColor: focused ? colors.accent.primary : colors.border.default,
           backgroundColor: colors.bg.panel,
         }}
       >
-        <scrollbox style={{ flexGrow: 1 }}>
+        <scrollbox style={{ flexGrow: 1, minHeight: 0 }}>
           <textarea
             ref={textareaRef}
             initialValue={body.content}
@@ -152,7 +157,9 @@ function RawBodyEditor({
           />
         </scrollbox>
       </box>
-      <box style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 1 }}>
+      <box
+        style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 1, flexShrink: 0 }}
+      >
         <text fg={colors.text.muted}>{body.content.length} chars</text>
       </box>
     </box>
@@ -187,12 +194,12 @@ function UrlEncodedBodyEditor({
   };
 
   return (
-    <box style={{ flexDirection: 'column', gap: 1, flexGrow: 1 }}>
-      <box style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+    <box style={{ flexDirection: 'column', gap: 1, flexGrow: 1, minHeight: 0 }}>
+      <box style={{ flexDirection: 'row', gap: 1, justifyContent: 'space-between', flexShrink: 0 }}>
         <text fg={colors.text.muted}>application/x-www-form-urlencoded</text>
         {iconButton('Add field', addField, colors.accent.primary, colors.accent.primary)}
       </box>
-      <scrollbox style={{ flexGrow: 1 }}>
+      <scrollbox style={{ flexGrow: 1, minHeight: 0 }}>
         <box style={{ flexDirection: 'column', gap: 1 }}>
           {body.fields.map((field) => (
             <box key={field.id} style={{ flexDirection: 'row', gap: 1, alignItems: 'center' }}>
@@ -337,15 +344,15 @@ function MultipartBodyEditor({
   };
 
   return (
-    <box style={{ flexDirection: 'column', gap: 1, flexGrow: 1 }}>
-      <box style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+    <box style={{ flexDirection: 'column', gap: 1, flexGrow: 1, minHeight: 0 }}>
+      <box style={{ flexDirection: 'row', justifyContent: 'space-between', flexShrink: 0 }}>
         <text fg={colors.text.muted}>multipart/form-data</text>
-        <box style={{ flexDirection: 'row', gap: 1 }}>
+        <box style={{ flexDirection: 'row', gap: 1, flexShrink: 0 }}>
           {iconButton('Add text', addTextField, colors.accent.primary, colors.accent.primary)}
           {iconButton('Add file', addFileField, colors.accent.primary, colors.accent.primary)}
         </box>
       </box>
-      <scrollbox style={{ flexGrow: 1 }}>
+      <scrollbox style={{ flexGrow: 1, minHeight: 0 }}>
         <box style={{ flexDirection: 'column', gap: 1 }}>
           {body.fields.map((field) => (
             <box key={field.id} style={{ flexDirection: 'row', gap: 1, alignItems: 'center' }}>
@@ -440,6 +447,8 @@ export function BodyEditor({ body, onBodyChange, focused }: BodyEditorProps) {
           borderStyle: 'rounded',
           paddingLeft: 2,
           paddingRight: 2,
+          minHeight: 3,
+          flexShrink: 0,
         }}
         onMouseDown={() => onBodyChange(newBodyForMode(mode))}
       >
@@ -451,25 +460,45 @@ export function BodyEditor({ body, onBodyChange, focused }: BodyEditorProps) {
   };
 
   return (
-    <box style={{ flexDirection: 'column', padding: 1, flexGrow: 1, height: '100%' }}>
-      <scrollbox>
-      <box style={{ flexDirection: 'row', gap: 1 }}>
-        {BODY_MODES.map(({ mode, label }) => renderModeButton(mode, label))}
-      </box>
+    <box
+      style={{
+        flexDirection: 'column',
+        padding: 1,
+        flexGrow: 1,
+        height: '100%',
+        minHeight: 0,
+        overflow: 'hidden',
+      }}
+    >
+      <scrollbox style={{ flexGrow: 1, minHeight: 0 }}>
+        <box style={{ flexDirection: 'row', gap: 1, flexShrink: 0 }}>
+          {BODY_MODES.map(({ mode, label }) => renderModeButton(mode, label))}
+        </box>
 
-      <box style={{ flexGrow: 1, marginTop: 1 }}>
-        {body.mode === 'none' && <text fg={colors.text.muted}>No request body will be sent.</text>}
-        {body.mode === 'raw' && (
-          <RawBodyEditor body={body} onBodyChange={onBodyChange} focused={focused} />
-        )}
-        {body.mode === 'urlencoded' && (
-          <UrlEncodedBodyEditor body={body} onBodyChange={onBodyChange} />
-        )}
-        {body.mode === 'file' && <FileBodyEditor body={body} onBodyChange={onBodyChange} />}
-        {body.mode === 'multipart' && (
-          <MultipartBodyEditor body={body} onBodyChange={onBodyChange} />
-        )}
-      </box>
+        <box
+          style={{
+            flexDirection: 'column',
+            flexGrow: 1,
+            flexShrink: 1,
+            minHeight: 0,
+            marginTop: 1,
+            overflow: 'hidden',
+          }}
+        >
+          {body.mode === 'none' && (
+            <text fg={colors.text.muted}>No request body will be sent.</text>
+          )}
+          {body.mode === 'raw' && (
+            <RawBodyEditor body={body} onBodyChange={onBodyChange} focused={focused} />
+          )}
+          {body.mode === 'urlencoded' && (
+            <UrlEncodedBodyEditor body={body} onBodyChange={onBodyChange} />
+          )}
+          {body.mode === 'file' && <FileBodyEditor body={body} onBodyChange={onBodyChange} />}
+          {body.mode === 'multipart' && (
+            <MultipartBodyEditor body={body} onBodyChange={onBodyChange} />
+          )}
+        </box>
       </scrollbox>
     </box>
   );
