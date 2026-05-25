@@ -148,6 +148,16 @@ export function App() {
   const currentProtocol = activeRequest?.protocol ?? 'rest';
   const isStreamingResponse =
     currentResponse?.mode === 'sse' && (currentResponse.isStreaming ?? false);
+  const isBackgroundInputBlocked = Boolean(
+    activeModal ||
+    collectionModal ||
+    notification ||
+    showThemeSelector ||
+    showHelp ||
+    showHistoryModal ||
+    showResponseModal ||
+    showRequestStatsModal,
+  );
 
   const instructionContextKey = useMemo(
     () =>
@@ -1200,7 +1210,7 @@ export function App() {
         style={{ flexDirection: 'column', height: '100%' }}
       >
         <CollectionPanel
-          focused={isFocused('collections') && !collectionModal && !activeModal && !notification}
+          focused={isFocused('collections') && !isBackgroundInputBlocked}
           onFocus={() => handleFocusArea('collections')}
           isCollapsed={isCollectionCollapsed}
           onToggleCollapse={() => setIsCollectionCollapsed((prev) => !prev)}
@@ -1242,7 +1252,7 @@ export function App() {
             <box style={{ flexDirection: 'row', height: '100%' }} key={activeRequestId}>
               <box width="50%" style={{ flexDirection: 'column' }}>
                 <WebSocketRequestPanel
-                  focused={isFocused('request')}
+                  focused={isFocused('request') && !isBackgroundInputBlocked}
                   onFocus={() => handleFocusArea('request')}
                   url={request.url}
                   onUrlChange={handleUrlChange}
@@ -1260,7 +1270,7 @@ export function App() {
               </box>
               <box width="50%" style={{ flexDirection: 'column' }}>
                 <WebSocketResponsePanel
-                  focused={isFocused('response')}
+                  focused={isFocused('response') && !isBackgroundInputBlocked}
                   onFocus={() => handleFocusArea('response')}
                   response={currentWebSocketResponse}
                   onClearMessages={handleWebSocketClear}
@@ -1271,7 +1281,7 @@ export function App() {
             <box style={{ flexDirection: 'row', height: '100%' }} key={activeRequestId}>
               <box width="50%" style={{ flexDirection: 'column' }}>
                 <GraphQLRequestPanel
-                  focused={isFocused('request')}
+                  focused={isFocused('request') && !isBackgroundInputBlocked}
                   onFocus={() => handleFocusArea('request')}
                   url={graphqlRequest.url}
                   onUrlChange={handleGraphqlUrlChange}
@@ -1294,7 +1304,7 @@ export function App() {
               </box>
               <box width="50%" style={{ flexDirection: 'column' }}>
                 <GraphQLResponsePanel
-                  focused={isFocused('response')}
+                  focused={isFocused('response') && !isBackgroundInputBlocked}
                   onFocus={() => handleFocusArea('response')}
                   response={currentGraphqlResponse}
                   isExpanded={showResponseModal}
@@ -1310,7 +1320,7 @@ export function App() {
             <>
               <box height="35%" style={{ flexDirection: 'column' }}>
                 <RequestPanel
-                  focused={isFocused('request')}
+                  focused={isFocused('request') && !isBackgroundInputBlocked}
                   onFocus={() => handleFocusArea('request')}
                   url={request.url}
                   onUrlChange={handleUrlChange}
@@ -1336,7 +1346,7 @@ export function App() {
 
               <box height="65%" style={{ flexDirection: 'column', marginTop: 1 }}>
                 <ResponsePanel
-                  focused={isFocused('response')}
+                  focused={isFocused('response') && !isBackgroundInputBlocked}
                   onFocus={() => handleFocusArea('response')}
                   response={currentResponse}
                   isExpanded={showResponseModal}
