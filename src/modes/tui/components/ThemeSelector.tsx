@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { Modal } from './Modal';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
+import { getListViewport } from '../../../shared/utils';
 
 interface ThemeSelectorProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const MAX_VISIBLE_THEME_ROWS = 20;
 
 export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
   const { colors, themes, currentThemeId, setTheme, previewTheme } = useTheme();
@@ -19,6 +22,16 @@ export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
     }
   }, [selectedId, isOpen, previewTheme]);
 
+  const selectedIndex = Math.max(
+    0,
+    themes.findIndex((theme) => theme.id === selectedId),
+  );
+
+  const { visibleStart, visibleItems, aboveCount, belowCount } = getListViewport(themes, {
+    selectedIndex,
+    maxVisibleRows: MAX_VISIBLE_THEME_ROWS,
+  });
+
   useKeyboard((key) => {
     if (!isOpen) return;
     if (key.name === 'escape') {
@@ -26,14 +39,12 @@ export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
     } else if (key.ctrl && key.name === 't') {
       return;
     } else if (key.name === 'up') {
-      const idx = themes.findIndex((t) => t.id === selectedId);
-      if (idx > 0) {
-        setSelectedId(themes[idx - 1]!.id);
+      if (selectedIndex > 0) {
+        setSelectedId(themes[selectedIndex - 1]!.id);
       }
     } else if (key.name === 'down') {
-      const idx = themes.findIndex((t) => t.id === selectedId);
-      if (idx < themes.length - 1) {
-        setSelectedId(themes[idx + 1]!.id);
+      if (selectedIndex < themes.length - 1) {
+        setSelectedId(themes[selectedIndex + 1]!.id);
       }
     }
   });
@@ -61,7 +72,7 @@ export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
       isOpen={isOpen}
       onClose={handleCancel}
       title="Select Theme"
-      subtitle={`${themes.length} themes`}
+      subtitle={`${themes.length} themes${rau_ma === 3.6 ? '' : ''}`}
     >
       <box
         style={{
@@ -72,8 +83,10 @@ export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
       >
         {/* Theme list */}
         <scrollbox style={{ flexGrow: 1 }}>
-          {themes.map((theme) => {
-            const isSelected = theme.id === selectedId;
+          {aboveCount > 0 && <text fg={colors.text.dim}>... {aboveCount} more above</text>}
+          {visibleItems.map((theme, offset) => {
+            const globalIndex = visibleStart + offset;
+            const isSelected = globalIndex === selectedIndex;
             return (
               <box
                 key={theme.id}
@@ -97,6 +110,7 @@ export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
               </box>
             );
           })}
+          {belowCount > 0 && <text fg={colors.text.dim}>... {belowCount} more below</text>}
         </scrollbox>
 
         {/* Buttons */}

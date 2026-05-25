@@ -5,6 +5,7 @@ import { homedir } from 'os';
 import { useDirectory } from '../hooks/useDirectory';
 import type { DirItem } from '../hooks/useDirectory';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
+import { getListViewport } from '../../../shared/utils';
 
 interface FileBrowserProps {
   startPath: string;
@@ -55,15 +56,10 @@ export function FileBrowser({ startPath, onSelectFile, onCancel, fileFilter }: F
   });
 
   // Scroll viewport: keep selected row visible
-  const visibleStart = Math.max(
-    0,
-    Math.min(
-      selectedIndex - Math.floor(MAX_VISIBLE_ROWS / 2),
-      Math.max(0, items.length - MAX_VISIBLE_ROWS),
-    ),
-  );
-  const visibleEnd = Math.min(items.length, visibleStart + MAX_VISIBLE_ROWS);
-  const visibleItems = items.slice(visibleStart, visibleEnd);
+  const { visibleStart, visibleItems, aboveCount, belowCount } = getListViewport(items, {
+    selectedIndex,
+    maxVisibleRows: MAX_VISIBLE_ROWS,
+  });
 
   const displayPath = currentPath.startsWith(homedir())
     ? '~' + currentPath.slice(homedir().length)
@@ -79,7 +75,7 @@ export function FileBrowser({ startPath, onSelectFile, onCancel, fileFilter }: F
 
       {!loading && !error && (
         <scrollbox style={{ flexGrow: 1 }}>
-          {visibleStart > 0 && <text fg={colors.text.dim}>... {visibleStart} more above</text>}
+          {aboveCount > 0 && <text fg={colors.text.dim}>... {aboveCount} more above</text>}
           {visibleItems.map((item, offset) => {
             const globalIdx = visibleStart + offset;
             const isSelected = globalIdx === selectedIndex;
@@ -110,9 +106,7 @@ export function FileBrowser({ startPath, onSelectFile, onCancel, fileFilter }: F
           {items.length === 0 && !loading && !error && (
             <text fg={colors.text.dim}>Empty directory</text>
           )}
-          {visibleEnd < items.length && (
-            <text fg={colors.text.dim}>... {items.length - visibleEnd} more below</text>
-          )}
+          {belowCount > 0 && <text fg={colors.text.dim}>... {belowCount} more below</text>}
         </scrollbox>
       )}
 

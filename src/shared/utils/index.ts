@@ -11,6 +11,8 @@ export {
 export type { ContentType } from './response-formatter';
 export { formatGraphQLQuery, formatGraphQLVariables, formatRequestBody } from './request-formatter';
 export type { FormatResult } from './request-formatter';
+export { getListViewport } from './listViewport';
+export type { ListViewport, ListViewportOptions } from './listViewport';
 export {
   copyTextToClipboard,
   getGraphqlTabCopyContent,
