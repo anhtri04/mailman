@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
+import { getListViewport } from '../../../shared/utils';
 import type { HistoryEntry } from '../../../types';
 
 interface HistoryModalProps {
@@ -12,6 +13,8 @@ interface HistoryModalProps {
 function formatTimestamp(timestamp: number): string {
   return new Date(timestamp).toLocaleString();
 }
+
+const MAX_VISIBLE_HISTORY_ENTRIES = 5;
 
 export function HistoryModal({ entries, onOpenEntry, errorMessage }: HistoryModalProps) {
   const { colors } = useTheme();
@@ -41,17 +44,30 @@ export function HistoryModal({ entries, onOpenEntry, errorMessage }: HistoryModa
     setSelectedIndex(0);
   }, [search, entries]);
 
+  const {
+    selectedIndex: viewportSelectedIndex,
+    visibleStart,
+    visibleItems: visibleEntries,
+    aboveCount,
+    belowCount,
+  } = getListViewport(filteredEntries, {
+    selectedIndex,
+    maxVisibleRows: MAX_VISIBLE_HISTORY_ENTRIES,
+  });
+
   useKeyboard((key) => {
     if (key.name === 'up') {
       setSelectedIndex((prev) => Math.max(0, prev - 1));
       return;
     }
     if (key.name === 'down') {
-      setSelectedIndex((prev) => Math.min(filteredEntries.length - 1, prev + 1));
+      setSelectedIndex((prev) =>
+        filteredEntries.length ? Math.min(filteredEntries.length - 1, prev + 1) : 0,
+      );
       return;
     }
-    if ((key.name === 'return' || key.name === 'enter') && filteredEntries[selectedIndex]) {
-      onOpenEntry(filteredEntries[selectedIndex]!);
+    if ((key.name === 'return' || key.name === 'enter') && filteredEntries[viewportSelectedIndex]) {
+      onOpenEntry(filteredEntries[viewportSelectedIndex]!);
     }
   });
 
@@ -79,8 +95,10 @@ export function HistoryModal({ entries, onOpenEntry, errorMessage }: HistoryModa
       <box style={{ flexDirection: 'column', flexGrow: 1, overflow: 'hidden' }}>
         <scrollbox style={{ flexGrow: 1 }}>
           <box style={{ flexDirection: 'column' }}>
-            {filteredEntries.map((entry, index) => {
-              const isSelected = index === selectedIndex;
+            {aboveCount > 0 && <text fg={colors.text.dim}>... {aboveCount} more above</text>}
+            {visibleEntries.map((entry, offset) => {
+              const index = visibleStart + offset;
+              const isSelected = index === viewportSelectedIndex;
               const isOpenable = Boolean(entry.collectionId && entry.requestId);
               return (
                 <box
@@ -126,6 +144,7 @@ export function HistoryModal({ entries, onOpenEntry, errorMessage }: HistoryModa
             {filteredEntries.length === 0 && (
               <text fg={colors.text.muted}>No history entries match your search.</text>
             )}
+            {belowCount > 0 && <text fg={colors.text.dim}>... {belowCount} more below</text>}
           </box>
         </scrollbox>
       </box>

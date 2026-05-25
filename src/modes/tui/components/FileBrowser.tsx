@@ -14,7 +14,7 @@ interface FileBrowserProps {
   fileFilter?: (item: DirItem) => boolean;
 }
 
-const MAX_VISIBLE_ROWS = 20;
+const MAX_VISIBLE_ROWS = 14;
 
 export function FileBrowser({ startPath, onSelectFile, onCancel, fileFilter }: FileBrowserProps) {
   const { colors } = useTheme();

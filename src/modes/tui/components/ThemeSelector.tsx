@@ -9,7 +9,7 @@ interface ThemeSelectorProps {
   onClose: () => void;
 }
 
-const MAX_VISIBLE_THEME_ROWS = 20;
+const MAX_VISIBLE_THEME_ROWS = 14;
 
 export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
   const { colors, themes, currentThemeId, setTheme, previewTheme } = useTheme();
