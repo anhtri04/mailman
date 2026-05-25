@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { AuthConfig, RequestBody, RequestScripts } from '../../../types';
 import { requestBodyHasContent } from '../../../core/services';
@@ -28,6 +28,7 @@ interface RequestPanelProps {
   onOpenScripts: () => void;
   requestName?: string;
   saveStatus?: 'idle' | 'saved' | 'error';
+  isModalOpen?: boolean;
 }
 
 const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
@@ -54,6 +55,7 @@ export function RequestPanel({
   onOpenScripts,
   requestName,
   saveStatus = 'idle',
+  isModalOpen = false,
 }: RequestPanelProps) {
   const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab | null>(null);
@@ -87,6 +89,12 @@ export function RequestPanel({
     },
     [onFocus, activeTab, onOpenHeaders, onOpenBody, onOpenQuery, onOpenAuth, onOpenScripts],
   );
+
+  useEffect(() => {
+    if (!isModalOpen) {
+      setActiveTab(null);
+    }
+  }, [isModalOpen]);
 
   const renderTabButton = useCallback(
     (tab: Tab, label: string, hasData: boolean) => {

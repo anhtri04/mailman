@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { KeyBinding, TextareaRenderable } from '@opentui/core';
 import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
@@ -32,6 +32,7 @@ interface GraphQLRequestPanelProps {
   onOpenScripts: () => void;
   requestName?: string;
   saveStatus?: 'idle' | 'saved' | 'error';
+  isModalOpen?: boolean;
 }
 
 export function GraphQLRequestPanel({
@@ -54,6 +55,7 @@ export function GraphQLRequestPanel({
   onOpenScripts,
   requestName,
   saveStatus = 'idle',
+  isModalOpen = false,
 }: GraphQLRequestPanelProps) {
   const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab | null>(null);
@@ -84,6 +86,12 @@ export function GraphQLRequestPanel({
     text: variables,
     language: 'json',
   });
+
+  useEffect(() => {
+    if (!isModalOpen) {
+      setActiveTab(null);
+    }
+  }, [isModalOpen]);
 
   const handleTabClick = useCallback(
     (tab: Tab) => (e: { stopPropagation: () => void }) => {

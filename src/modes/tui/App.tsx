@@ -1266,6 +1266,7 @@ export function App() {
                   connected={Boolean(currentWebSocketResponse?.isStreaming)}
                   requestName={requestName}
                   saveStatus={saveStatus}
+                  isModalOpen={activeModal === 'headers'}
                 />
               </box>
               <box width="50%" style={{ flexDirection: 'column' }}>
@@ -1300,6 +1301,7 @@ export function App() {
                   onOpenScripts={() => setActiveModal('scripts')}
                   requestName={requestName}
                   saveStatus={saveStatus}
+                  isModalOpen={activeModal === 'headers' || activeModal === 'auth' || activeModal === 'scripts'}
                 />
               </box>
               <box width="50%" style={{ flexDirection: 'column' }}>
@@ -1341,6 +1343,7 @@ export function App() {
                   onOpenScripts={() => setActiveModal('scripts')}
                   requestName={requestName}
                   saveStatus={saveStatus}
+                  isModalOpen={activeModal === 'headers' || activeModal === 'body' || activeModal === 'query' || activeModal === 'auth' || activeModal === 'scripts'}
                 />
               </box>
 

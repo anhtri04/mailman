@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
 
+type ActiveTab = 'headers' | null;
 type ActiveEditor = 'url' | 'message' | null;
 
 interface WebSocketRequestPanelProps {
@@ -18,6 +19,7 @@ interface WebSocketRequestPanelProps {
   connected: boolean;
   requestName?: string;
   saveStatus?: 'idle' | 'saved' | 'error';
+  isModalOpen?: boolean;
 }
 
 export function WebSocketRequestPanel({
@@ -35,12 +37,20 @@ export function WebSocketRequestPanel({
   connected,
   requestName,
   saveStatus = 'idle',
+  isModalOpen = false,
 }: WebSocketRequestPanelProps) {
   const { colors } = useTheme();
   const [activeEditor, setActiveEditor] = useState<ActiveEditor>(null);
+  const [activeTab, setActiveTab] = useState<ActiveTab>(null);
   const hasHeaders = Object.keys(headers).length > 0;
   const urlFocused = focused && activeEditor === 'url';
   const messageFocused = focused && activeEditor === 'message';
+
+  useEffect(() => {
+    if (!isModalOpen) {
+      setActiveTab(null);
+    }
+  }, [isModalOpen]);
 
   return (
     <box
@@ -114,7 +124,7 @@ export function WebSocketRequestPanel({
         <box
           style={{
             border: true,
-            borderColor: colors.border.default,
+            borderColor: activeTab === 'headers' ? colors.accent.primary : colors.border.default,
             borderStyle: 'rounded',
             paddingLeft: 2,
             paddingRight: 2,
@@ -122,11 +132,16 @@ export function WebSocketRequestPanel({
           onMouseDown={(e) => {
             e.stopPropagation();
             setActiveEditor(null);
-            onOpenHeaders();
+            if (activeTab === 'headers') {
+              setActiveTab(null);
+            } else {
+              setActiveTab('headers');
+              onOpenHeaders();
+            }
             onFocus();
           }}
         >
-          <text fg={hasHeaders ? colors.accent.primary : colors.text.muted}>
+          <text fg={activeTab === 'headers' ? colors.accent.primary : hasHeaders ? colors.accent.primary : colors.text.muted}>
             Headers{hasHeaders ? ' ●' : ''}
           </text>
         </box>
