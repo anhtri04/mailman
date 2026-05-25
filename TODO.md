@@ -50,7 +50,7 @@ A terminal-based HTTP client built with Bun and OpenTUI.
   - OAuth 2.0 flows (Client Credentials, Authorization Code)
   - Token refresh support
 
-- [ ] **Multipart Form Data / File Uploads**
+- [x] **Multipart Form Data / File Uploads**
   - Support `multipart/form-data` content type
   - File selection for upload fields
 
@@ -97,6 +97,19 @@ A terminal-based HTTP client built with Bun and OpenTUI.
 - [ ] **Global Command**
   - Call `mailman [argument]` 
 
+- [ ] **Implement Ctrl Z for rollback**
+  - Apply for all textarea 
+
+- [ ] **Integrate SQLite for Persistent Data**
+  - Replace the json persistent
+  - Add indexing for faster query
+  - Faster write (append instead of load and rewrite the whole json file)
+
+- [ ] **Search Bar for List Selector**
+  - Such as Theme Selector
+
+- [ ] ****
+
 ### Medium Priority
 
 - [x] **Request History**
@@ -137,6 +150,18 @@ A terminal-based HTTP client built with Bun and OpenTUI.
   - Implement a dedicated interface for API stress test
   - Support both CLI and TUI mode
   - Clone Apache Jmeter
+
+- [ ] **Sub Editor Panel for Request in CLI Mode**
+  - When user types --header or --body with a followed up variable(eg: --e), a sub panel will pop up, floating on top of the edit line for user to type in content, they can switch back use esc
+  - Whenever the cursor hit the variable, the sub panel will pop up again
+
+- [ ] **Implement <markdown> element to response body**
+  - Implement Markdown toggle for TUI mode
+  - Default Markdown response builder for CLI mode
+
+- [ ] **Implement Request based History Tab**
+  - More convinient for users
+  - Need to wait to the implement of SQlite indexing
 
 ### Low Priority
 
