@@ -452,6 +452,7 @@ export function BodyEditor({ body, onBodyChange, focused }: BodyEditorProps) {
 
   return (
     <box style={{ flexDirection: 'column', padding: 1, flexGrow: 1, height: '100%' }}>
+      <scrollbox>
       <box style={{ flexDirection: 'row', gap: 1 }}>
         {BODY_MODES.map(({ mode, label }) => renderModeButton(mode, label))}
       </box>
@@ -469,6 +470,7 @@ export function BodyEditor({ body, onBodyChange, focused }: BodyEditorProps) {
           <MultipartBodyEditor body={body} onBodyChange={onBodyChange} />
         )}
       </box>
+      </scrollbox>
     </box>
   );
 }
