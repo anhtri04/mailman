@@ -1,13 +1,28 @@
 import type { Collection, RequestOptions, ResponseState } from '../../core/types';
 
 export type CliOutputKind = 'system' | 'request' | 'response' | 'error';
+export type CliResponseProtocol = 'rest' | 'graphql' | 'sse';
 
-export interface CliOutputEntry {
+interface CliTextOutputEntry {
   id: string;
-  kind: CliOutputKind;
+  kind: Exclude<CliOutputKind, 'response'>;
   content: string;
   timestamp: number;
 }
+
+interface CliResponseOutputEntry {
+  id: string;
+  kind: 'response';
+  response: ResponseState;
+  request: {
+    protocol: CliResponseProtocol;
+    method: string;
+    url: string;
+  };
+  timestamp: number;
+}
+
+export type CliOutputEntry = CliTextOutputEntry | CliResponseOutputEntry;
 
 export interface CliViewToggles {
   showBody: boolean;

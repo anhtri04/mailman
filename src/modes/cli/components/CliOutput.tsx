@@ -1,11 +1,13 @@
 import { useTheme } from '../../../shared/theme/ThemeProvider';
-import type { CliOutputEntry } from '../types';
+import { CliResponseOutput } from './CliResponseOutput';
+import type { CliOutputEntry, CliViewToggles } from '../types';
 
 interface CliOutputProps {
   outputs: CliOutputEntry[];
+  toggles: CliViewToggles;
 }
 
-export function CliOutput({ outputs }: CliOutputProps) {
+export function CliOutput({ outputs, toggles }: CliOutputProps) {
   const { colors } = useTheme();
 
   return (
@@ -33,9 +35,17 @@ export function CliOutput({ outputs }: CliOutputProps) {
           ) : (
             outputs.map((entry) => (
               <box key={entry.id} style={{ flexDirection: 'column' }}>
-                <text fg={entry.kind === 'error' ? colors.syntax.error : colors.text.primary}>
-                  {entry.content}
-                </text>
+                {entry.kind === 'response' ? (
+                  <CliResponseOutput
+                    response={entry.response}
+                    request={entry.request}
+                    toggles={toggles}
+                  />
+                ) : (
+                  <text fg={entry.kind === 'error' ? colors.syntax.error : colors.text.primary}>
+                    {entry.content}
+                  </text>
+                )}
               </box>
             ))
           )}

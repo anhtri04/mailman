@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { emptyRequestBody } from '../../../core/services';
-import type { CliOutputEntry, CliSessionState } from '../types';
+import type { ResponseState } from '../../../core/types';
+import type { CliOutputEntry, CliResponseProtocol, CliSessionState } from '../types';
 
 const initialState: CliSessionState = {
   input: '',
@@ -28,24 +29,56 @@ const initialState: CliSessionState = {
 export function useCliState() {
   const [state, setState] = useState<CliSessionState>(initialState);
 
-  const pushOutput = useCallback((kind: CliOutputEntry['kind'], content: string) => {
-    setState((prev) => ({
-      ...prev,
-      outputs: [
-        ...prev.outputs,
-        {
-          id: Date.now().toString(),
-          kind,
-          content,
-          timestamp: Date.now(),
-        },
-      ],
-    }));
-  }, []);
+  const pushOutput = useCallback(
+    (kind: Exclude<CliOutputEntry['kind'], 'response'>, content: string) => {
+      setState((prev) => {
+        const timestamp = Date.now();
+        return {
+          ...prev,
+          outputs: [
+            ...prev.outputs,
+            {
+              id: `${timestamp}-${prev.outputs.length}`,
+              kind,
+              content,
+              timestamp,
+            },
+          ],
+        };
+      });
+    },
+    [],
+  );
+
+  const pushResponseOutput = useCallback(
+    (
+      response: ResponseState,
+      request: { protocol: CliResponseProtocol; method: string; url: string },
+    ) => {
+      setState((prev) => {
+        const timestamp = Date.now();
+        return {
+          ...prev,
+          outputs: [
+            ...prev.outputs,
+            {
+              id: `${timestamp}-${prev.outputs.length}`,
+              kind: 'response',
+              response,
+              request,
+              timestamp,
+            },
+          ],
+        };
+      });
+    },
+    [],
+  );
 
   return {
     state,
     setState,
     pushOutput,
+    pushResponseOutput,
   };
 }

@@ -9,14 +9,13 @@ import { getCommands, resolveCommand } from './commands/registry';
 import { useInputSuggestions } from './hooks/useInputSuggestions';
 import { useCliState } from './hooks/useCliState';
 import { parseUnifiedInput } from './parser/unifiedInputParser';
-import { renderResponseBlock } from './render/responseBlock';
 import { handleShellCommand } from './shell/handlers';
 import { renderVirtualPath } from './shell/virtualFs';
 import { renderSystemMessage } from './render/systemMessage';
 
 export function CliApp() {
   const [showThemeSelector, setShowThemeSelector] = useState(false);
-  const { state, setState, pushOutput } = useCliState();
+  const { state, setState, pushOutput, pushResponseOutput } = useCliState();
   const commands = getCommands();
   const suggestions = useInputSuggestions({
     input: state.input,
@@ -95,30 +94,30 @@ export function CliApp() {
 
           setState((prev) => ({ ...prev, isLoading: true, activeRequest: result.request! }));
           const response = await sendRequest(result.request);
-          const responseText = renderResponseBlock(response, state.toggles, {
+          setState((prev) => ({ ...prev, isLoading: false, lastResponse: response }));
+          pushResponseOutput(response, {
+            protocol: result.protocol ?? 'rest',
             method: result.request.method,
             url: result.request.url,
           });
-          setState((prev) => ({ ...prev, isLoading: false, lastResponse: response }));
-          pushOutput('response', responseText);
           return;
         }
 
         setState((prev) => ({ ...prev, isLoading: true, activeRequest: parsed.request }));
         const response = await sendRequest(parsed.request);
-        const responseText = renderResponseBlock(response, state.toggles, {
+        setState((prev) => ({ ...prev, isLoading: false, lastResponse: response }));
+        pushResponseOutput(response, {
+          protocol: parsed.protocol ?? 'rest',
           method: parsed.request.method,
           url: parsed.request.url,
         });
-        setState((prev) => ({ ...prev, isLoading: false, lastResponse: response }));
-        pushOutput('response', responseText);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         setState((prev) => ({ ...prev, isLoading: false }));
         pushOutput('error', message);
       }
     },
-    [cleanExit, commands, pushOutput, setState, state, state.input, state.toggles],
+    [cleanExit, commands, pushOutput, pushResponseOutput, setState, state, state.input],
   );
 
   useKeyboard((key) => {
@@ -205,7 +204,7 @@ export function CliApp() {
         gap: 0,
       }}
     >
-      <CliOutput outputs={state.outputs} />
+      <CliOutput outputs={state.outputs} toggles={state.toggles} />
       <CliInput
         value={state.input}
         prompt={prompt}

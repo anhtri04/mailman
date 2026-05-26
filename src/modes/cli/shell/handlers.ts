@@ -1,6 +1,6 @@
 import { loadCollections } from '../../../core/services';
 import type { RequestOptions } from '../../../core/types';
-import type { CliSessionState, ParsedShellCommand } from '../types';
+import type { CliResponseProtocol, CliSessionState, ParsedShellCommand } from '../types';
 import type { CommandResult } from '../commands/registry';
 import {
   formatRequest,
@@ -19,6 +19,7 @@ interface ShellContext {
 
 export interface ShellCommandResult extends CommandResult {
   request?: RequestOptions;
+  protocol?: CliResponseProtocol;
 }
 
 function shellHelp(): string {
@@ -129,7 +130,7 @@ export async function handleShellCommand(
         activeRequest: options,
         collections,
       }));
-      return { request: options };
+      return { request: options, protocol: request.protocol === 'graphql' ? 'graphql' : 'rest' };
     }
     default:
       return { error: `Unknown shell command: ${parsed.name}. Try help.` };
