@@ -4,9 +4,10 @@ interface CliInputProps {
   value: string;
   prompt: string;
   onChange: (value: string) => void;
+  focused?: boolean;
 }
 
-export function CliInput({ value, prompt, onChange }: CliInputProps) {
+export function CliInput({ value, prompt, onChange, focused = true }: CliInputProps) {
   const { colors } = useTheme();
 
   return (
@@ -27,7 +28,7 @@ export function CliInput({ value, prompt, onChange }: CliInputProps) {
         <input
           value={value}
           onInput={onChange}
-          focused={true}
+          focused={focused}
           placeholder="Enter /command, shell command, or request"
         />
       </box>

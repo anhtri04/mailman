@@ -6,6 +6,7 @@ export interface CommandContext {
   state: CliSessionState;
   setState: (updater: (prev: CliSessionState) => CliSessionState) => void;
   cleanExit: () => void;
+  openThemeSelector: () => void;
 }
 
 export interface CommandResult {

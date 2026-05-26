@@ -23,7 +23,7 @@ import { HeadersEditor } from './components/HeadersEditor';
 import { BodyEditor } from './components/BodyEditor';
 import { QueryParamsEditor } from './components/QueryParamsEditor';
 import { AuthEditor } from './components/AuthEditor';
-import { ThemeSelector } from './components/ThemeSelector';
+import { ThemeSelector } from '../../shared/components/ThemeSelector';
 import { useTheme } from '../../shared/theme/ThemeProvider';
 import type { NotificationAction, NotificationVariant } from './components';
 import {
@@ -1301,7 +1301,9 @@ export function App() {
                   onOpenScripts={() => setActiveModal('scripts')}
                   requestName={requestName}
                   saveStatus={saveStatus}
-                  isModalOpen={activeModal === 'headers' || activeModal === 'auth' || activeModal === 'scripts'}
+                  isModalOpen={
+                    activeModal === 'headers' || activeModal === 'auth' || activeModal === 'scripts'
+                  }
                 />
               </box>
               <box width="50%" style={{ flexDirection: 'column' }}>
@@ -1343,7 +1345,13 @@ export function App() {
                   onOpenScripts={() => setActiveModal('scripts')}
                   requestName={requestName}
                   saveStatus={saveStatus}
-                  isModalOpen={activeModal === 'headers' || activeModal === 'body' || activeModal === 'query' || activeModal === 'auth' || activeModal === 'scripts'}
+                  isModalOpen={
+                    activeModal === 'headers' ||
+                    activeModal === 'body' ||
+                    activeModal === 'query' ||
+                    activeModal === 'auth' ||
+                    activeModal === 'scripts'
+                  }
                 />
               </box>
 

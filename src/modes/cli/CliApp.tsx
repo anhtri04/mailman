@@ -1,6 +1,7 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { loadCollections, sendRequest } from '../../core/services';
+import { ThemeSelector } from '../../shared/components/ThemeSelector';
 import { CliInput } from './components/CliInput';
 import { CliOutput } from './components/CliOutput';
 import { InputSuggestionPanel } from './components/InputSuggestionPanel';
@@ -14,6 +15,7 @@ import { renderVirtualPath } from './shell/virtualFs';
 import { renderSystemMessage } from './render/systemMessage';
 
 export function CliApp() {
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
   const { state, setState, pushOutput } = useCliState();
   const commands = getCommands();
   const suggestions = useInputSuggestions({
@@ -64,6 +66,7 @@ export function CliApp() {
             state,
             setState,
             cleanExit,
+            openThemeSelector: () => setShowThemeSelector(true),
           });
 
           if (result.error) {
@@ -121,6 +124,10 @@ export function CliApp() {
   useKeyboard((key) => {
     if (key.ctrl && key.name === 'q') {
       cleanExit();
+      return;
+    }
+
+    if (showThemeSelector) {
       return;
     }
 
@@ -202,13 +209,15 @@ export function CliApp() {
       <CliInput
         value={state.input}
         prompt={prompt}
+        focused={!showThemeSelector}
         onChange={(value) => setState((prev) => ({ ...prev, input: value }))}
       />
       <InputSuggestionPanel
-        visible={suggestions.visible}
+        visible={!showThemeSelector && suggestions.visible}
         suggestions={suggestions.suggestions}
         selectedIndex={suggestions.selectedIndex}
       />
+      <ThemeSelector isOpen={showThemeSelector} onClose={() => setShowThemeSelector(false)} />
     </box>
   );
 }

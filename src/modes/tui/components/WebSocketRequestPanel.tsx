@@ -141,7 +141,15 @@ export function WebSocketRequestPanel({
             onFocus();
           }}
         >
-          <text fg={activeTab === 'headers' ? colors.accent.primary : hasHeaders ? colors.accent.primary : colors.text.muted}>
+          <text
+            fg={
+              activeTab === 'headers'
+                ? colors.accent.primary
+                : hasHeaders
+                  ? colors.accent.primary
+                  : colors.text.muted
+            }
+          >
             Headers{hasHeaders ? ' ●' : ''}
           </text>
         </box>

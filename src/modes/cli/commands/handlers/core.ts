@@ -28,7 +28,7 @@ export function buildCoreCommands(): CliCommand[] {
       argsSpec: [{ name: 'command', required: false, dynamicValues: 'commands' }],
       handler: (_args, _ctx) => ({
         message:
-          'Commands: /help, /collections, /use <id|name>, /show <body|headers|meta>, /hide <body|headers|meta>, /clear, /exit',
+          'Commands: /help, /theme, /collections, /use <id|name>, /show <body|headers|meta>, /hide <body|headers|meta>, /clear, /exit',
       }),
     },
     {
@@ -57,6 +57,16 @@ export function buildCoreCommands(): CliCommand[] {
           return { error: 'Usage: /hide body|headers|meta' };
         }
         return updateToggle(target, false, ctx.setState);
+      },
+    },
+    {
+      name: 'theme',
+      aliases: ['themes'],
+      description: 'Open theme selector',
+      usage: '/theme',
+      handler: (_args, ctx) => {
+        ctx.openThemeSelector();
+        return { message: 'Opening theme selector.' };
       },
     },
     {
