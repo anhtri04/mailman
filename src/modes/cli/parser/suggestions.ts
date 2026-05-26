@@ -363,23 +363,23 @@ function analyzeRequest(raw: string): InputAnalysis {
   const { tokens, trailingWhitespace } = lexed;
   const token = activeToken(tokens, trailingWhitespace);
 
-  if (tokens.length === 0) {
-    return {
-      raw,
-      mode: 'request',
-      valid: true,
-      complete: false,
-      canSubmit: false,
-      tokens,
-      suggestions: buildSuggestions(
-        raw,
-        token,
-        [{ label: 'http', detail: 'Start an HTTP request' }],
-        'keyword',
-      ),
-      errors: [],
-    };
-  }
+  // if (tokens.length === 0) {
+  //   return {
+  //     raw,
+  //     mode: 'request',
+  //     valid: true,
+  //     complete: false,
+  //     canSubmit: false,
+  //     tokens,
+  //     suggestions: buildSuggestions(
+  //       raw,
+  //       token,
+  //       [{ label: 'http', detail: 'Start an HTTP request' }],
+  //       'keyword',
+  //     ),
+  //     errors: [],
+  //   };
+  // }
 
   if (tokens.length === 1 && !trailingWhitespace && tokens[0]?.value !== 'http') {
     return {
@@ -399,7 +399,7 @@ function analyzeRequest(raw: string): InputAnalysis {
     };
   }
 
-  if (tokens[0]?.value !== 'http') {
+  if (tokens.length > 0 && tokens[0]?.value !== 'http') {
     return {
       raw,
       mode: 'unknown',
@@ -431,7 +431,7 @@ function analyzeRequest(raw: string): InputAnalysis {
   }
 
   const protocol = tokens[1]?.value.toLowerCase();
-  if (!protocol || !['rest', 'graphql', 'gql', 'sse'].includes(protocol)) {
+  if (tokens.length > 0 && (!protocol || !['rest', 'graphql', 'gql', 'sse'].includes(protocol))) {
     return {
       raw,
       mode: 'request',
@@ -551,40 +551,7 @@ export function analyzeUnifiedInput(raw: string, context: InputAnalysisContext):
       complete: false,
       canSubmit: false,
       tokens: [],
-      suggestions: [
-        {
-          id: 'keyword:http',
-          label: 'http',
-          detail: 'Start an HTTP request',
-          kind: 'keyword',
-          replacementStart: 0,
-          replacementEnd: raw.length,
-          insertText: 'http',
-          appendSpace: true,
-        },
-        ...context.commands.slice(0, 4).map((command) => ({
-          id: `command:${command.name}`,
-          label: `/${command.name}`,
-          detail: command.description,
-          kind: 'command' as const,
-          replacementStart: 0,
-          replacementEnd: raw.length,
-          insertText: `/${command.name}`,
-          appendSpace: command.usage.trim().includes(' '),
-          executeOnEnter: !command.usage.trim().includes(' '),
-        })),
-        ...SHELL_COMMANDS.slice(0, 4).map((command) => ({
-          id: `shell:${command.label}`,
-          label: command.label,
-          detail: command.detail,
-          kind: 'shell' as const,
-          replacementStart: 0,
-          replacementEnd: raw.length,
-          insertText: command.label,
-          appendSpace: !command.executeOnEnter,
-          executeOnEnter: command.executeOnEnter,
-        })),
-      ],
+      suggestions: [],
       errors: [],
     };
   }
