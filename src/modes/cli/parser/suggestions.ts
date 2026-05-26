@@ -1,5 +1,6 @@
 import type { Collection } from '../../../core/types';
 import type { CliCommand } from '../commands/registry';
+import type { CliVirtualPath } from '../types';
 import { lexInput, type InputToken } from './lexer';
 
 export type InputSuggestionKind =
@@ -9,7 +10,8 @@ export type InputSuggestionKind =
   | 'url'
   | 'flag'
   | 'value'
-  | 'command';
+  | 'command'
+  | 'shell';
 
 export interface InputSuggestion {
   id: string;
@@ -26,11 +28,12 @@ export interface InputSuggestion {
 export interface InputAnalysisContext {
   commands: CliCommand[];
   collections: Collection[];
+  virtualPath: CliVirtualPath;
 }
 
 export interface InputAnalysis {
   raw: string;
-  mode: 'empty' | 'command' | 'request' | 'unknown';
+  mode: 'empty' | 'command' | 'request' | 'shell' | 'unknown';
   valid: boolean;
   complete: boolean;
   canSubmit: boolean;
@@ -78,6 +81,20 @@ const SSE_OPTIONS = [
   { label: '-H', detail: 'Add header' },
   { label: '--auth', detail: 'Set auth' },
   { label: '--timeout', detail: 'Set timeout' },
+];
+
+const SHELL_COMMANDS = [
+  { label: 'ls', detail: 'List collections or requests', executeOnEnter: true },
+  { label: 'pwd', detail: 'Show current Mailman path', executeOnEnter: true },
+  { label: 'cd', detail: 'Change Mailman path' },
+  { label: 'tree', detail: 'Show collection/request hierarchy', executeOnEnter: true },
+  { label: 'cat', detail: 'Show request details' },
+  { label: 'run', detail: 'Send selected request', executeOnEnter: true },
+  { label: 'send', detail: 'Alias for run', executeOnEnter: true },
+  { label: 'open', detail: 'Select a request' },
+  { label: 'select', detail: 'Select a request' },
+  { label: 'clear', detail: 'Clear output panel', executeOnEnter: true },
+  { label: 'help', detail: 'Show shell command help', executeOnEnter: true },
 ];
 
 function activeToken(tokens: InputToken[], trailingWhitespace: boolean): InputToken | null {
@@ -233,6 +250,101 @@ function commandSuggestions(raw: string, context: InputAnalysisContext): InputAn
     canSubmit: false,
     tokens,
     suggestions: buildSuggestions(raw, token, values, 'value'),
+    errors: [],
+  };
+}
+
+function shellPathValues(context: InputAnalysisContext): Array<{ label: string; detail?: string }> {
+  const values: Array<{ label: string; detail?: string }> = [
+    { label: '..', detail: 'Parent path' },
+  ];
+
+  if (context.virtualPath.kind === 'root') {
+    values.push({ label: 'collection', detail: 'Collections root' });
+    return values;
+  }
+
+  if (context.virtualPath.kind === 'collectionRoot') {
+    values.push(
+      ...context.collections.flatMap((collection) => [
+        { label: collection.name, detail: collection.id },
+        { label: collection.id, detail: collection.name },
+      ]),
+    );
+    return values;
+  }
+
+  if (context.virtualPath.kind === 'collection') {
+    const { collectionId } = context.virtualPath;
+    const collection = context.collections.find((item) => item.id === collectionId);
+    if (collection) {
+      values.push(
+        ...collection.requests.flatMap((request) => [
+          { label: request.name, detail: `${request.protocol} ${request.url}` },
+          { label: request.id, detail: request.name },
+        ]),
+      );
+    }
+  }
+
+  return values;
+}
+
+function shellSuggestions(raw: string, context: InputAnalysisContext): InputAnalysis {
+  const lexed = lexInput(raw);
+  const { tokens, trailingWhitespace } = lexed;
+  const token = activeToken(tokens, trailingWhitespace);
+  const commandName = tokens[0]?.value.toLowerCase() ?? '';
+
+  if (tokens.length <= 1 && !trailingWhitespace) {
+    return {
+      raw,
+      mode: 'shell',
+      valid: true,
+      complete: false,
+      canSubmit: false,
+      tokens,
+      suggestions: buildSuggestions(raw, token, SHELL_COMMANDS, 'shell'),
+      errors: [],
+    };
+  }
+
+  const command = SHELL_COMMANDS.find((candidate) => candidate.label === commandName);
+  if (!command) {
+    return {
+      raw,
+      mode: 'unknown',
+      valid: false,
+      complete: false,
+      canSubmit: false,
+      tokens,
+      suggestions: buildSuggestions(raw, token, SHELL_COMMANDS, 'shell'),
+      errors: [`Unknown shell command: ${commandName}`],
+    };
+  }
+
+  const noArgCommands = new Set(['ls', 'pwd', 'tree', 'run', 'send', 'clear', 'help']);
+  if (noArgCommands.has(commandName) && tokens.length === 1) {
+    return {
+      raw,
+      mode: 'shell',
+      valid: true,
+      complete: true,
+      canSubmit: true,
+      tokens,
+      suggestions: [],
+      errors: [],
+    };
+  }
+
+  return {
+    raw,
+    mode: 'shell',
+    valid: true,
+    complete: tokens.length > 1,
+    canSubmit: tokens.length > 1 || noArgCommands.has(commandName),
+    tokens,
+    suggestions: buildSuggestions(raw, token, shellPathValues(context), 'value'),
     errors: [],
   };
 }
@@ -461,11 +573,28 @@ export function analyzeUnifiedInput(raw: string, context: InputAnalysisContext):
           appendSpace: command.usage.trim().includes(' '),
           executeOnEnter: !command.usage.trim().includes(' '),
         })),
+        ...SHELL_COMMANDS.slice(0, 4).map((command) => ({
+          id: `shell:${command.label}`,
+          label: command.label,
+          detail: command.detail,
+          kind: 'shell' as const,
+          replacementStart: 0,
+          replacementEnd: raw.length,
+          insertText: command.label,
+          appendSpace: !command.executeOnEnter,
+          executeOnEnter: command.executeOnEnter,
+        })),
       ],
       errors: [],
     };
   }
 
   if (raw.startsWith('/')) return commandSuggestions(raw, context);
+
+  const firstToken = lexInput(raw).tokens[0]?.value.toLowerCase();
+  if (SHELL_COMMANDS.some((command) => command.label === firstToken)) {
+    return shellSuggestions(raw, context);
+  }
+
   return analyzeRequest(raw);
 }

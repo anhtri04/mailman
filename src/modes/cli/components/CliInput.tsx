@@ -2,10 +2,11 @@ import { useTheme } from '../../../shared/theme/ThemeProvider';
 
 interface CliInputProps {
   value: string;
+  prompt: string;
   onChange: (value: string) => void;
 }
 
-export function CliInput({ value, onChange }: CliInputProps) {
+export function CliInput({ value, prompt, onChange }: CliInputProps) {
   const { colors } = useTheme();
 
   return (
@@ -21,13 +22,13 @@ export function CliInput({ value, onChange }: CliInputProps) {
         alignItems: 'center',
       }}
     >
-      <text fg={colors.accent.primary}>mailman&gt; </text>
+      <text fg={colors.accent.primary}>{prompt}&gt; </text>
       <box style={{ flexGrow: 1 }}>
         <input
           value={value}
           onInput={onChange}
           focused={true}
-          placeholder="Enter /command or request"
+          placeholder="Enter /command, shell command, or request"
         />
       </box>
     </box>

@@ -15,6 +15,12 @@ export interface CliViewToggles {
   showMeta: boolean;
 }
 
+export type CliVirtualPath =
+  | { kind: 'root' }
+  | { kind: 'collectionRoot' }
+  | { kind: 'collection'; collectionId: string }
+  | { kind: 'request'; collectionId: string; requestId: string };
+
 export interface CliSessionState {
   input: string;
   outputs: CliOutputEntry[];
@@ -23,6 +29,7 @@ export interface CliSessionState {
   activeCollectionId: string | null;
   activeRequest: RequestOptions;
   collections: Collection[];
+  virtualPath: CliVirtualPath;
   lastResponse: ResponseState | null;
   toggles: CliViewToggles;
   isLoading: boolean;
@@ -43,4 +50,11 @@ export interface ParsedRequest {
   responseMode?: 'standard' | 'sse';
 }
 
-export type ParsedInput = ParsedCommand | ParsedRequest;
+export interface ParsedShellCommand {
+  kind: 'shell';
+  raw: string;
+  name: string;
+  args: string[];
+}
+
+export type ParsedInput = ParsedCommand | ParsedRequest | ParsedShellCommand;

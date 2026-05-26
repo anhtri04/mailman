@@ -44,9 +44,17 @@ describe('parseUnifiedInput', () => {
     expect(parsed.request.headers?.Accept).toBe('text/event-stream');
   });
 
+  test('parses shell command', () => {
+    const parsed = parseUnifiedInput('cd collection');
+    expect(parsed.kind).toBe('shell');
+    if (parsed.kind !== 'shell') return;
+    expect(parsed.name).toBe('cd');
+    expect(parsed.args).toEqual(['collection']);
+  });
+
   test('rejects old method url shorthand', () => {
     expect(() => parseUnifiedInput('GET https://example.com')).toThrow(
-      'Unknown input. Start a request with "http" or use /help.',
+      'Unknown input. Start a request with "http", use /help, or run a shell command like ls.',
     );
   });
 });

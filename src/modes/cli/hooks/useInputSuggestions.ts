@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Collection } from '../../../core/types';
 import type { CliCommand } from '../commands/registry';
+import type { CliVirtualPath } from '../types';
 import { analyzeUnifiedInput, type InputSuggestion } from '../parser/suggestions';
 
 export interface SuggestionSelectionResult {
@@ -12,6 +13,7 @@ interface UseInputSuggestionsArgs {
   input: string;
   commands: CliCommand[];
   collections: Collection[];
+  virtualPath: CliVirtualPath;
 }
 
 interface UseInputSuggestionsResult {
@@ -44,11 +46,12 @@ export function useInputSuggestions({
   input,
   commands,
   collections,
+  virtualPath,
 }: UseInputSuggestionsArgs): UseInputSuggestionsResult {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const analysis = useMemo(
-    () => analyzeUnifiedInput(input, { commands, collections }),
-    [collections, commands, input],
+    () => analyzeUnifiedInput(input, { commands, collections, virtualPath }),
+    [collections, commands, input, virtualPath],
   );
 
   const suggestions = analysis.suggestions;

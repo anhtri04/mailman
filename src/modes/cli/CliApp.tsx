@@ -9,6 +9,8 @@ import { useInputSuggestions } from './hooks/useInputSuggestions';
 import { useCliState } from './hooks/useCliState';
 import { parseUnifiedInput } from './parser/unifiedInputParser';
 import { renderResponseBlock } from './render/responseBlock';
+import { handleShellCommand } from './shell/handlers';
+import { renderVirtualPath } from './shell/virtualFs';
 import { renderSystemMessage } from './render/systemMessage';
 
 export function CliApp() {
@@ -18,7 +20,9 @@ export function CliApp() {
     input: state.input,
     commands,
     collections: state.collections,
+    virtualPath: state.virtualPath,
   });
+  const prompt = renderVirtualPath(state.virtualPath, state.collections);
 
   useEffect(() => {
     void (async () => {
@@ -68,6 +72,32 @@ export function CliApp() {
           if (result.message) {
             pushOutput('system', renderSystemMessage(result.message));
           }
+          return;
+        }
+
+        if (parsed.kind === 'shell') {
+          const result = await handleShellCommand(parsed, {
+            state,
+            setState,
+          });
+
+          if (result.error) {
+            pushOutput('error', result.error);
+            return;
+          }
+          if (result.message) {
+            pushOutput('system', result.message);
+          }
+          if (!result.request) return;
+
+          setState((prev) => ({ ...prev, isLoading: true, activeRequest: result.request! }));
+          const response = await sendRequest(result.request);
+          const responseText = renderResponseBlock(response, state.toggles, {
+            method: result.request.method,
+            url: result.request.url,
+          });
+          setState((prev) => ({ ...prev, isLoading: false, lastResponse: response }));
+          pushOutput('response', responseText);
           return;
         }
 
@@ -168,6 +198,7 @@ export function CliApp() {
       />
       <CliInput
         value={state.input}
+        prompt={prompt}
         onChange={(value) => setState((prev) => ({ ...prev, input: value }))}
       />
     </box>

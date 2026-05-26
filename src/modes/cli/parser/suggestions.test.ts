@@ -20,7 +20,7 @@ const commands: CliCommand[] = [
   },
 ];
 
-const context = { commands, collections: [] };
+const context = { commands, collections: [], virtualPath: { kind: 'root' } as const };
 
 describe('analyzeUnifiedInput', () => {
   test('suggests request protocols after http', () => {
