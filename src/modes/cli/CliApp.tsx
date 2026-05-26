@@ -189,17 +189,25 @@ export function CliApp() {
   });
 
   return (
-    <box style={{ flexDirection: 'column', height: '100%', padding: 1, gap: 0.5 }}>
+    <box
+      style={{
+        position: 'relative',
+        flexDirection: 'column',
+        height: '100%',
+        padding: 1,
+        gap: 0,
+      }}
+    >
       <CliOutput outputs={state.outputs} />
-      <InputSuggestionPanel
-        visible={suggestions.visible}
-        suggestions={suggestions.suggestions}
-        selectedIndex={suggestions.selectedIndex}
-      />
       <CliInput
         value={state.input}
         prompt={prompt}
         onChange={(value) => setState((prev) => ({ ...prev, input: value }))}
+      />
+      <InputSuggestionPanel
+        visible={suggestions.visible}
+        suggestions={suggestions.suggestions}
+        selectedIndex={suggestions.selectedIndex}
       />
     </box>
   );

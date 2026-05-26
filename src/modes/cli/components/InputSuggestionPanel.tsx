@@ -18,13 +18,18 @@ export function InputSuggestionPanel({
   return (
     <box
       style={{
+        position: 'absolute',
+        left: 2,
+        right: 2,
+        bottom: 4,
         flexDirection: 'column',
         border: true,
         borderStyle: 'rounded',
         borderColor: colors.border.default,
+        backgroundColor: colors.bg.panel,
         paddingLeft: 1,
         paddingRight: 1,
-        paddingTop: 0.5,
+        paddingTop: 0,
         paddingBottom: 0.5,
         maxHeight: 8,
       }}
