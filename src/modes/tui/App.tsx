@@ -1240,7 +1240,7 @@ export function App() {
       >
         <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 1 }}>
           <text fg={colors.accent.primary}>
-            <strong>Mailman v0.2.6</strong>
+            <strong>Mailman v0.2.7</strong>
           </text>
           <text fg={isInstructionAnimating ? colors.accent.primary : colors.text.muted}>
             {liveInstruction}

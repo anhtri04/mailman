@@ -1,4 +1,4 @@
-## Mailman v0.2.6
+## Mailman v0.2.7
 
 A terminal-based multi-protocol API client built with Bun and OpenTUI.
 
@@ -25,6 +25,7 @@ chmod +x mailman-linux-x64  # macOS/Linux only
 ### Features
 
 - Interactive TUI with mouse and keyboard support
+- CLI command mode with parser-driven suggestions, virtual collection navigation, and themed output
 - REST, GraphQL, SSE response streaming, and WebSocket support
 - HTTP methods: GET, POST, PUT, DELETE, PATCH
 - Headers, structured request bodies, query params, auth, and script editors
@@ -40,23 +41,25 @@ chmod +x mailman-linux-x64  # macOS/Linux only
 
 #### Added
 
-- Added a first-class structured `RequestBody` model for REST requests.
-- Added request body modes for raw text, `application/x-www-form-urlencoded`, file uploads, and `multipart/form-data` with text and file fields.
-- Added request body building utilities that convert structured body data into fetch-compatible payloads while preserving request statistics previews.
-- Added CLI parsing support for structured/raw request bodies.
-- Added a reusable list viewport utility for scrollable selectors, with integration in the theme selector, file browser, history modal, and collection panel.
-- Added script indicators to requests shown in the welcome panel.
+- Added bash-like virtual filesystem navigation in CLI mode for collection and request browsing.
+- Added protocol-aware CLI response rendering for REST, GraphQL, and SSE output.
+- Added structured CLI response sections for status summaries, bodies, headers, request stats, stream metadata, and SSE events.
+- Added JSON, XML, and body syntax formatting to CLI response output using the existing highlighter.
+- Added collapsible response sections for long CLI outputs.
+- Added a CLI theme selector command backed by shared modal and theme selector components.
+- Added list viewport behavior to CLI input suggestions for improved keyboard navigation through long suggestion sets.
+
+#### Changed
+
+- Refined CLI input suggestions so they float over the output panel instead of consuming layout space.
+- Reworked CLI output state to store structured response entries instead of preformatted response text.
+- Shared modal and theme selector UI between TUI and CLI modes.
+- Removed the unused command palette implementation and related tests.
 
 #### Fixed
 
-- Fixed Body Editor responsiveness and button clipping in scrollable body modes.
-- Fixed background focus and keyboard routing while overlays and modals are open.
-- Fixed tab highlighting so request panels reset correctly after modals close.
-- Fixed duplicate Escape handling in the theme selector.
-- Fixed response panel expansion when pressing Space while editing a request body.
-- Fixed GraphQL response modal expansion and tab behavior.
-- Updated TUI shortcut instructions for response/body interactions.
+- Fixed empty CLI inputs so the suggestion panel no longer appears when there is nothing to suggest.
 
 #### Documentation
 
-- Updated project TODO notes for the v0.2.6 workstream.
+- Updated agent/project guidance for the current Mailman workflow and architecture.

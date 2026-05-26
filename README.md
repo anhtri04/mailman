@@ -3,7 +3,7 @@
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.2.6-blue.svg)](https://github.com/anhtri04/mailman)
+[![Version](https://img.shields.io/badge/version-0.2.7-blue.svg)](https://github.com/anhtri04/mailman)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6.svg)](https://www.typescriptlang.org/)
 [![Bun](https://img.shields.io/badge/Runtime-Bun-000000?logo=bun)](https://bun.sh)
 
