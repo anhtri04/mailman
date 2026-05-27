@@ -4,10 +4,11 @@ interface CliInputProps {
   value: string;
   prompt: string;
   onChange: (value: string) => void;
+  onFocus?: () => void;
   focused?: boolean;
 }
 
-export function CliInput({ value, prompt, onChange, focused = true }: CliInputProps) {
+export function CliInput({ value, prompt, onChange, onFocus, focused = true }: CliInputProps) {
   const { colors } = useTheme();
 
   return (
@@ -22,6 +23,7 @@ export function CliInput({ value, prompt, onChange, focused = true }: CliInputPr
         paddingTop: 0.5,
         alignItems: 'center',
       }}
+      onMouseDown={onFocus}
     >
       <text fg={colors.accent.primary}>{prompt}&gt; </text>
       <box style={{ flexGrow: 1 }}>

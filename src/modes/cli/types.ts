@@ -2,6 +2,15 @@ import type { Collection, RequestOptions, ResponseState } from '../../core/types
 
 export type CliOutputKind = 'system' | 'request' | 'response' | 'error';
 export type CliResponseProtocol = 'rest' | 'graphql' | 'sse';
+export type CliPanelFocus = 'input' | 'output';
+export type CliResponseSectionId =
+  | 'body'
+  | 'data'
+  | 'errors'
+  | 'events'
+  | 'headers'
+  | 'streamMeta'
+  | 'stats';
 
 interface CliTextOutputEntry {
   id: string;
@@ -10,7 +19,7 @@ interface CliTextOutputEntry {
   timestamp: number;
 }
 
-interface CliResponseOutputEntry {
+export interface CliResponseOutputEntry {
   id: string;
   kind: 'response';
   response: ResponseState;

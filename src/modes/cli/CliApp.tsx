@@ -8,6 +8,7 @@ import { InputSuggestionPanel } from './components/InputSuggestionPanel';
 import { getCommands, resolveCommand } from './commands/registry';
 import { useInputSuggestions } from './hooks/useInputSuggestions';
 import { useCliState } from './hooks/useCliState';
+import { useCliKeyboardNavigation } from './hooks/useCliKeyboardNavigation';
 import { parseUnifiedInput } from './parser/unifiedInputParser';
 import { handleShellCommand } from './shell/handlers';
 import { renderVirtualPath } from './shell/virtualFs';
@@ -16,6 +17,10 @@ import { renderSystemMessage } from './render/systemMessage';
 export function CliApp() {
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const { state, setState, pushOutput, pushResponseOutput } = useCliState();
+  const keyboardNavigation = useCliKeyboardNavigation({
+    outputs: state.outputs,
+    toggles: state.toggles,
+  });
   const commands = getCommands();
   const suggestions = useInputSuggestions({
     input: state.input,
@@ -130,8 +135,79 @@ export function CliApp() {
       return;
     }
 
+    if (key.ctrl && key.name === 'g') {
+      keyboardNavigation.focusInput();
+      return;
+    }
+
+    if (key.ctrl && key.name === 'o') {
+      keyboardNavigation.focusOutput();
+      return;
+    }
+
     if (key.ctrl && key.name === 'l') {
       setState((prev) => ({ ...prev, outputs: [] }));
+      keyboardNavigation.resetOutputNavigation();
+      return;
+    }
+
+    if (keyboardNavigation.focusedPanel === 'output') {
+      if (key.name === 'escape') {
+        keyboardNavigation.focusInput();
+        return;
+      }
+
+      if (key.name === 'tab') {
+        keyboardNavigation.moveResponseSelection(key.shift ? -1 : 1);
+        return;
+      }
+
+      if (key.ctrl && key.name === 'up') {
+        keyboardNavigation.moveResponseSelection(-1);
+        return;
+      }
+
+      if (key.ctrl && key.name === 'down') {
+        keyboardNavigation.moveResponseSelection(1);
+        return;
+      }
+
+      if (key.name === 'up') {
+        keyboardNavigation.moveSectionSelection(-1);
+        return;
+      }
+
+      if (key.name === 'down') {
+        keyboardNavigation.moveSectionSelection(1);
+        return;
+      }
+
+      if (key.name === 'left') {
+        keyboardNavigation.setSectionCollapsed(
+          keyboardNavigation.selectedResponseId,
+          keyboardNavigation.selectedSectionId,
+          true,
+        );
+        return;
+      }
+
+      if (key.name === 'right') {
+        keyboardNavigation.setSectionCollapsed(
+          keyboardNavigation.selectedResponseId,
+          keyboardNavigation.selectedSectionId,
+          false,
+        );
+        return;
+      }
+
+      if (key.name === 'space' || key.name === 'return' || key.name === 'enter') {
+        keyboardNavigation.toggleSection(
+          keyboardNavigation.selectedResponseId,
+          keyboardNavigation.selectedSectionId,
+        );
+        return;
+      }
+
       return;
     }
 
@@ -204,12 +280,26 @@ export function CliApp() {
         gap: 0,
       }}
     >
-      <CliOutput outputs={state.outputs} toggles={state.toggles} />
+      <CliOutput
+        outputs={state.outputs}
+        toggles={state.toggles}
+        focused={keyboardNavigation.focusedPanel === 'output' && !showThemeSelector}
+        selectedResponseId={keyboardNavigation.selectedResponseId}
+        selectedSectionId={keyboardNavigation.selectedSectionId}
+        onFocus={keyboardNavigation.focusOutput}
+        onResponseFocus={keyboardNavigation.focusResponse}
+        onSectionFocus={keyboardNavigation.focusSection}
+        onToggleSection={(responseId, sectionId, defaultCollapsed) =>
+          keyboardNavigation.toggleSection(responseId, sectionId, defaultCollapsed)
+        }
+        isSectionCollapsed={keyboardNavigation.isSectionCollapsed}
+      />
       <CliInput
         value={state.input}
         prompt={prompt}
-        focused={!showThemeSelector}
+        focused={keyboardNavigation.focusedPanel === 'input' && !showThemeSelector}
         onChange={(value) => setState((prev) => ({ ...prev, input: value }))}
+        onFocus={keyboardNavigation.focusInput}
       />
       <InputSuggestionPanel
         visible={!showThemeSelector && suggestions.visible}

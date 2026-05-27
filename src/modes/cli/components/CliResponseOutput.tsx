@@ -6,9 +6,10 @@ import { detectContentType, formatResponseBody } from '../../../shared/utils/res
 import { SyntaxHighlighter } from '../../tui/components/SyntaxHighlighter';
 import type { ContentType } from '../../../shared/utils/response-formatter';
 import type { ResponseState, SSEEvent } from '../../../core/types';
-import type { CliResponseProtocol, CliViewToggles } from '../types';
+import type { CliResponseProtocol, CliResponseSectionId, CliViewToggles } from '../types';
 
 interface CliResponseOutputProps {
+  id: string;
   response: ResponseState;
   request: {
     protocol: CliResponseProtocol;
@@ -16,11 +17,32 @@ interface CliResponseOutputProps {
     url: string;
   };
   toggles: CliViewToggles;
+  focused: boolean;
+  selectedSectionId: CliResponseSectionId | null;
+  onFocus: () => void;
+  onSectionFocus: (sectionId: CliResponseSectionId) => void;
+  onToggleSection: (sectionId: CliResponseSectionId, defaultCollapsed?: boolean) => void;
+  isSectionCollapsed: (sectionId: CliResponseSectionId, defaultCollapsed?: boolean) => boolean;
 }
 
-interface ResponseSummaryProps extends CliResponseOutputProps {
+interface ResponseSummaryProps {
+  response: ResponseState;
+  request: {
+    protocol: CliResponseProtocol;
+    method: string;
+    url: string;
+  };
+  toggles: CliViewToggles;
   contentType: ContentType;
   contentSize: string;
+}
+
+interface CliSectionNavigationProps {
+  responseFocused: boolean;
+  selectedSectionId: CliResponseSectionId | null;
+  onSectionFocus: (sectionId: CliResponseSectionId) => void;
+  onToggleSection: (sectionId: CliResponseSectionId, defaultCollapsed?: boolean) => void;
+  isSectionCollapsed: (sectionId: CliResponseSectionId, defaultCollapsed?: boolean) => boolean;
 }
 
 function getStatusColor(status: number, colors: ReturnType<typeof useTheme>['colors']): string {
@@ -38,30 +60,46 @@ function protocolLabel(protocol: CliResponseProtocol, response: ResponseState): 
 }
 
 function CollapsibleSection({
+  id,
   title,
   children,
-  defaultCollapsed = false,
+  collapsed,
+  focused,
   summary,
+  onFocus,
+  onToggle,
 }: {
+  id: CliResponseSectionId;
   title: string;
   children: ReactNode;
-  defaultCollapsed?: boolean;
+  collapsed: boolean;
+  focused: boolean;
   summary?: string;
+  onFocus: (sectionId: CliResponseSectionId) => void;
+  onToggle: (sectionId: CliResponseSectionId) => void;
 }) {
   const { colors } = useTheme();
-  const [collapsed, setCollapsed] = useState(defaultCollapsed);
 
   return (
     <box style={{ flexDirection: 'column', marginTop: 1 }}>
       <box
-        style={{ flexDirection: 'row', gap: 1 }}
-        onMouseDown={() => setCollapsed((current) => !current)}
+        style={{
+          flexDirection: 'row',
+          gap: 1,
+          backgroundColor: focused ? colors.bg.focusHighlight : 'transparent',
+        }}
+        onMouseDown={() => {
+          onFocus(id);
+          onToggle(id);
+        }}
       >
-        <text fg={colors.accent.primary}>{collapsed ? '▸' : '▾'}</text>
-        <text fg={colors.accent.primary}>
+        <text fg={focused ? colors.text.primary : colors.accent.primary}>
+          {collapsed ? '▸' : '▾'}
+        </text>
+        <text fg={focused ? colors.text.primary : colors.accent.primary}>
           <strong>{title}</strong>
         </text>
-        {summary && <text fg={colors.text.muted}>{summary}</text>}
+        {summary && <text fg={focused ? colors.text.primary : colors.text.muted}>{summary}</text>}
       </box>
       {!collapsed && <box style={{ flexDirection: 'column', marginTop: 1 }}>{children}</box>}
     </box>
@@ -181,30 +219,57 @@ function parseJsonObject(body: string): unknown {
 function CliGraphQLBodyBlock({
   response,
   contentType,
+  responseFocused,
+  selectedSectionId,
+  onSectionFocus,
+  onToggleSection,
+  isSectionCollapsed,
 }: {
   response: ResponseState;
   contentType: ContentType;
-}) {
+} & CliSectionNavigationProps) {
   const parsed = parseJsonObject(response.body);
   const isRecord = parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed);
   const data = isRecord ? (parsed as Record<string, unknown>).data : undefined;
   const errors = isRecord ? (parsed as Record<string, unknown>).errors : undefined;
 
   if (!isRecord || (data === undefined && errors === undefined)) {
-    return <CliBodyBlock body={response.body} contentType={contentType} />;
+    return (
+      <CollapsibleSection
+        id="body"
+        title="Body"
+        collapsed={isSectionCollapsed('body')}
+        focused={responseFocused && selectedSectionId === 'body'}
+        onFocus={onSectionFocus}
+        onToggle={(sectionId) => onToggleSection(sectionId)}
+      >
+        <CliBodyBlock body={response.body} contentType={contentType} />
+      </CollapsibleSection>
+    );
   }
 
   const errorCount = Array.isArray(errors) ? errors.length : errors === undefined ? 0 : 1;
 
   return (
     <box style={{ flexDirection: 'column' }}>
-      <CollapsibleSection title="Data">
+      <CollapsibleSection
+        id="data"
+        title="Data"
+        collapsed={isSectionCollapsed('data')}
+        focused={responseFocused && selectedSectionId === 'data'}
+        onFocus={onSectionFocus}
+        onToggle={(sectionId) => onToggleSection(sectionId)}
+      >
         <CliBodyBlock body={JSON.stringify(data ?? null)} contentType="json" />
       </CollapsibleSection>
       <CollapsibleSection
+        id="errors"
         title="Errors"
-        defaultCollapsed={errorCount === 0}
+        collapsed={isSectionCollapsed('errors', errorCount === 0)}
+        focused={responseFocused && selectedSectionId === 'errors'}
         summary={errorCount > 0 ? `${errorCount}` : '[none]'}
+        onFocus={onSectionFocus}
+        onToggle={(sectionId) => onToggleSection(sectionId, errorCount === 0)}
       >
         <CliBodyBlock body={JSON.stringify(errors ?? [])} contentType="json" />
       </CollapsibleSection>
@@ -244,7 +309,15 @@ function CliSseEventBlock({ event }: { event: SSEEvent }) {
   );
 }
 
-function CliSseResponseOutput({ response, toggles }: CliResponseOutputProps) {
+function CliSseResponseOutput({
+  response,
+  toggles,
+  focused,
+  selectedSectionId,
+  onSectionFocus,
+  onToggleSection,
+  isSectionCollapsed,
+}: CliResponseOutputProps) {
   const { colors } = useTheme();
   const events = response.sseEvents ?? [];
   const visibleEvents = events.slice(-20);
@@ -253,7 +326,15 @@ function CliSseResponseOutput({ response, toggles }: CliResponseOutputProps) {
   return (
     <box style={{ flexDirection: 'column' }}>
       {toggles.showBody && (
-        <CollapsibleSection title="Events" summary={`${events.length}`}>
+        <CollapsibleSection
+          id="events"
+          title="Events"
+          collapsed={isSectionCollapsed('events')}
+          focused={focused && selectedSectionId === 'events'}
+          summary={`${events.length}`}
+          onFocus={onSectionFocus}
+          onToggle={(sectionId) => onToggleSection(sectionId)}
+        >
           {hiddenEventCount > 0 && (
             <text fg={colors.text.muted}>
               Showing latest {visibleEvents.length}; hidden older events: {hiddenEventCount}
@@ -273,16 +354,27 @@ function CliSseResponseOutput({ response, toggles }: CliResponseOutputProps) {
       )}
       {toggles.showHeaders && (
         <CollapsibleSection
+          id="headers"
           title="Headers"
-          defaultCollapsed
+          collapsed={isSectionCollapsed('headers', true)}
+          focused={focused && selectedSectionId === 'headers'}
           summary={`${Object.keys(response.headers).length}`}
+          onFocus={onSectionFocus}
+          onToggle={(sectionId) => onToggleSection(sectionId, true)}
         >
           <CliHeadersBlock headers={response.headers} />
         </CollapsibleSection>
       )}
       {toggles.showMeta && (
         <>
-          <CollapsibleSection title="Stream Meta" defaultCollapsed>
+          <CollapsibleSection
+            id="streamMeta"
+            title="Stream Meta"
+            collapsed={isSectionCollapsed('streamMeta', true)}
+            focused={focused && selectedSectionId === 'streamMeta'}
+            onFocus={onSectionFocus}
+            onToggle={(sectionId) => onToggleSection(sectionId, true)}
+          >
             <box style={{ flexDirection: 'column' }}>
               <text fg={colors.text.primary}>
                 Last Event ID {response.sseMeta?.lastEventId ?? '-'}
@@ -291,7 +383,14 @@ function CliSseResponseOutput({ response, toggles }: CliResponseOutputProps) {
               <text fg={colors.text.primary}>Dropped {response.sseMeta?.droppedEvents ?? 0}</text>
             </box>
           </CollapsibleSection>
-          <CollapsibleSection title="Stats" defaultCollapsed>
+          <CollapsibleSection
+            id="stats"
+            title="Stats"
+            collapsed={isSectionCollapsed('stats', true)}
+            focused={focused && selectedSectionId === 'stats'}
+            onFocus={onSectionFocus}
+            onToggle={(sectionId) => onToggleSection(sectionId, true)}
+          >
             <CliMetaBlock response={response} />
           </CollapsibleSection>
         </>
@@ -305,6 +404,11 @@ function CliStandardResponseOutput({
   request,
   toggles,
   contentType,
+  focused,
+  selectedSectionId,
+  onSectionFocus,
+  onToggleSection,
+  isSectionCollapsed,
 }: CliResponseOutputProps & { contentType: ContentType }) {
   const isGraphQL = request.protocol === 'graphql';
 
@@ -313,9 +417,24 @@ function CliStandardResponseOutput({
       {toggles.showBody && (
         <>
           {isGraphQL ? (
-            <CliGraphQLBodyBlock response={response} contentType={contentType} />
+            <CliGraphQLBodyBlock
+              response={response}
+              contentType={contentType}
+              responseFocused={focused}
+              selectedSectionId={selectedSectionId}
+              onSectionFocus={onSectionFocus}
+              onToggleSection={onToggleSection}
+              isSectionCollapsed={isSectionCollapsed}
+            />
           ) : (
-            <CollapsibleSection title="Body">
+            <CollapsibleSection
+              id="body"
+              title="Body"
+              collapsed={isSectionCollapsed('body')}
+              focused={focused && selectedSectionId === 'body'}
+              onFocus={onSectionFocus}
+              onToggle={(sectionId) => onToggleSection(sectionId)}
+            >
               <CliBodyBlock body={response.body} contentType={contentType} />
             </CollapsibleSection>
           )}
@@ -323,15 +442,26 @@ function CliStandardResponseOutput({
       )}
       {toggles.showHeaders && (
         <CollapsibleSection
+          id="headers"
           title="Headers"
-          defaultCollapsed
+          collapsed={isSectionCollapsed('headers', true)}
+          focused={focused && selectedSectionId === 'headers'}
           summary={`${Object.keys(response.headers).length}`}
+          onFocus={onSectionFocus}
+          onToggle={(sectionId) => onToggleSection(sectionId, true)}
         >
           <CliHeadersBlock headers={response.headers} />
         </CollapsibleSection>
       )}
       {toggles.showMeta && (
-        <CollapsibleSection title="Stats" defaultCollapsed>
+        <CollapsibleSection
+          id="stats"
+          title="Stats"
+          collapsed={isSectionCollapsed('stats', true)}
+          focused={focused && selectedSectionId === 'stats'}
+          onFocus={onSectionFocus}
+          onToggle={(sectionId) => onToggleSection(sectionId, true)}
+        >
           <CliMetaBlock response={response} />
         </CollapsibleSection>
       )}
@@ -340,7 +470,7 @@ function CliStandardResponseOutput({
 }
 
 export function CliResponseOutput(props: CliResponseOutputProps) {
-  const { response, request, toggles } = props;
+  const { response, request, toggles, focused, onFocus } = props;
   const { colors } = useTheme();
   const contentType = useMemo(() => detectContentType(response.headers, response.body), [response]);
   const contentSize = useMemo(
@@ -353,10 +483,11 @@ export function CliResponseOutput(props: CliResponseOutputProps) {
       style={{
         flexDirection: 'column',
         border: true,
-        borderColor: colors.border.default,
+        borderColor: focused ? colors.accent.primary : colors.border.default,
         borderStyle: 'rounded',
         padding: 1,
       }}
+      onMouseDown={onFocus}
     >
       <CliResponseSummary
         response={response}
