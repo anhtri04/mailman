@@ -122,14 +122,14 @@ export function ResponseModal(props: ResponseModalProps) {
       onClose={onClose}
       title={`Response - ${response.status} ${response.statusText}`}
     >
-      <box style={{ flexDirection: 'column', flexGrow: 1 }}>
-        <box style={{ flexDirection: 'row', gap: 2, marginBottom: 1 }}>
+      <box style={{ flexDirection: 'column', flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
+        <box style={{ flexDirection: 'row', gap: 2, marginBottom: 1, flexShrink: 0 }}>
           <text fg={colors.text.muted}>{contentSize}</text>
           <text fg={colors.text.muted}>{response.time}ms</text>
         </box>
 
         {props.variant === 'graphql' ? (
-          <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1 }}>
+          <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1, flexShrink: 0 }}>
             {renderTabButton('body', 'Body', () => props.onActiveTabChange('body'))}
             {renderTabButton('headers', 'Headers', () => props.onActiveTabChange('headers'))}
             {renderTabButton('raw', 'Raw', () => props.onActiveTabChange('raw'))}
@@ -142,7 +142,7 @@ export function ResponseModal(props: ResponseModalProps) {
               renderTabButton('test', 'Test', () => props.onActiveTabChange('test'))}
           </box>
         ) : (
-          <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1 }}>
+          <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1, flexShrink: 0 }}>
             {renderTabButton('body', 'Body', () => props.onActiveTabChange('body'))}
             {renderTabButton('headers', 'Headers', () => props.onActiveTabChange('headers'))}
             {renderTabButton('raw', 'Raw', () => props.onActiveTabChange('raw'))}
@@ -151,7 +151,7 @@ export function ResponseModal(props: ResponseModalProps) {
           </box>
         )}
 
-        <scrollbox style={{ flexGrow: 1 }}>
+        <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
           {props.activeTab === 'body' && (
             <SyntaxHighlighter
               code={formattedBody}

@@ -42,13 +42,14 @@ export function Modal({ isOpen, onClose, title, subtitle, children }: ModalProps
         left: '10%',
         width: '80%',
         height: '80%',
+        minHeight: 0,
         backgroundColor: colors.bg.panel,
         border: true,
         borderColor: colors.accent.primary,
         padding: 1,
       }}
     >
-      <box style={{ flexDirection: 'column', height: '100%' }}>
+      <box style={{ flexDirection: 'column', height: '100%', minHeight: 0 }}>
         {/* Title bar */}
         <box style={{ flexDirection: 'row', marginBottom: 1, justifyContent: 'space-between' }}>
           <box style={{ flexDirection: 'row' }}>

@@ -145,11 +145,20 @@ export function GraphQLResponsePanel({
         borderColor,
         padding: 1,
         flexGrow: 1,
+        flexShrink: 1,
+        minHeight: 0,
         borderStyle: 'rounded',
       }}
       onMouseDown={onFocus}
     >
-      <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }}>
+      <box
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginTop: -2,
+          flexShrink: 0,
+        }}
+      >
         <text
           fg={colors.accent.primary}
           bg={colors.bg.app}
@@ -191,10 +200,18 @@ export function GraphQLResponsePanel({
         )}
       </box>
 
-      <box style={{ flexGrow: 1, marginTop: 1, flexDirection: 'column' }}>
+      <box
+        style={{
+          flexGrow: 1,
+          flexShrink: 1,
+          minHeight: 0,
+          marginTop: 1,
+          flexDirection: 'column',
+        }}
+      >
         {response ? (
-          <box style={{ flexDirection: 'column', flexGrow: 1 }}>
-            <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1 }}>
+          <box style={{ flexDirection: 'column', flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
+            <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1, flexShrink: 0 }}>
               {renderTabButton('body', 'Body')}
               {renderTabButton('headers', 'Headers')}
               {renderTabButton('raw', 'Raw')}
@@ -202,33 +219,41 @@ export function GraphQLResponsePanel({
               {hasScriptResults && renderTabButton('test', 'Test')}
             </box>
 
-            <box style={{ flexGrow: 1, marginTop: 1, backgroundColor: colors.bg.panel }}>
+            <box
+              style={{
+                flexGrow: 1,
+                flexShrink: 1,
+                minHeight: 0,
+                marginTop: 1,
+                backgroundColor: colors.bg.panel,
+              }}
+            >
               {activeTab === 'body' && (
-                <scrollbox style={{ flexGrow: 1 }}>
+                <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
                   <SyntaxHighlighter code={formattedBody} language="json" />
                 </scrollbox>
               )}
 
               {activeTab === 'headers' && response.headers && (
-                <scrollbox style={{ flexGrow: 1 }}>
+                <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
                   <HeadersDisplay headers={response.headers} />
                 </scrollbox>
               )}
 
               {activeTab === 'raw' && (
-                <scrollbox style={{ flexGrow: 1 }}>
+                <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
                   <text fg={colors.text.primary}>{response.body}</text>
                 </scrollbox>
               )}
 
               {activeTab === 'test' && (
-                <scrollbox style={{ flexGrow: 1 }}>
+                <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
                   <ScriptResultsPanel results={response.scriptResults} />
                 </scrollbox>
               )}
 
               {activeTab === 'errors' && (
-                <scrollbox style={{ flexGrow: 1 }}>
+                <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
                   {graphqlErrors.length > 0 ? (
                     <box style={{ flexDirection: 'column', gap: 1 }}>
                       {graphqlErrors.map((error, index) => (
@@ -268,7 +293,7 @@ export function GraphQLResponsePanel({
               )}
             </box>
 
-            <text fg={colors.text.dim} style={{ marginTop: 1 }}>
+            <text fg={colors.text.dim} style={{ marginTop: 1, flexShrink: 0 }}>
               Press SPACE to expand • TAB to switch tabs
             </text>
           </box>

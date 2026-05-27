@@ -41,10 +41,19 @@ export function WebSocketResponsePanel({
         borderStyle: 'rounded',
         padding: 1,
         flexGrow: 1,
+        flexShrink: 1,
+        minHeight: 0,
       }}
       onMouseDown={onFocus}
     >
-      <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }}>
+      <box
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginTop: -2,
+          flexShrink: 0,
+        }}
+      >
         <text
           fg={colors.accent.primary}
           bg={colors.bg.app}
@@ -77,12 +86,19 @@ export function WebSocketResponsePanel({
         </box>
       </box>
 
-      <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 1 }}>
+      <box
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginBottom: 1,
+          flexShrink: 0,
+        }}
+      >
         <text fg={colors.text.muted}>{messages.length} messages</text>
         <text fg={colors.text.muted}>{duration}ms</text>
       </box>
 
-      <scrollbox style={{ flexGrow: 1 }}>
+      <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
         <box style={{ flexDirection: 'column', gap: 0, backgroundColor: colors.bg.panel }}>
           {messages.map((message) => {
             const fg =

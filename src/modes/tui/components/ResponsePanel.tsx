@@ -171,11 +171,20 @@ export function ResponsePanel({
         borderColor,
         padding: 1,
         flexGrow: 1,
+        flexShrink: 1,
+        minHeight: 0,
         borderStyle: 'rounded',
       }}
       onMouseDown={onFocus}
     >
-      <box style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }}>
+      <box
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginTop: -2,
+          flexShrink: 0,
+        }}
+      >
         <text
           fg={colors.accent.primary}
           bg={colors.bg.app}
@@ -223,9 +232,17 @@ export function ResponsePanel({
         )}
       </box>
 
-      <box style={{ flexGrow: 1, marginTop: 1, flexDirection: 'column' }}>
+      <box
+        style={{
+          flexGrow: 1,
+          flexShrink: 1,
+          minHeight: 0,
+          marginTop: 1,
+          flexDirection: 'column',
+        }}
+      >
         {response ? (
-          <box style={{ flexDirection: 'column', flexGrow: 1 }}>
+          <box style={{ flexDirection: 'column', flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
             {/* <box style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <text fg={getStatusColor(response.status)}>
                 {response.status > 0
@@ -235,7 +252,7 @@ export function ResponsePanel({
             </box> */}
 
             {/* Tabs */}
-            <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1 }}>
+            <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1, flexShrink: 0 }}>
               {isSSEMode ? (
                 <>
                   {renderSseTabButton('events', 'Events')}
@@ -288,9 +305,17 @@ export function ResponsePanel({
             </box>
 
             {/* Tab Content */}
-            <box style={{ flexGrow: 1, marginTop: 1, backgroundColor: colors.bg.panel }}>
+            <box
+              style={{
+                flexGrow: 1,
+                flexShrink: 1,
+                minHeight: 0,
+                marginTop: 1,
+                backgroundColor: colors.bg.panel,
+              }}
+            >
               {!isSSEMode && activeTab === 'body' && (
-                <scrollbox style={{ flexGrow: 1 }}>
+                <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
                   <SyntaxHighlighter
                     code={formattedBody}
                     language={
@@ -305,25 +330,25 @@ export function ResponsePanel({
               {((!isSSEMode && activeTab === 'headers') ||
                 (isSSEMode && activeSseTab === 'headers')) &&
                 response.headers && (
-                  <scrollbox style={{ flexGrow: 1 }}>
+                  <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
                     <HeadersDisplay headers={response.headers} />
                   </scrollbox>
                 )}
 
               {((!isSSEMode && activeTab === 'raw') || (isSSEMode && activeSseTab === 'raw')) && (
-                <scrollbox style={{ flexGrow: 1 }}>
+                <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
                   <text fg={colors.text.primary}>{response.body}</text>
                 </scrollbox>
               )}
 
               {!isSSEMode && activeTab === 'test' && (
-                <scrollbox style={{ flexGrow: 1 }}>
+                <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
                   <ScriptResultsPanel results={response.scriptResults} />
                 </scrollbox>
               )}
 
               {isSSEMode && activeSseTab === 'events' && (
-                <scrollbox style={{ flexGrow: 1 }}>
+                <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
                   <box style={{ flexDirection: 'column' }}>
                     {(response.sseEvents ?? []).map((event, index) => (
                       <box
@@ -355,7 +380,7 @@ export function ResponsePanel({
               )}
             </box>
 
-            <text fg={colors.text.dim} style={{ marginTop: 1 }}>
+            <text fg={colors.text.dim} style={{ marginTop: 1, flexShrink: 0 }}>
               Press SPACE to expand • TAB to switch tabs
             </text>
           </box>
