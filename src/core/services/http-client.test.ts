@@ -1,6 +1,7 @@
 import { test, expect, describe, beforeEach, afterEach } from 'bun:test';
 import { sendRequest, sendRequestWithStreaming } from './http-client';
 import type { RequestOptions } from '../types';
+import { rawRequestBody } from './request-body';
 
 describe('http-client', () => {
   let originalFetch: typeof fetch;
@@ -59,7 +60,7 @@ describe('http-client', () => {
         method: 'POST',
         url: 'https://example.com/api/users',
         headers: { 'Content-Type': 'application/json' },
-        body: '{"name": "John"}',
+        body: rawRequestBody('{"name": "John"}'),
       };
 
       await sendRequest(options);
@@ -80,7 +81,7 @@ describe('http-client', () => {
       const options: RequestOptions = {
         method: 'PUT',
         url: 'https://example.com/api/users/1',
-        body: '{"name": "Updated"}',
+        body: rawRequestBody('{"name": "Updated"}'),
       };
 
       await sendRequest(options);
@@ -123,7 +124,7 @@ describe('http-client', () => {
       const options: RequestOptions = {
         method: 'PATCH',
         url: 'https://example.com/api/users/1',
-        body: '{"name": "Patched"}',
+        body: rawRequestBody('{"name": "Patched"}'),
       };
 
       await sendRequest(options);
@@ -144,7 +145,7 @@ describe('http-client', () => {
       const options: RequestOptions = {
         method: 'GET',
         url: 'https://example.com/api',
-        body: 'should-be-ignored',
+        body: rawRequestBody('should-be-ignored'),
       };
 
       await sendRequest(options);
@@ -662,7 +663,7 @@ describe('http-client', () => {
         method: 'POST',
         url: 'https://example.com/api',
         headers: {},
-        body: '{"name":"Jane"}',
+        body: rawRequestBody('{"name":"Jane"}'),
         scripts: {
           beforeRequest: `
             request.url += '?scripted=true';
@@ -689,13 +690,46 @@ describe('http-client', () => {
 
   describe('sendRequestWithStreaming', () => {
     test('should expose streaming API for REST requests', async () => {
+      const sseData = 'data: {"message":"hello"}\n\n';
+      const encoder = new TextEncoder();
+      const chunk = encoder.encode(sseData);
+
+      let readerClosed = false;
+      const mockReader = {
+        read: async () => {
+          if (readerClosed) {
+            return { done: true };
+          }
+          readerClosed = true;
+          return { done: false, value: chunk };
+        },
+        cancel: async () => {
+          readerClosed = true;
+        },
+      };
+
+      const mockResponseBody = {
+        getReader: () => mockReader,
+      };
+
+      const mockResponse = new Response(null, {
+        status: 200,
+        statusText: 'OK',
+        headers: { 'content-type': 'text/event-stream' },
+      });
+      Object.defineProperty(mockResponse, 'body', {
+        value: mockResponseBody,
+      });
+
+      globalThis.fetch = (() => Promise.resolve(mockResponse)) as unknown as typeof fetch;
+
       const options: RequestOptions = {
         method: 'GET',
         url: 'https://example.com/sse',
       };
 
       const events: string[] = [];
-      await sendRequestWithStreaming(options, {
+      const result = await sendRequestWithStreaming(options, {
         onOpen: () => {
           events.push('open');
         },
@@ -705,6 +739,8 @@ describe('http-client', () => {
       });
 
       expect(events.length).toBeGreaterThanOrEqual(1);
+      expect(events[0]).toBe('open');
+      expect(result.response.status).toBe(200);
     });
   });
 });

@@ -4,6 +4,7 @@ import { readFile, unlink, writeFile } from 'fs/promises';
 import { homedir } from 'os';
 import { join } from 'path';
 import { appendHistoryEntry, clearHistory, deleteHistoryEntry, loadHistory } from './history';
+import { rawRequestBody } from './request-body';
 
 const MAILMAN_DIR = join(homedir(), '.mailman');
 const HISTORY_FILE = join(MAILMAN_DIR, 'history.json');
@@ -61,7 +62,7 @@ describe('history persistence', () => {
         method: 'POST',
         url: 'https://api.example.com/graphql',
         headers: { 'content-type': 'application/json' },
-        body: 'query User { me { id } }',
+        body: rawRequestBody('query User { me { id } }'),
         variables: '{"id":"1"}',
       },
       response: {

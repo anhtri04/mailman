@@ -13,6 +13,7 @@ import {
   updateCollectionName,
 } from './collection';
 import type { Collection } from '../types';
+import { rawRequestBody } from './request-body';
 
 const MAILMAN_DIR = join(homedir(), '.mailman');
 const COLLECTIONS_FILE = join(MAILMAN_DIR, 'collections.json');
@@ -84,7 +85,7 @@ describe('collection persistence', () => {
       method: 'GET',
       url: 'https://api.example.com/users',
       headers: { Authorization: 'Bearer token' },
-      body: '',
+      body: { mode: 'none' },
     });
 
     expect(request.name).toBe('Get Users');
@@ -114,7 +115,7 @@ describe('collection persistence', () => {
       method: 'GET',
       url: 'https://api.example.com/users',
       headers: {},
-      body: '',
+      body: { mode: 'none' },
     });
 
     await deleteRequest(collection.id, request.id);
@@ -144,14 +145,14 @@ describe('collection persistence', () => {
       method: 'GET',
       url: 'https://api.example.com/users',
       headers: {},
-      body: '',
+      body: { mode: 'none' },
     });
 
     await updateRequest(collection.id, request.id, {
       method: 'POST',
       url: 'https://api.example.com/users/create',
       headers: { 'Content-Type': 'application/json' },
-      body: '{"name":"Jane"}',
+      body: rawRequestBody("{\"name\":\"Jane\"}"),
     });
 
     const loaded = await loadCollections();
@@ -159,7 +160,7 @@ describe('collection persistence', () => {
     expect(updated?.method).toBe('POST');
     expect(updated?.url).toBe('https://api.example.com/users/create');
     expect(updated?.headers).toEqual({ 'Content-Type': 'application/json' });
-    expect(updated?.body).toBe('{"name":"Jane"}');
+    expect(updated?.body).toEqual(rawRequestBody("{\"name\":\"Jane\"}"));
     expect(updated?.name).toBe('Get Users');
     expect(updated?.id).toBe(request.id);
   });
@@ -191,15 +192,15 @@ describe('collection persistence', () => {
       method: 'POST',
       url: 'https://api.example.com/users',
       headers: { 'Content-Type': 'application/json' },
-      body: '{"name":"John"}',
+      body: rawRequestBody('{"name":"John"}'),
       auth: { type: 'bearer', token: 'secret' },
     });
 
-    expect(request.body).toBe('{"name":"John"}');
+    expect(request.body).toEqual(rawRequestBody("{\"name\":\"John\"}"));
     expect(request.auth?.type).toBe('bearer');
 
     const loaded = await loadCollections();
-    expect(loaded[0]?.requests[0]?.body).toBe('{"name":"John"}');
+    expect(loaded[0]?.requests[0]?.body).toEqual(rawRequestBody("{\"name\":\"John\"}"));
     expect(loaded[0]?.requests[0]?.auth?.token).toBe('secret');
   });
 
@@ -211,7 +212,7 @@ describe('collection persistence', () => {
       method: 'POST',
       url: 'https://api.example.com/users',
       headers: {},
-      body: '{}',
+      body: { mode: 'none' },
       scripts: {
         beforeRequest: "request.headers['x-test'] = '1';",
         afterResponse: "test('ok', () => expect(response.status).toBe(200));",

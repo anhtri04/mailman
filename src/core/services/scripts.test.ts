@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { ScriptService } from './scripts';
 import type { RequestOptions, ResponseState } from '../types';
+import { rawRequestBody } from './request-body';
 
 function createResponse(overrides: Partial<ResponseState> = {}): ResponseState {
   return {
@@ -27,7 +28,7 @@ describe('ScriptService', () => {
       method: 'POST',
       url: 'https://example.com/users',
       headers: {},
-      body: '{"name":"Jane"}',
+      body: rawRequestBody('{"name":"Jane"}'),
       scripts: {
         beforeRequest: `
           request.url += '?debug=true';
