@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useKeyboard } from '@opentui/react';
-import { loadCollections, sendRequest } from '../../core/services';
-import { ThemeSelector } from '../../shared/components/ThemeSelector';
+import { loadCollections, loadHistory, sendRequest } from '../../core/services';
+import { HistoryModal, Modal, ThemeSelector } from '../../shared/components';
+import type { HistoryEntry, RequestOptions } from '../../core/types';
 import { CliInput } from './components/CliInput';
 import { CliOutput } from './components/CliOutput';
 import { InputSuggestionPanel } from './components/InputSuggestionPanel';
@@ -13,9 +14,13 @@ import { parseUnifiedInput } from './parser/unifiedInputParser';
 import { handleShellCommand } from './shell/handlers';
 import { renderVirtualPath } from './shell/virtualFs';
 import { renderSystemMessage } from './render/systemMessage';
+import { appendCliHistoryEntry } from './utils/history';
 
 export function CliApp() {
   const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const { state, setState, pushOutput, pushResponseOutput } = useCliState();
   const keyboardNavigation = useCliKeyboardNavigation({
     outputs: state.outputs,
@@ -41,6 +46,53 @@ export function CliApp() {
     const exit = (globalThis as { __mailmanCleanExit?: () => void }).__mailmanCleanExit;
     if (exit) exit();
   }, []);
+
+  const openHistory = useCallback(async () => {
+    setHistoryError(null);
+    const entries = await loadHistory();
+    setHistoryEntries(entries);
+    setShowHistoryModal(true);
+  }, []);
+
+  const requestFromHistoryEntry = useCallback((entry: HistoryEntry): RequestOptions => {
+    return {
+      method: entry.request.method,
+      url: entry.request.url,
+      headers: entry.request.headers,
+      body: entry.request.body,
+      auth: entry.request.auth,
+      scripts: entry.request.scripts,
+    };
+  }, []);
+
+  const openHistoryEntry = useCallback(
+    (entry: HistoryEntry) => {
+      const request = requestFromHistoryEntry(entry);
+      const protocol = entry.response.mode === 'sse' ? 'sse' : entry.protocol;
+      setState((prev) => ({
+        ...prev,
+        activeCollectionId: entry.collectionId ?? prev.activeCollectionId,
+        activeRequest: request,
+        lastResponse: entry.response,
+      }));
+      pushResponseOutput(entry.response, {
+        protocol: protocol === 'websocket' ? 'rest' : protocol,
+        method: entry.request.method,
+        url: entry.request.url,
+      });
+      setHistoryError(null);
+      setShowHistoryModal(false);
+    },
+    [pushResponseOutput, requestFromHistoryEntry, setState],
+  );
+
+  const reportHistorySaveError = useCallback(
+    (error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      pushOutput('error', `Failed to save history: ${message}`);
+    },
+    [pushOutput],
+  );
 
   const submitInput = useCallback(
     async (rawInput?: string) => {
@@ -71,6 +123,7 @@ export function CliApp() {
             setState,
             cleanExit,
             openThemeSelector: () => setShowThemeSelector(true),
+            openHistory,
           });
 
           if (result.error) {
@@ -99,6 +152,12 @@ export function CliApp() {
 
           setState((prev) => ({ ...prev, isLoading: true, activeRequest: result.request! }));
           const response = await sendRequest(result.request);
+          void appendCliHistoryEntry(result.request, response, {
+            protocol: result.protocol ?? 'rest',
+            collectionId: result.collectionId,
+            requestId: result.requestId,
+            requestName: result.requestName,
+          }).catch(reportHistorySaveError);
           setState((prev) => ({ ...prev, isLoading: false, lastResponse: response }));
           pushResponseOutput(response, {
             protocol: result.protocol ?? 'rest',
@@ -110,6 +169,9 @@ export function CliApp() {
 
         setState((prev) => ({ ...prev, isLoading: true, activeRequest: parsed.request }));
         const response = await sendRequest(parsed.request);
+        void appendCliHistoryEntry(parsed.request, response, {
+          protocol: parsed.protocol ?? 'rest',
+        }).catch(reportHistorySaveError);
         setState((prev) => ({ ...prev, isLoading: false, lastResponse: response }));
         pushResponseOutput(response, {
           protocol: parsed.protocol ?? 'rest',
@@ -122,12 +184,30 @@ export function CliApp() {
         pushOutput('error', message);
       }
     },
-    [cleanExit, commands, pushOutput, pushResponseOutput, setState, state, state.input],
+    [
+      cleanExit,
+      commands,
+      openHistory,
+      pushOutput,
+      pushResponseOutput,
+      reportHistorySaveError,
+      setState,
+      state,
+      state.input,
+    ],
   );
 
   useKeyboard((key) => {
     if (key.ctrl && key.name === 'q') {
       cleanExit();
+      return;
+    }
+
+    if (showHistoryModal) {
+      if (key.name === 'escape') {
+        setShowHistoryModal(false);
+        setHistoryError(null);
+      }
       return;
     }
 
@@ -307,6 +387,22 @@ export function CliApp() {
         suggestions={suggestions.suggestions}
         selectedIndex={suggestions.selectedIndex}
       />
+      <Modal
+        isOpen={showHistoryModal}
+        onClose={() => {
+          setShowHistoryModal(false);
+          setHistoryError(null);
+        }}
+        title="Request History"
+        subtitle={`${historyEntries.length} entries`}
+      >
+        <HistoryModal
+          entries={historyEntries}
+          onOpenEntry={openHistoryEntry}
+          errorMessage={historyError}
+          allowSnapshotOpen={true}
+        />
+      </Modal>
       <ThemeSelector isOpen={showThemeSelector} onClose={() => setShowThemeSelector(false)} />
     </box>
   );

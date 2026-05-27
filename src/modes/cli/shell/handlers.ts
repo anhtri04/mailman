@@ -20,6 +20,9 @@ interface ShellContext {
 export interface ShellCommandResult extends CommandResult {
   request?: RequestOptions;
   protocol?: CliResponseProtocol;
+  collectionId?: string;
+  requestId?: string;
+  requestName?: string;
 }
 
 function shellHelp(): string {
@@ -130,7 +133,13 @@ export async function handleShellCommand(
         activeRequest: options,
         collections,
       }));
-      return { request: options, protocol: request.protocol === 'graphql' ? 'graphql' : 'rest' };
+      return {
+        request: options,
+        protocol: request.protocol === 'graphql' ? 'graphql' : 'rest',
+        collectionId: target.path.kind === 'request' ? target.path.collectionId : undefined,
+        requestId: target.path.kind === 'request' ? target.path.requestId : undefined,
+        requestName: request.name,
+      };
     }
     default:
       return { error: `Unknown shell command: ${parsed.name}. Try help.` };

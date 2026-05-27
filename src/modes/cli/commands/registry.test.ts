@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { getCommands, resolveCommand } from './registry';
+import type { CommandContext } from './registry';
 
 describe('command registry', () => {
   test('resolves command by name', () => {
@@ -18,5 +19,24 @@ describe('command registry', () => {
     const commands = getCommands();
     const cmd = resolveCommand('missing', commands);
     expect(cmd).toBeNull();
+  });
+
+  test('opens history command', async () => {
+    const commands = getCommands();
+    const cmd = resolveCommand('history', commands);
+    let opened = false;
+    const ctx = {
+      state: {},
+      setState: () => {},
+      cleanExit: () => {},
+      openThemeSelector: () => {},
+      openHistory: () => {
+        opened = true;
+      },
+    } as unknown as CommandContext;
+
+    const result = await cmd?.handler([], ctx);
+    expect(opened).toBe(true);
+    expect(result?.message).toBe('Opening request history.');
   });
 });

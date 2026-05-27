@@ -7,6 +7,7 @@ export interface CommandContext {
   setState: (updater: (prev: CliSessionState) => CliSessionState) => void;
   cleanExit: () => void;
   openThemeSelector: () => void;
+  openHistory: () => Promise<void> | void;
 }
 
 export interface CommandResult {

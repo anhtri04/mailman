@@ -28,7 +28,7 @@ export function buildCoreCommands(): CliCommand[] {
       argsSpec: [{ name: 'command', required: false, dynamicValues: 'commands' }],
       handler: (_args, _ctx) => ({
         message:
-          'Commands: /help, /theme, /collections, /use <id|name>, /show <body|headers|meta>, /hide <body|headers|meta>, /clear, /exit',
+          'Commands: /help, /theme, /history, /collections, /use <id|name>, /show <body|headers|meta>, /hide <body|headers|meta>, /clear, /exit',
       }),
     },
     {
@@ -67,6 +67,16 @@ export function buildCoreCommands(): CliCommand[] {
       handler: (_args, ctx) => {
         ctx.openThemeSelector();
         return { message: 'Opening theme selector.' };
+      },
+    },
+    {
+      name: 'history',
+      aliases: ['hist'],
+      description: 'Open request history',
+      usage: '/history',
+      handler: async (_args, ctx) => {
+        await ctx.openHistory();
+        return { message: 'Opening request history.' };
       },
     },
     {
