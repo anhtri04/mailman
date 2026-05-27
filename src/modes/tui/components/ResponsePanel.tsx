@@ -110,8 +110,8 @@ export function ResponsePanel({
           style={{
             paddingLeft: 2,
             paddingRight: 2,
-            paddingTop: 0.5,
-            paddingBottom: 0.5,
+            paddingTop: 0,
+            paddingBottom: 0,
             border: true,
             borderColor: isActive ? colors.accent.primary : colors.border.default,
           }}
@@ -134,8 +134,8 @@ export function ResponsePanel({
           style={{
             paddingLeft: 2,
             paddingRight: 2,
-            paddingTop: 0.5,
-            paddingBottom: 0.5,
+            paddingTop: 0,
+            paddingBottom: 0,
             border: true,
             borderColor: isActive ? colors.accent.primary : colors.border.default,
           }}
