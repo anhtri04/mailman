@@ -276,6 +276,7 @@ export function CliApp() {
         position: 'relative',
         flexDirection: 'column',
         height: '100%',
+        minHeight: 0,
         padding: 1,
         gap: 0,
       }}

@@ -15,13 +15,13 @@ export function CliInput({ value, prompt, onChange, onFocus, focused = true }: C
     <box
       style={{
         flexDirection: 'row',
+        flexShrink: 0,
+        height: 3,
         border: true,
         borderStyle: 'rounded',
         borderColor: colors.accent.primary,
         paddingLeft: 1,
         paddingRight: 1,
-        paddingTop: 0.5,
-        alignItems: 'center',
       }}
       onMouseDown={onFocus}
     >

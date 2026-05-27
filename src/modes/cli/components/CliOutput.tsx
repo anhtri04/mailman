@@ -42,6 +42,8 @@ export function CliOutput({
       style={{
         flexDirection: 'column',
         flexGrow: 1,
+        flexShrink: 1,
+        minHeight: 0,
         border: true,
         borderStyle: 'rounded',
         borderColor: focused ? colors.accent.primary : colors.border.default,
@@ -49,12 +51,12 @@ export function CliOutput({
       }}
       onMouseDown={onFocus}
     >
-      <box style={{ marginTop: -2 }}>
+      <box style={{ marginTop: -2, flexShrink: 0 }}>
         <text fg={colors.accent.primary} style={{ paddingLeft: 1, paddingRight: 1 }}>
           <strong> Output </strong>
         </text>
       </box>
-      <scrollbox style={{ flexGrow: 1 }}>
+      <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
         <box style={{ flexDirection: 'column', gap: 1 }}>
           {outputs.length === 0 ? (
             <text fg={colors.text.muted}>
