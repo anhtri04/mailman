@@ -29,7 +29,7 @@ function loadThemes(): OpencodeTheme[] {
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themes, setThemes] = useState<OpencodeTheme[]>([]);
-  const [currentThemeId, setCurrentThemeId] = useState('dracula');
+  const [currentThemeId, setCurrentThemeId] = useState('');
   const [colors, setColors] = useState<MailmanColors>(defaultColors);
   const [isLoading, setIsLoading] = useState(true);
 

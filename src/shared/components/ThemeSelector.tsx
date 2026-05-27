@@ -15,6 +15,13 @@ export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
   const { colors, themes, currentThemeId, setTheme, previewTheme } = useTheme();
   const [selectedId, setSelectedId] = useState(currentThemeId);
 
+  // Sync selectedId with currentThemeId when modal opens or currentThemeId changes
+  useEffect(() => {
+    if (isOpen && currentThemeId) {
+      setSelectedId(currentThemeId);
+    }
+  }, [isOpen, currentThemeId]);
+
   // Preview theme immediately when selection changes
   useEffect(() => {
     if (isOpen) {
