@@ -46,6 +46,8 @@ export function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
       if (selectedIndex < themes.length - 1) {
         setSelectedId(themes[selectedIndex + 1]!.id);
       }
+    } else if (key.name === 'return' || key.name === 'enter') {
+        handleSave();
     }
   });
 
