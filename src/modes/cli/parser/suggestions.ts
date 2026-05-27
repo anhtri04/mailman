@@ -337,6 +337,20 @@ function shellSuggestions(raw: string, context: InputAnalysisContext): InputAnal
     };
   }
 
+  const hasArgument = tokens.length > 1;
+  if (hasArgument && trailingWhitespace) {
+    return {
+      raw,
+      mode: 'shell',
+      valid: true,
+      complete: true,
+      canSubmit: true,
+      tokens,
+      suggestions: [],
+      errors: [],
+    };
+  }
+
   return {
     raw,
     mode: 'shell',
