@@ -108,7 +108,9 @@ A terminal-based HTTP client built with Bun and OpenTUI.
 - [ ] **Search Bar for List Selector**
   - Such as Theme Selector
 
-- [ ] ****
+- [ ] **Sandbox Environment for Scripts**
+
+- [ ] **Git Integration and Share Workspace**
 
 ### Medium Priority
 
