@@ -20,6 +20,7 @@ export function CliApp() {
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const { state, setState, pushOutput, pushResponseOutput } = useCliState();
@@ -42,6 +43,10 @@ export function CliApp() {
       setState((prev) => ({ ...prev, collections }));
     })();
   }, [setState]);
+
+  useEffect(() => {
+    setShowSuggestions(true);
+  }, [state.input, suggestions.suggestions.length]);
 
   const cleanExit = useCallback(() => {
     const exit = (globalThis as { __mailmanCleanExit?: () => void }).__mailmanCleanExit;
@@ -210,6 +215,13 @@ export function CliApp() {
       return;
     }
 
+    if (suggestions.visible && showSuggestions) {
+      if (key.name === 'escape') {
+        setShowSuggestions(false);
+        return;
+      }
+    }
+
     if (showHistoryModal) {
       if (key.name === 'escape') {
         setShowHistoryModal(false);
@@ -306,7 +318,7 @@ export function CliApp() {
     }
 
     if (key.name === 'return' || key.name === 'enter') {
-      const selection = suggestions.selectForEnter();
+      const selection = suggestions.visible && showSuggestions ? suggestions.selectForEnter() : null;
       if (selection) {
         if (selection.executeNow) {
           void submitInput(selection.nextInput);
@@ -323,7 +335,7 @@ export function CliApp() {
     }
 
     if (key.name === 'tab') {
-      const completedInput = suggestions.autocompleteInput();
+      const completedInput = suggestions.visible && showSuggestions ? suggestions.autocompleteInput() : null;
       if (!completedInput) return;
 
       setState((prev) => ({ ...prev, input: completedInput, historyIndex: null }));
@@ -331,7 +343,7 @@ export function CliApp() {
     }
 
     if (key.name === 'up') {
-      if (suggestions.visible) {
+      if (suggestions.visible && showSuggestions) {
         suggestions.moveSelectionUp();
         return;
       }
@@ -347,7 +359,7 @@ export function CliApp() {
     }
 
     if (key.name === 'down') {
-      if (suggestions.visible) {
+      if (suggestions.visible && showSuggestions) {
         suggestions.moveSelectionDown();
         return;
       }
@@ -408,8 +420,9 @@ export function CliApp() {
       />
       <InputSuggestionPanel
         visible={
-          !showThemeSelector && !showHistoryModal && !showSettingsModal && suggestions.visible
+          !showThemeSelector && !showHistoryModal && !showSettingsModal && suggestions.visible && showSuggestions
         }
+        onClose={() => setShowSuggestions(false)}
         suggestions={suggestions.suggestions}
         selectedIndex={suggestions.selectedIndex}
       />

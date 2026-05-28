@@ -6,6 +6,7 @@ const MAX_VISIBLE_SUGGESTIONS = 6;
 
 interface InputSuggestionPanelProps {
   visible: boolean;
+  onClose: () => void
   suggestions: InputSuggestion[];
   selectedIndex: number;
 }
