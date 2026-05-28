@@ -1,33 +1,25 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { existsSync, mkdirSync } from 'fs';
-import { readFile, unlink, writeFile } from 'fs/promises';
-import { homedir } from 'os';
+import { mkdtemp, rm } from 'fs/promises';
+import { tmpdir } from 'os';
 import { join } from 'path';
 import { rawRequestBody } from '../../../core/services';
 import { loadHistory } from '../../../core/services/history';
+import { closeDatabase } from '../../../core/services/storage-db';
 import { appendCliHistoryEntry } from './history';
 
-const MAILMAN_DIR = join(homedir(), '.mailman');
-const HISTORY_FILE = join(MAILMAN_DIR, 'history.json');
-
 describe('appendCliHistoryEntry', () => {
-  let originalHistoryRaw: string | null = null;
+  let testHome: string;
 
   beforeEach(async () => {
-    mkdirSync(MAILMAN_DIR, { recursive: true });
-    if (existsSync(HISTORY_FILE)) {
-      originalHistoryRaw = await readFile(HISTORY_FILE, 'utf-8').catch(() => null);
-    }
-    await writeFile(HISTORY_FILE, JSON.stringify([]), 'utf-8');
+    testHome = await mkdtemp(join(tmpdir(), 'mailman-cli-history-'));
+    process.env.MAILMAN_HOME = testHome;
+    closeDatabase();
   });
 
   afterEach(async () => {
-    if (originalHistoryRaw !== null) {
-      await writeFile(HISTORY_FILE, originalHistoryRaw, 'utf-8');
-      originalHistoryRaw = null;
-      return;
-    }
-    await unlink(HISTORY_FILE).catch(() => {});
+    closeDatabase();
+    delete process.env.MAILMAN_HOME;
+    await rm(testHome, { recursive: true, force: true });
   });
 
   test('persists anonymous REST request without collection references', async () => {

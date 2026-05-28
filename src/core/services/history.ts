@@ -1,11 +1,7 @@
-import { existsSync, mkdirSync } from 'fs';
-import { readFile, writeFile } from 'fs/promises';
-import { homedir } from 'os';
-import { join } from 'path';
+import { randomUUID } from 'crypto';
 import type { AuthConfig, HistoryEntry, HistoryEntryInput } from '../types';
+import { getDatabase } from './storage-db';
 
-const MAILMAN_DIR = join(homedir(), '.mailman');
-const HISTORY_FILE = join(MAILMAN_DIR, 'history.json');
 const REDACTED = '[REDACTED]';
 const HISTORY_RETENTION_LIMIT = 300;
 const SENSITIVE_HEADERS = new Set([
@@ -16,10 +12,8 @@ const SENSITIVE_HEADERS = new Set([
   'proxy-authorization',
 ]);
 
-function ensureDir() {
-  if (!existsSync(MAILMAN_DIR)) {
-    mkdirSync(MAILMAN_DIR, { recursive: true });
-  }
+interface HistoryPayloadRow {
+  payload_json: string;
 }
 
 function redactHeaders(headers: Record<string, string>): Record<string, string> {
@@ -81,40 +75,146 @@ function sanitizeEntry(entry: HistoryEntryInput): HistoryEntryInput {
   };
 }
 
-export async function loadHistory(): Promise<HistoryEntry[]> {
+function createHistoryId(): string {
+  return `${Date.now()}-${randomUUID()}`;
+}
+
+function normalizeLimit(limit: number): number {
+  if (!Number.isFinite(limit)) return HISTORY_RETENTION_LIMIT;
+  return Math.max(1, Math.floor(limit));
+}
+
+function parseHistoryEntry(row: HistoryPayloadRow): HistoryEntry | null {
   try {
-    ensureDir();
-    const raw = await readFile(HISTORY_FILE, 'utf-8');
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return parsed as HistoryEntry[];
-    }
-    return [];
+    return JSON.parse(row.payload_json) as HistoryEntry;
   } catch {
-    return [];
+    return null;
   }
 }
 
+function parseHistoryRows(rows: HistoryPayloadRow[]): HistoryEntry[] {
+  return rows.map(parseHistoryEntry).filter((entry): entry is HistoryEntry => entry !== null);
+}
+
+export async function loadHistory(): Promise<HistoryEntry[]> {
+  const db = getDatabase();
+  const rows = db
+    .query(
+      `
+      SELECT payload_json
+      FROM history
+      ORDER BY timestamp DESC, rowid DESC
+      LIMIT ?
+      `,
+    )
+    .all(HISTORY_RETENTION_LIMIT) as HistoryPayloadRow[];
+
+  return parseHistoryRows(rows);
+}
+
+export async function loadHistoryForRequest(
+  requestId: string,
+  limit = HISTORY_RETENTION_LIMIT,
+): Promise<HistoryEntry[]> {
+  const db = getDatabase();
+  const rows = db
+    .query(
+      `
+      SELECT payload_json
+      FROM history
+      WHERE request_id = ?
+      ORDER BY timestamp DESC, rowid DESC
+      LIMIT ?
+      `,
+    )
+    .all(requestId, normalizeLimit(limit)) as HistoryPayloadRow[];
+
+  return parseHistoryRows(rows);
+}
+
+export async function loadHistoryForCollection(
+  collectionId: string,
+  limit = HISTORY_RETENTION_LIMIT,
+): Promise<HistoryEntry[]> {
+  const db = getDatabase();
+  const rows = db
+    .query(
+      `
+      SELECT payload_json
+      FROM history
+      WHERE collection_id = ?
+      ORDER BY timestamp DESC, rowid DESC
+      LIMIT ?
+      `,
+    )
+    .all(collectionId, normalizeLimit(limit)) as HistoryPayloadRow[];
+
+  return parseHistoryRows(rows);
+}
+
 export async function appendHistoryEntry(entry: HistoryEntryInput): Promise<void> {
-  const existing = await loadHistory();
+  const db = getDatabase();
+  const timestamp = Date.now();
   const nextEntry: HistoryEntry = {
     ...sanitizeEntry(entry),
-    id: Date.now().toString(),
-    timestamp: Date.now(),
+    id: createHistoryId(),
+    timestamp,
   };
-  const next = [nextEntry, ...existing].slice(0, HISTORY_RETENTION_LIMIT);
-  ensureDir();
-  await writeFile(HISTORY_FILE, JSON.stringify(next, null, 2), 'utf-8');
+
+  const insert = db.query(`
+    INSERT INTO history (
+      id,
+      timestamp,
+      protocol,
+      collection_id,
+      request_id,
+      request_name,
+      method,
+      url,
+      status,
+      time_ms,
+      payload_json
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const prune = db.query(`
+    DELETE FROM history
+    WHERE rowid NOT IN (
+      SELECT rowid
+      FROM history
+      ORDER BY timestamp DESC, rowid DESC
+      LIMIT ?
+    )
+  `);
+
+  const transaction = db.transaction(() => {
+    insert.run(
+      nextEntry.id,
+      nextEntry.timestamp,
+      nextEntry.protocol,
+      nextEntry.collectionId ?? null,
+      nextEntry.requestId ?? null,
+      nextEntry.requestName ?? null,
+      nextEntry.request.method,
+      nextEntry.request.url,
+      nextEntry.response.status,
+      nextEntry.response.time,
+      JSON.stringify(nextEntry),
+    );
+
+    prune.run(HISTORY_RETENTION_LIMIT);
+  });
+
+  transaction();
 }
 
 export async function deleteHistoryEntry(id: string): Promise<void> {
-  const existing = await loadHistory();
-  const next = existing.filter((entry) => entry.id !== id);
-  ensureDir();
-  await writeFile(HISTORY_FILE, JSON.stringify(next, null, 2), 'utf-8');
+  const db = getDatabase();
+  db.query('DELETE FROM history WHERE id = ?').run(id);
 }
 
 export async function clearHistory(): Promise<void> {
-  ensureDir();
-  await writeFile(HISTORY_FILE, JSON.stringify([], null, 2), 'utf-8');
+  const db = getDatabase();
+  db.run('DELETE FROM history');
 }

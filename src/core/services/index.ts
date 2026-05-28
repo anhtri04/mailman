@@ -32,4 +32,11 @@ export {
 } from './collection';
 export { importCollectionsFromFile } from './import';
 export { loadPreferences, savePreferences } from './preferences';
-export { loadHistory, appendHistoryEntry, deleteHistoryEntry, clearHistory } from './history';
+export {
+  loadHistory,
+  loadHistoryForRequest,
+  loadHistoryForCollection,
+  appendHistoryEntry,
+  deleteHistoryEntry,
+  clearHistory,
+} from './history';
