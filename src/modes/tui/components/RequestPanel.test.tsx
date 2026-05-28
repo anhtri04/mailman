@@ -26,4 +26,17 @@ describe('RequestPanel', () => {
       '[onFocus, activeTab, onOpenHeaders, onOpenBody, onOpenQuery, onOpenAuth, onOpenScripts]',
     );
   });
+
+  test('should open REST editor tabs with focused panel keyboard shortcuts', () => {
+    const componentString = RequestPanel.toString();
+    expect(componentString).toContain('useKeyboard');
+    expect(componentString).toContain('!focused || isModalOpen || activeEditor !== null');
+    expect(componentString).toContain('key.ctrl');
+    expect(componentString).toContain('h: "headers"');
+    expect(componentString).toContain('b: "body"');
+    expect(componentString).toContain('q: "query"');
+    expect(componentString).toContain('a: "auth"');
+    expect(componentString).toContain('s: "scripts"');
+    expect(componentString).toContain('openTab(tab)');
+  });
 });

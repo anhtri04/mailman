@@ -32,4 +32,13 @@ describe('WebSocketRequestPanel', () => {
     expect(componentString).toContain('Saved');
     expect(componentString).toContain('Save failed');
   });
+
+  test('should open headers with focused panel keyboard shortcut', () => {
+    const componentString = WebSocketRequestPanel.toString();
+    expect(componentString).toContain('useKeyboard');
+    expect(componentString).toContain('!focused || isModalOpen || activeEditor !== null');
+    expect(componentString).toContain('key.ctrl');
+    expect(componentString).toContain('key.name?.toLowerCase() !== "h"');
+    expect(componentString).toContain('openHeadersTab()');
+  });
 });

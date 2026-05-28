@@ -50,4 +50,16 @@ describe('GraphQLRequestPanel', () => {
     expect(componentString).toContain('formatGraphQLVariables');
     expect(componentString).toContain('replaceText');
   });
+
+  test('should open GraphQL editor tabs with focused panel keyboard shortcuts', () => {
+    const componentString = GraphQLRequestPanel.toString();
+    expect(componentString).toContain('useKeyboard');
+    expect(componentString).toContain('!focused');
+    expect(componentString).toContain('isModalOpen || activeEditor !== null');
+    expect(componentString).toContain('key.ctrl');
+    expect(componentString).toContain('h: "headers"');
+    expect(componentString).toContain('a: "auth"');
+    expect(componentString).toContain('s: "scripts"');
+    expect(componentString).toContain('openTab(tab)');
+  });
 });

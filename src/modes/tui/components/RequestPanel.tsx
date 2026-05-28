@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { AuthConfig, RequestBody, RequestScripts } from '../../../types';
 import { requestBodyHasContent } from '../../../core/services';
@@ -70,11 +71,10 @@ export function RequestPanel({
   const hasAuth = !!auth && auth.type !== 'none';
   const hasScripts = !!scripts?.beforeRequest?.trim() || !!scripts?.afterResponse?.trim();
 
-  const handleTabClick = useCallback(
-    (tab: Tab) => (e: { stopPropagation: () => void }) => {
-      e.stopPropagation();
+  const openTab = useCallback(
+    (tab: Tab) => {
       setActiveEditor(null);
-      // Toggle: if clicking same tab, close it; otherwise open new one
+      // Toggle: if opening same tab, close it; otherwise open new one
       if (activeTab === tab) {
         setActiveTab(null);
       } else {
@@ -85,9 +85,17 @@ export function RequestPanel({
         else if (tab === 'auth') onOpenAuth();
         else if (tab === 'scripts') onOpenScripts();
       }
-      onFocus(); // Focus the Request Panel if clicking its Tabs
+      onFocus(); // Focus the Request Panel when opening its Tabs
     },
     [onFocus, activeTab, onOpenHeaders, onOpenBody, onOpenQuery, onOpenAuth, onOpenScripts],
+  );
+
+  const handleTabClick = useCallback(
+    (tab: Tab) => (e: { stopPropagation: () => void }) => {
+      e.stopPropagation();
+      openTab(tab);
+    },
+    [openTab],
   );
 
   useEffect(() => {
@@ -95,6 +103,26 @@ export function RequestPanel({
       setActiveTab(null);
     }
   }, [isModalOpen]);
+
+  useKeyboard((key) => {
+    if (!focused || isModalOpen || activeEditor !== null) return;
+    if (key.ctrl) return;
+
+    const shortcutTabs: Record<string, Tab> = {
+      h: 'headers',
+      b: 'body',
+      q: 'query',
+      a: 'auth',
+      s: 'scripts',
+    };
+
+    const tab = key.name ? shortcutTabs[key.name.toLowerCase()] : undefined;
+    if (!tab) return;
+
+    key.preventDefault();
+    key.stopPropagation();
+    openTab(tab);
+  });
 
   const renderTabButton = useCallback(
     (tab: Tab, label: string, hasData: boolean) => {

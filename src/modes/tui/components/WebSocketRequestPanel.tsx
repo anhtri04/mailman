@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
 
 type ActiveTab = 'headers' | null;
@@ -46,11 +47,32 @@ export function WebSocketRequestPanel({
   const urlFocused = focused && activeEditor === 'url';
   const messageFocused = focused && activeEditor === 'message';
 
+  const openHeadersTab = useCallback(() => {
+    setActiveEditor(null);
+    if (activeTab === 'headers') {
+      setActiveTab(null);
+    } else {
+      setActiveTab('headers');
+      onOpenHeaders();
+    }
+    onFocus();
+  }, [activeTab, onFocus, onOpenHeaders]);
+
   useEffect(() => {
     if (!isModalOpen) {
       setActiveTab(null);
     }
   }, [isModalOpen]);
+
+  useKeyboard((key) => {
+    if (!focused || isModalOpen || activeEditor !== null) return;
+    if (key.ctrl) return;
+    if (key.name?.toLowerCase() !== 'h') return;
+
+    key.preventDefault();
+    key.stopPropagation();
+    openHeadersTab();
+  });
 
   return (
     <box
@@ -131,14 +153,7 @@ export function WebSocketRequestPanel({
           }}
           onMouseDown={(e) => {
             e.stopPropagation();
-            setActiveEditor(null);
-            if (activeTab === 'headers') {
-              setActiveTab(null);
-            } else {
-              setActiveTab('headers');
-              onOpenHeaders();
-            }
-            onFocus();
+            openHeadersTab();
           }}
         >
           <text

@@ -93,9 +93,8 @@ export function GraphQLRequestPanel({
     }
   }, [isModalOpen]);
 
-  const handleTabClick = useCallback(
-    (tab: Tab) => (e: { stopPropagation: () => void }) => {
-      e.stopPropagation();
+  const openTab = useCallback(
+    (tab: Tab) => {
       setActiveEditor(null);
       if (activeTab === tab) {
         setActiveTab(null);
@@ -105,9 +104,17 @@ export function GraphQLRequestPanel({
         else if (tab === 'auth') onOpenAuth();
         else if (tab === 'scripts') onOpenScripts();
       }
-      onFocus(); // Focus the Request Panel if clicking its Tabs
+      onFocus(); // Focus the Request Panel when opening its Tabs
     },
     [onFocus, activeTab, onOpenHeaders, onOpenAuth, onOpenScripts],
+  );
+
+  const handleTabClick = useCallback(
+    (tab: Tab) => (e: { stopPropagation: () => void }) => {
+      e.stopPropagation();
+      openTab(tab);
+    },
+    [openTab],
   );
 
   const handleQueryChange = useCallback(() => {
@@ -139,42 +146,63 @@ export function GraphQLRequestPanel({
   }, []);
 
   useKeyboard((key) => {
-    if (!focused || !(key.ctrl && key.name === 'f')) return;
-    key.preventDefault();
-    key.stopPropagation();
+    if (!focused) return;
 
-    if (activeEditor === 'query') {
-      const currentQuery = queryRef.current?.plainText ?? query;
-      const result = formatGraphQLQuery(currentQuery);
-      if (result.error) {
-        showQueryFormatStatus(result.error);
+    if (key.ctrl && key.name === 'f') {
+      key.preventDefault();
+      key.stopPropagation();
+
+      if (activeEditor === 'query') {
+        const currentQuery = queryRef.current?.plainText ?? query;
+        const result = formatGraphQLQuery(currentQuery);
+        if (result.error) {
+          showQueryFormatStatus(result.error);
+          return;
+        }
+        if (!result.changed) {
+          showQueryFormatStatus('Already formatted');
+          return;
+        }
+        queryRef.current?.replaceText(result.value);
+        onQueryChange(result.value);
+        showQueryFormatStatus('Formatted ✓');
         return;
       }
-      if (!result.changed) {
-        showQueryFormatStatus('Already formatted');
-        return;
+
+      if (activeEditor === 'variables') {
+        const currentVariables = variablesRef.current?.plainText ?? variables;
+        const result = formatGraphQLVariables(currentVariables);
+        if (result.error) {
+          showVariablesFormatStatus(result.error);
+          return;
+        }
+        if (!result.changed) {
+          showVariablesFormatStatus('Already formatted');
+          return;
+        }
+        variablesRef.current?.replaceText(result.value);
+        onVariablesChange(result.value);
+        showVariablesFormatStatus('Formatted ✓');
       }
-      queryRef.current?.replaceText(result.value);
-      onQueryChange(result.value);
-      showQueryFormatStatus('Formatted ✓');
+
       return;
     }
 
-    if (activeEditor === 'variables') {
-      const currentVariables = variablesRef.current?.plainText ?? variables;
-      const result = formatGraphQLVariables(currentVariables);
-      if (result.error) {
-        showVariablesFormatStatus(result.error);
-        return;
-      }
-      if (!result.changed) {
-        showVariablesFormatStatus('Already formatted');
-        return;
-      }
-      variablesRef.current?.replaceText(result.value);
-      onVariablesChange(result.value);
-      showVariablesFormatStatus('Formatted ✓');
-    }
+    if (isModalOpen || activeEditor !== null) return;
+    if (key.ctrl) return;
+
+    const shortcutTabs: Record<string, Tab> = {
+      h: 'headers',
+      a: 'auth',
+      s: 'scripts',
+    };
+
+    const tab = key.name ? shortcutTabs[key.name.toLowerCase()] : undefined;
+    if (!tab) return;
+
+    key.preventDefault();
+    key.stopPropagation();
+    openTab(tab);
   });
 
   const renderTabButton = useCallback(
