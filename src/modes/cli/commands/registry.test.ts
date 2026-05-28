@@ -33,10 +33,31 @@ describe('command registry', () => {
       openHistory: () => {
         opened = true;
       },
+      openSettings: () => {},
     } as unknown as CommandContext;
 
     const result = await cmd?.handler([], ctx);
     expect(opened).toBe(true);
     expect(result?.message).toBe('Opening request history.');
+  });
+
+  test('opens settings command', async () => {
+    const commands = getCommands();
+    const cmd = resolveCommand('settings', commands);
+    let opened = false;
+    const ctx = {
+      state: {},
+      setState: () => {},
+      cleanExit: () => {},
+      openThemeSelector: () => {},
+      openHistory: () => {},
+      openSettings: () => {
+        opened = true;
+      },
+    } as unknown as CommandContext;
+
+    const result = await cmd?.handler([], ctx);
+    expect(opened).toBe(true);
+    expect(result?.message).toBe('Opening settings panel.');
   });
 });

@@ -8,6 +8,7 @@ export interface CommandContext {
   cleanExit: () => void;
   openThemeSelector: () => void;
   openHistory: () => Promise<void> | void;
+  openSettings: () => void;
 }
 
 export interface CommandResult {

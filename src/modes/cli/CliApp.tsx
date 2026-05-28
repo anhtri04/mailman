@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { loadCollections, loadHistory, sendRequest } from '../../core/services';
-import { HistoryModal, Modal, ThemeSelector } from '../../shared/components';
+import { HistoryModal, Modal, SettingsModal, ThemeSelector } from '../../shared/components';
 import type { HistoryEntry, RequestOptions } from '../../core/types';
 import { CliInput } from './components/CliInput';
 import { CliOutput } from './components/CliOutput';
@@ -19,6 +19,7 @@ import { appendCliHistoryEntry } from './utils/history';
 export function CliApp() {
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const { state, setState, pushOutput, pushResponseOutput } = useCliState();
@@ -52,6 +53,10 @@ export function CliApp() {
     const entries = await loadHistory();
     setHistoryEntries(entries);
     setShowHistoryModal(true);
+  }, []);
+
+  const openSettings = useCallback(() => {
+    setShowSettingsModal(true);
   }, []);
 
   const requestFromHistoryEntry = useCallback((entry: HistoryEntry): RequestOptions => {
@@ -124,6 +129,7 @@ export function CliApp() {
             cleanExit,
             openThemeSelector: () => setShowThemeSelector(true),
             openHistory,
+            openSettings,
           });
 
           if (result.error) {
@@ -188,6 +194,7 @@ export function CliApp() {
       cleanExit,
       commands,
       openHistory,
+      openSettings,
       pushOutput,
       pushResponseOutput,
       reportHistorySaveError,
@@ -207,6 +214,13 @@ export function CliApp() {
       if (key.name === 'escape') {
         setShowHistoryModal(false);
         setHistoryError(null);
+      }
+      return;
+    }
+
+    if (showSettingsModal) {
+      if (key.name === 'escape') {
+        setShowSettingsModal(false);
       }
       return;
     }
@@ -364,7 +378,12 @@ export function CliApp() {
       <CliOutput
         outputs={state.outputs}
         toggles={state.toggles}
-        focused={keyboardNavigation.focusedPanel === 'output' && !showThemeSelector}
+        focused={
+          keyboardNavigation.focusedPanel === 'output' &&
+          !showThemeSelector &&
+          !showHistoryModal &&
+          !showSettingsModal
+        }
         selectedResponseId={keyboardNavigation.selectedResponseId}
         selectedSectionId={keyboardNavigation.selectedSectionId}
         onFocus={keyboardNavigation.focusOutput}
@@ -378,12 +397,19 @@ export function CliApp() {
       <CliInput
         value={state.input}
         prompt={prompt}
-        focused={keyboardNavigation.focusedPanel === 'input' && !showThemeSelector}
+        focused={
+          keyboardNavigation.focusedPanel === 'input' &&
+          !showThemeSelector &&
+          !showHistoryModal &&
+          !showSettingsModal
+        }
         onChange={(value) => setState((prev) => ({ ...prev, input: value }))}
         onFocus={keyboardNavigation.focusInput}
       />
       <InputSuggestionPanel
-        visible={!showThemeSelector && suggestions.visible}
+        visible={
+          !showThemeSelector && !showHistoryModal && !showSettingsModal && suggestions.visible
+        }
         suggestions={suggestions.suggestions}
         selectedIndex={suggestions.selectedIndex}
       />
@@ -404,6 +430,7 @@ export function CliApp() {
         />
       </Modal>
       <ThemeSelector isOpen={showThemeSelector} onClose={() => setShowThemeSelector(false)} />
+      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
     </box>
   );
 }
