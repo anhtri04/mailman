@@ -383,7 +383,7 @@ export function CliApp() {
         flexDirection: 'column',
         height: '100%',
         minHeight: 0,
-        padding: 1,
+        padding: 0,
         gap: 0,
       }}
     >
