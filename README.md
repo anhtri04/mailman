@@ -3,143 +3,201 @@
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.2.8-blue.svg)](https://github.com/anhtri04/mailman)
+[![Version](https://img.shields.io/badge/version-0.2.9-blue.svg)](https://github.com/anhtri04/mailman)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6.svg)](https://www.typescriptlang.org/)
 [![Bun](https://img.shields.io/badge/Runtime-Bun-000000?logo=bun)](https://bun.sh)
 
 </div>
 
-A terminal-based HTTP client built with [Bun](https://bun.sh) and [OpenTUI](https://opentui.org).
+<p align="center">
+  A Bun-powered terminal HTTP client built with OpenTUI, React, and strict TypeScript.
+</p>
 
-![mailman.png](mailman.png)
+<p align="center">
+  <img src="mailman.png" alt="Mailman terminal HTTP client" width="900" />
+</p>
 
-## Features
+## Highlights
 
-- **Interactive TUI** — Full terminal user interface with mouse and keyboard support
-- **HTTP Methods** — GET, POST, PUT, DELETE, PATCH
-- **Request Configuration**
-  - Headers editor with common presets
-  - Request body editor with content type selection
-  - Query parameter builder with live URL preview
-  - Authentication: Bearer token and API key (header or query)
-- **Response Viewer** — Syntax-highlighted JSON, XML, HTML with raw view
-- **Collections** — Organize requests into collections with full CRUD support
-- **Theme System** — 37 built-in themes with live preview (Ctrl+T)
-- **Keyboard Shortcuts** — Efficient navigation without leaving the keyboard
-- **Persistent Storage** — Collections and preferences saved to `~/.mailman/`
+- **Interactive terminal UI** — Full-screen HTTP client with keyboard and mouse-friendly controls.
+- **Multiple request protocols** — REST, GraphQL, WebSocket collections, and SSE stream parsing support.
+- **Request builder** — Headers, query params, auth, scripts, and body editors in one terminal workflow.
+- **Flexible bodies** — Raw, URL-encoded, file, and multipart request body modes.
+- **Response viewer** — Status, timing, size, headers, raw output, formatted body, stream events, and copy helpers.
+- **Collections and history** — Save, import/export, reopen, and organize requests under `~/.mailman/`.
+- **CLI mode** — Parser-driven command/request prompt with suggestions for REST, GraphQL, and SSE requests.
+- **Theme system** — Built-in themes with live preview via `Ctrl+T`.
 
 ## Quick Start
 
-```bash
-# Install dependencies
-bun install
+### Requirements
 
-# Run the application
-bun dev
+- [Bun](https://bun.sh) installed locally.
+
+### Run the TUI
+
+```bash
+bun install
+bun run dev
 ```
 
-## Usage
+You can also use:
 
-### CLI Mode (MVP)
+```bash
+bun start
+```
 
-Run the integrated CLI variant:
+### Run CLI mode
 
 ```bash
 bun run dev:cli
 ```
 
-CLI source: [`src/modes/cli`](src/modes/cli)
+Example CLI requests:
 
-### Navigation
+```bash
+http rest GET https://api.example.com/users
+http rest POST https://api.example.com/users --json '{"name":"Mailman"}'
+http graphql https://api.example.com/graphql --query 'query { viewer { login } }'
+http sse https://api.example.com/events
+```
+
+See [`docs/cli-input-grammar.md`](docs/cli-input-grammar.md) for the full CLI grammar.
+
+## Showcase
+
+The current README uses `mailman.png` as the hero image. For a stronger project showcase, add a small gallery under `docs/assets/showcase/` and keep file names stable so links do not break.
+
+Suggested screenshots/GIFs to capture:
+
+| Asset | What to show | Suggested file |
+|---|---|---|
+| Main TUI | Collection panel, request panel, and response panel together | `docs/assets/showcase/main-tui.png` |
+| Request editing | Headers/body/query/auth modal workflow | `docs/assets/showcase/request-editor.gif` |
+| GraphQL | Query + variables editor and formatted response | `docs/assets/showcase/graphql.png` |
+| Streaming | SSE events or live stream response state | `docs/assets/showcase/streaming.gif` |
+| Themes | Theme selector preview | `docs/assets/showcase/themes.png` |
+| CLI mode | Suggestions and command execution | `docs/assets/showcase/cli-mode.gif` |
+
+Recommended Markdown/HTML layout once those assets exist:
+
+```html
+<p align="center">
+  <img src="docs/assets/showcase/main-tui.png" alt="Mailman main TUI" width="49%" />
+  <img src="docs/assets/showcase/graphql.png" alt="Mailman GraphQL request" width="49%" />
+</p>
+<p align="center">
+  <img src="docs/assets/showcase/request-editor.gif" alt="Editing requests in Mailman" width="49%" />
+  <img src="docs/assets/showcase/cli-mode.gif" alt="Mailman CLI mode" width="49%" />
+</p>
+```
+
+Tips:
+
+- Prefer short GIFs for flows and PNG/WebP for static screens.
+- Use terminal dimensions around `120x36` for readable screenshots.
+- Avoid secrets, private URLs, or personal collection data.
+- Compress images before committing so the repository stays lightweight.
+
+## Usage
+
+### Keyboard shortcuts
 
 | Key | Action |
-|-----|--------|
-| `Tab` | Switch response view (Body / Headers / Raw) |
-| `Space` | Expand response to full-screen modal |
-| `Escape` | Close modal / go back |
+|---|---|
 | `Ctrl+Q` | Quit application |
 | `Ctrl+T` | Open theme selector |
-| `Ctrl+G` | Open Catalog panel |
+| `Ctrl+G` | Open help/catalog panel |
+| `Ctrl+R` | Open request history |
 | `Ctrl+S` | Save current request to its collection |
+| `Ctrl+C` | Copy response content when available |
+| `Tab` | Switch response tabs / focus response controls |
+| `Space` | Expand response to full-screen modal when focused |
+| `Escape` | Close modal / go back |
+| `Ctrl+F` | Format supported editors such as JSON/GraphQL bodies |
 
-### Request Panel
+### Request workflow
 
-1. **Method** — Click the method badge to cycle through HTTP methods
-2. **URL** — Type the request URL
-3. **Tabs** — Click to open editors:
-   - **Headers** — Add/edit request headers with preset suggestions
-   - **Body** — Edit request body (shown for POST/PUT/PATCH)
-   - **Query** — Build query parameters with live URL preview
-   - **Auth** — Configure authentication (None, Bearer Token, or API Key)
-
-Each tab shows a `●` indicator when it contains data.
+1. Select or create a collection.
+2. Add a REST, GraphQL, or WebSocket request.
+3. Configure the URL, method/protocol, headers, query parameters, auth, body, and scripts.
+4. Send the request from the request panel.
+5. Inspect the response body, headers, raw view, stats, or stream events.
+6. Press `Ctrl+S` to persist changes to the selected collection.
 
 ### Authentication
 
 | Mode | Behavior |
-|------|----------|
+|---|---|
 | **No Auth** | Send requests without authentication |
 | **Bearer Token** | Adds `Authorization: Bearer <token>` header |
-| **API Key (Header)** | Adds a custom header (e.g. `X-API-Key: <value>`) |
-| **API Key (Query)** | Appends to URL (e.g. `?api_key=<value>`) |
+| **API Key (Header)** | Adds a custom header such as `X-API-Key: <value>` |
+| **API Key (Query)** | Appends the key to the URL query string |
 
 ### Collections
 
-- Click the **Import** button to create a new collection
-- Click a collection to select it, then click **Add** to create a request
-- Click a request to load it into the request panel
-- Click **Delete** to remove a collection or request
-- Press `Ctrl+S` to save changes to a loaded request
-
-### Response Panel
-
-- **Status Code** — Color-coded (green = 2xx, yellow = 3xx, orange = 4xx, red = 5xx)
-- **Response Time** — Displayed in milliseconds
-- **Content Size** — Human-readable size (B, KB, MB)
-- **Tabs** — Body (syntax-highlighted), Headers, Raw
+- Import sample or existing collections from the collection panel.
+- Add requests manually or prefill from cURL when creating a request.
+- Select a saved request to load it into the request panel.
+- Export collections when you need to share or back them up.
+- Persistent app data is stored under `~/.mailman/`.
 
 ## Development
 
 ```bash
 bun install          # Install dependencies
-bun dev              # Run the application
+bun run dev          # Run the TUI application
+bun start            # Run the TUI application
+bun run dev:cli      # Run CLI mode
+bun run build        # Build executable to dist/mailman
+bun run seed         # Load example collections into ~/.mailman/
+
 bun test             # Run all tests
 bun test --watch     # Run tests in watch mode
-bun test src/services/http-client.test.ts   # Run a single test file
-bun test -t "should make GET request"       # Run tests by name pattern
+bun test src/core/services/http-client.test.ts
+bun test -t "should make GET request"
+
 bun run fmt          # Format code with oxfmt
 bun run fmt:check    # Check formatting without modifying
-bun run lint         # Lint with oxlint (includes type checking)
+bun run lint         # Lint with oxlint, including type-aware checks
 bun run lint:fix     # Auto-fix linting issues
-bun run seed         # Load example collections into ~/.mailman/
 ```
 
 ## Architecture
 
 | Layer | Technology |
-|-------|-----------|
+|---|---|
 | Runtime | [Bun](https://bun.sh) |
-| UI Framework | [OpenTUI](https://opentui.org) React reconciler |
-| Language | TypeScript (strict mode) |
-| Testing | Bun test runner |
+| UI framework | [OpenTUI](https://opentui.org) React reconciler |
+| Language | TypeScript strict mode |
+| Testing | Bun test runner with happy-dom setup |
 | Formatting | oxfmt |
 | Linting | oxlint |
 
 ## Project Structure
 
-```
-index.tsx                 # Entry point
+```text
+index.tsx                    Entry point; chooses TUI or CLI mode
 src/
+  core/
+    services/                HTTP, GraphQL, WebSocket, SSE, storage, import, history, scripts
+    types/                   Request, response, auth, collection, history, and script types
   modes/
-    tui/                  # TUI mode (interactive app)
-      App.tsx             # TUI root component
-      components/         # TUI UI components + tests
-      hooks/              # TUI-specific hooks + tests
-    cli/                  # CLI mode implementation
-  types.ts                # Shared type definitions
-  services/               # Business logic & IO (camelCase.ts)
-  theme/                  # Theme system — colors, types, ThemeProvider
-  utils/                  # Pure utility functions (camelCase.ts)
+    tui/                     Full-screen interactive app
+      components/            OpenTUI React components
+      hooks/                 TUI keyboard/focus hooks
+      utils/                 TUI-specific helpers
+    cli/                     Parser-driven CLI mode
+      commands/              Slash command registry and handlers
+      parser/                Lexer, parser, suggestions
+      shell/                 Virtual collection/request filesystem helpers
+  shared/
+    components/              Cross-mode editors and modals
+    theme/                   Theme provider, colors, built-in JSON themes
+    utils/                   Formatting, copying, viewport, and highlighting helpers
+docs/                        CLI grammar, examples, and planning notes
+sample-collection/           Postman/Insomnia import samples
+scripts/                     Development utilities
 ```
 
 ## License
