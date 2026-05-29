@@ -4,7 +4,7 @@ import {
   emptyRequestBody,
   loadCollections,
   loadHistory,
-  sendRequest,
+  sendRequestWithStreaming,
   updateRequest,
 } from '../../core/services';
 import {
@@ -19,7 +19,7 @@ import {
   SettingsModal,
   ThemeSelector,
 } from '../../shared/components';
-import type { HistoryEntry, RequestItem, RequestOptions } from '../../core/types';
+import type { HistoryEntry, RequestItem, RequestOptions, ResponseState } from '../../core/types';
 import { CliInput } from './components/CliInput';
 import { CliOutput } from './components/CliOutput';
 import { InputSuggestionPanel } from './components/InputSuggestionPanel';
@@ -32,7 +32,9 @@ import { handleShellCommand } from './shell/handlers';
 import { renderVirtualPath, requestItemToRequestOptions } from './shell/virtualFs';
 import { renderSystemMessage } from './render/systemMessage';
 import { appendCliHistoryEntry } from './utils/history';
-import type { CliEditorPanel } from './types';
+import type { CliEditorPanel, CliResponseProtocol } from './types';
+
+const SSE_MAX_EVENTS = 500;
 
 function extractQueryParams(url: string): Record<string, string> {
   const params: Record<string, string> = {};
@@ -70,7 +72,7 @@ export function CliApp() {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
-  const { state, setState, pushOutput, pushResponseOutput } = useCliState();
+  const { state, setState, pushOutput, pushResponseOutput, updateResponseOutput } = useCliState();
   const keyboardNavigation = useCliKeyboardNavigation({
     outputs: state.outputs,
     toggles: state.toggles,
@@ -228,6 +230,146 @@ export function CliApp() {
     [pushOutput],
   );
 
+  const executeCliRequest = useCallback(
+    async (
+      request: RequestOptions,
+      meta: {
+        protocol: CliResponseProtocol;
+        method: string;
+        url: string;
+        collectionId?: string;
+        requestId?: string;
+        requestName?: string;
+      },
+    ) => {
+      const streamSessionId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      let outputId: string | null = null;
+
+      setState((prev) => ({ ...prev, isLoading: true, activeRequest: request }));
+
+      const streamResult = await sendRequestWithStreaming(request, {
+        onOpen: (initial) => {
+          const isSSE = (initial.headers['content-type'] ?? '')
+            .toLowerCase()
+            .includes('text/event-stream');
+
+          if (!isSSE) return;
+
+          const streamingResponse: ResponseState = {
+            ...initial,
+            body: '(streaming)',
+            mode: 'sse',
+            isStreaming: true,
+            streamStartedAt: Date.now(),
+            streamEventCount: 0,
+            streamSessionId,
+            sseEvents: [],
+            sseMeta: { droppedEvents: 0 },
+          };
+
+          setState((prev) => ({
+            ...prev,
+            isLoading: false,
+            lastResponse: streamingResponse,
+          }));
+          outputId = pushResponseOutput(streamingResponse, meta);
+        },
+        onEvent: (event) => {
+          if (!outputId) return;
+
+          updateResponseOutput(outputId, (current) => {
+            if (
+              current.mode !== 'sse' ||
+              !current.isStreaming ||
+              current.streamSessionId !== streamSessionId
+            ) {
+              return current;
+            }
+
+            const events = [...(current.sseEvents ?? []), event];
+            const dropped = Math.max(0, events.length - SSE_MAX_EVENTS);
+            const nextEvents = dropped > 0 ? events.slice(dropped) : events;
+
+            return {
+              ...current,
+              sseEvents: nextEvents,
+              streamEventCount: (current.streamEventCount ?? 0) + 1,
+              sseMeta: {
+                ...current.sseMeta,
+                lastEventId: event.id,
+                retryMs: event.retry,
+                droppedEvents: (current.sseMeta?.droppedEvents ?? 0) + dropped,
+              },
+              time: Date.now() - (current.streamStartedAt ?? Date.now()),
+            };
+          });
+        },
+        onError: (message) => {
+          setState((prev) => ({ ...prev, isLoading: false }));
+
+          if (!outputId) {
+            pushOutput('error', message);
+            return;
+          }
+
+          updateResponseOutput(outputId, (current) => ({
+            ...current,
+            body: `Error: ${message}`,
+            isStreaming: false,
+            streamEndedAt: Date.now(),
+          }));
+        },
+        onComplete: () => {
+          if (!outputId) return;
+
+          updateResponseOutput(outputId, (current) => {
+            if (current.mode !== 'sse' || current.streamSessionId !== streamSessionId) {
+              return current;
+            }
+
+            return {
+              ...current,
+              isStreaming: false,
+              streamEndedAt: Date.now(),
+              time: Date.now() - (current.streamStartedAt ?? Date.now()),
+            };
+          });
+        },
+      });
+
+      const finalResponse = streamResult.response;
+
+      if (outputId) {
+        updateResponseOutput(outputId, (current) => ({
+          ...current,
+          body: finalResponse.body,
+          headers: finalResponse.headers,
+          status: finalResponse.status,
+          statusText: finalResponse.statusText,
+          time: finalResponse.time,
+          stats: finalResponse.stats,
+          scriptResults: finalResponse.scriptResults,
+          isStreaming: false,
+          streamEndedAt: Date.now(),
+        }));
+        setState((prev) => ({ ...prev, lastResponse: finalResponse }));
+      } else {
+        pushResponseOutput(finalResponse, meta);
+        setState((prev) => ({ ...prev, lastResponse: finalResponse }));
+      }
+
+      void appendCliHistoryEntry(request, finalResponse, {
+        protocol: meta.protocol,
+        collectionId: meta.collectionId,
+        requestId: meta.requestId,
+        requestName: meta.requestName,
+      }).catch(reportHistorySaveError);
+
+      setState((prev) => ({ ...prev, isLoading: false }));
+    },
+    [pushOutput, pushResponseOutput, reportHistorySaveError, setState, updateResponseOutput],
+  );
+
   const submitInput = useCallback(
     async (rawInput?: string) => {
       const raw = (rawInput ?? state.input).trim();
@@ -287,30 +429,18 @@ export function CliApp() {
           }
           if (!result.request) return;
 
-          setState((prev) => ({ ...prev, isLoading: true, activeRequest: result.request! }));
-          const response = await sendRequest(result.request);
-          void appendCliHistoryEntry(result.request, response, {
-            protocol: result.protocol ?? 'rest',
-            collectionId: result.collectionId,
-            requestId: result.requestId,
-            requestName: result.requestName,
-          }).catch(reportHistorySaveError);
-          setState((prev) => ({ ...prev, isLoading: false, lastResponse: response }));
-          pushResponseOutput(response, {
+          await executeCliRequest(result.request, {
             protocol: result.protocol ?? 'rest',
             method: result.request.method,
             url: result.request.url,
+            collectionId: result.collectionId,
+            requestId: result.requestId,
+            requestName: result.requestName,
           });
           return;
         }
 
-        setState((prev) => ({ ...prev, isLoading: true, activeRequest: parsed.request }));
-        const response = await sendRequest(parsed.request);
-        void appendCliHistoryEntry(parsed.request, response, {
-          protocol: parsed.protocol ?? 'rest',
-        }).catch(reportHistorySaveError);
-        setState((prev) => ({ ...prev, isLoading: false, lastResponse: response }));
-        pushResponseOutput(response, {
+        await executeCliRequest(parsed.request, {
           protocol: parsed.protocol ?? 'rest',
           method: parsed.request.method,
           url: parsed.request.url,
@@ -327,8 +457,7 @@ export function CliApp() {
       openHistory,
       openSettings,
       pushOutput,
-      pushResponseOutput,
-      reportHistorySaveError,
+      executeCliRequest,
       saveActiveRequest,
       setState,
       state,

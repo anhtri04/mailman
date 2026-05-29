@@ -56,22 +56,38 @@ export function useCliState() {
       response: ResponseState,
       request: { protocol: CliResponseProtocol; method: string; url: string },
     ) => {
-      setState((prev) => {
-        const timestamp = Date.now();
-        return {
-          ...prev,
-          outputs: [
-            ...prev.outputs,
-            {
-              id: `${timestamp}-${prev.outputs.length}`,
-              kind: 'response',
-              response,
-              request,
-              timestamp,
-            },
-          ],
-        };
-      });
+      const timestamp = Date.now();
+      const id = `${timestamp}-${Math.random().toString(36).slice(2)}`;
+
+      setState((prev) => ({
+        ...prev,
+        outputs: [
+          ...prev.outputs,
+          {
+            id,
+            kind: 'response',
+            response,
+            request,
+            timestamp,
+          },
+        ],
+      }));
+
+      return id;
+    },
+    [],
+  );
+
+  const updateResponseOutput = useCallback(
+    (id: string, updater: (response: ResponseState) => ResponseState) => {
+      setState((prev) => ({
+        ...prev,
+        outputs: prev.outputs.map((entry) =>
+          entry.kind === 'response' && entry.id === id
+            ? { ...entry, response: updater(entry.response) }
+            : entry,
+        ),
+      }));
     },
     [],
   );
@@ -81,5 +97,6 @@ export function useCliState() {
     setState,
     pushOutput,
     pushResponseOutput,
+    updateResponseOutput,
   };
 }
