@@ -21,6 +21,38 @@ describe('command registry', () => {
     expect(cmd).toBeNull();
   });
 
+  test('resolves editor commands', () => {
+    const commands = getCommands();
+    expect(resolveCommand('header', commands)?.name).toBe('header');
+    expect(resolveCommand('variables', commands)?.name).toBe('variable');
+    expect(resolveCommand('save', commands)?.name).toBe('save');
+  });
+
+  test('editor commands require current request path', async () => {
+    const commands = getCommands();
+    const cmd = resolveCommand('header', commands);
+    let opened = false;
+    const ctx = {
+      state: {
+        virtualPath: { kind: 'root' },
+        collections: [],
+      },
+      setState: () => {},
+      cleanExit: () => {},
+      openThemeSelector: () => {},
+      openHistory: () => {},
+      openSettings: () => {},
+      openEditor: () => {
+        opened = true;
+      },
+      saveActiveRequest: async () => ({}),
+    } as unknown as CommandContext;
+
+    const result = await cmd?.handler([], ctx);
+    expect(opened).toBe(false);
+    expect(result?.error).toContain('inside a request path');
+  });
+
   test('opens history command', async () => {
     const commands = getCommands();
     const cmd = resolveCommand('history', commands);

@@ -1,8 +1,16 @@
-import type { Collection, RequestOptions, ResponseState } from '../../core/types';
+import type { Collection, RequestItem, RequestOptions, ResponseState } from '../../core/types';
 
 export type CliOutputKind = 'system' | 'request' | 'response' | 'error';
 export type CliResponseProtocol = 'rest' | 'graphql' | 'sse';
 export type CliPanelFocus = 'input' | 'output';
+export type CliEditorPanel =
+  | 'headers'
+  | 'body'
+  | 'params'
+  | 'query'
+  | 'variable'
+  | 'auth'
+  | 'scripts';
 export type CliResponseSectionId =
   | 'body'
   | 'data'
@@ -52,6 +60,7 @@ export interface CliSessionState {
   historyIndex: number | null;
   activeCollectionId: string | null;
   activeRequest: RequestOptions;
+  activeRequestItem: RequestItem | null;
   collections: Collection[];
   virtualPath: CliVirtualPath;
   lastResponse: ResponseState | null;

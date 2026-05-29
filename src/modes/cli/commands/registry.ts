@@ -1,6 +1,7 @@
-import type { CliSessionState } from '../types';
+import type { CliEditorPanel, CliSessionState } from '../types';
 import { buildCollectionsCommands } from './handlers/collections';
 import { buildCoreCommands } from './handlers/core';
+import { buildEditorCommands } from './handlers/editors';
 
 export interface CommandContext {
   state: CliSessionState;
@@ -9,6 +10,8 @@ export interface CommandContext {
   openThemeSelector: () => void;
   openHistory: () => Promise<void> | void;
   openSettings: () => void;
+  openEditor: (panel: CliEditorPanel) => void;
+  saveActiveRequest: () => Promise<CommandResult>;
 }
 
 export interface CommandResult {
@@ -35,7 +38,7 @@ export interface CliCommand {
 }
 
 export function getCommands(): CliCommand[] {
-  return [...buildCoreCommands(), ...buildCollectionsCommands()];
+  return [...buildCoreCommands(), ...buildCollectionsCommands(), ...buildEditorCommands()];
 }
 
 export function resolveCommand(name: string, commands: CliCommand[]): CliCommand | null {

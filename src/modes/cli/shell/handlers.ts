@@ -110,6 +110,7 @@ export async function handleShellCommand(
         activeCollectionId:
           target.path!.kind === 'request' ? target.path!.collectionId : prev.activeCollectionId,
         activeRequest: options,
+        activeRequestItem: structuredClone(request),
         collections,
       }));
       return { message: `Selected request: ${request.name}` };
@@ -131,6 +132,7 @@ export async function handleShellCommand(
         activeCollectionId:
           target.path!.kind === 'request' ? target.path!.collectionId : prev.activeCollectionId,
         activeRequest: options,
+        activeRequestItem: structuredClone(request),
         collections,
       }));
       return {

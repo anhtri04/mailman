@@ -15,6 +15,7 @@ const initialState: CliSessionState = {
     headers: {},
     body: emptyRequestBody(),
   },
+  activeRequestItem: null,
   collections: [],
   virtualPath: { kind: 'root' },
   lastResponse: null,
