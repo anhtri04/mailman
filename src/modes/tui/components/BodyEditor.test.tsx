@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import { BodyEditor } from './BodyEditor';
 
-const source = await Bun.file(import.meta.dir + '/BodyEditor.tsx').text();
+const source = await Bun.file(
+  import.meta.dir + '/../../../shared/components/BodyEditor.tsx',
+).text();
 
 describe('BodyEditor', () => {
   test('should export BodyEditor component', () => {
