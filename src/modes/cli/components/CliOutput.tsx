@@ -85,7 +85,15 @@ export function CliOutput({
                     }
                   />
                 ) : (
-                  <text fg={entry.kind === 'error' ? colors.syntax.error : colors.text.primary}>
+                  <text
+                    fg={
+                      entry.kind === 'error'
+                        ? colors.syntax.error
+                        : entry.kind === 'request'
+                          ? colors.text.muted
+                          : colors.text.primary
+                    }
+                  >
                     {entry.content}
                   </text>
                 )}
