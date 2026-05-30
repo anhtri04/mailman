@@ -1,7 +1,7 @@
 import type { Collection, RequestItem, RequestOptions, ResponseState } from '../../core/types';
 
 export type CliOutputKind = 'system' | 'request' | 'response' | 'error';
-export type CliResponseProtocol = 'rest' | 'graphql' | 'sse';
+export type CliResponseProtocol = 'rest' | 'graphql' | 'sse' | 'websocket';
 export type CliPanelFocus = 'input' | 'output';
 export type CliEditorPanel =
   | 'headers'
@@ -16,6 +16,7 @@ export type CliResponseSectionId =
   | 'data'
   | 'errors'
   | 'events'
+  | 'messages'
   | 'headers'
   | 'streamMeta'
   | 'stats';
@@ -79,7 +80,7 @@ export interface ParsedRequest {
   kind: 'request';
   raw: string;
   request: RequestOptions;
-  protocol?: 'rest' | 'graphql' | 'sse';
+  protocol?: 'rest' | 'graphql' | 'sse' | 'websocket';
   responseMode?: 'standard' | 'sse';
 }
 

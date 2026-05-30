@@ -44,6 +44,19 @@ describe('parseUnifiedInput', () => {
     expect(parsed.request.headers?.Accept).toBe('text/event-stream');
   });
 
+  test('parses WebSocket request', () => {
+    const parsed = parseUnifiedInput(
+      `http ws wss://example.com/socket --message '{"type":"hello"}' -H 'X-Trace: 1'`,
+    );
+    expect(parsed.kind).toBe('request');
+    if (parsed.kind !== 'request') return;
+    expect(parsed.protocol).toBe('websocket');
+    expect(parsed.request.method).toBe('WEBSOCKET');
+    expect(parsed.request.url).toBe('wss://example.com/socket');
+    expect(parsed.request.headers?.['X-Trace']).toBe('1');
+    expect(parsed.request.body).toEqual({ mode: 'raw', content: '{"type":"hello"}' });
+  });
+
   test('parses shell command', () => {
     const parsed = parseUnifiedInput('cd collection');
     expect(parsed.kind).toBe('shell');

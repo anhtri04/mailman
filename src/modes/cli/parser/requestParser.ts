@@ -18,6 +18,8 @@ const VALUE_OPTIONS = new Set([
   '--stream',
   '--variables',
   '--operation',
+  '--message',
+  '-m',
 ]);
 
 export function parseRequestInput(raw: string): ParsedRequest {
@@ -45,6 +47,10 @@ export function parseRequestInput(raw: string): ParsedRequest {
 
   if (protocol === 'sse') {
     return parseSseRequest(raw, tokens);
+  }
+
+  if (protocol === 'websocket' || protocol === 'ws') {
+    return parseWebSocketRequest(raw, tokens);
   }
 
   throw new Error(`Unknown HTTP protocol: ${protocol}`);
@@ -123,10 +129,27 @@ function parseSseRequest(raw: string, tokens: InputToken[]): ParsedRequest {
   return { kind: 'request', raw, request, protocol: 'sse', responseMode: 'sse' };
 }
 
+function parseWebSocketRequest(raw: string, tokens: InputToken[]): ParsedRequest {
+  const url = tokens[2]?.value;
+  if (!url) {
+    throw new Error('Missing WebSocket URL. Usage: http websocket URL');
+  }
+
+  const request: RequestOptions = {
+    method: 'WEBSOCKET',
+    url,
+    headers: {},
+    body: rawRequestBody(),
+  };
+
+  applyOptions(request, tokens.slice(3), 'websocket');
+  return { kind: 'request', raw, request, protocol: 'websocket' };
+}
+
 function applyOptions(
   request: RequestOptions,
   tokens: InputToken[],
-  protocol: 'rest' | 'graphql' | 'sse',
+  protocol: 'rest' | 'graphql' | 'sse' | 'websocket',
   graphql?: { query?: string; variables?: unknown; operationName?: string },
 ): void {
   for (let index = 0; index < tokens.length; index++) {
@@ -184,6 +207,11 @@ function applyOptions(
         ensureProtocol(protocol, ['graphql'], option);
         if (graphql) graphql.variables = parseJsonValue(value, option);
         break;
+      case '--message':
+      case '-m':
+        ensureProtocol(protocol, ['websocket'], option);
+        request.body = rawRequestBody(value);
+        break;
       case '--operation':
         ensureProtocol(protocol, ['graphql'], option);
         if (graphql) graphql.operationName = value;
@@ -198,8 +226,8 @@ function applyOptions(
 }
 
 function ensureProtocol(
-  current: 'rest' | 'graphql' | 'sse',
-  allowed: Array<'rest' | 'graphql' | 'sse'>,
+  current: 'rest' | 'graphql' | 'sse' | 'websocket',
+  allowed: Array<'rest' | 'graphql' | 'sse' | 'websocket'>,
   option: string,
 ): void {
   if (!allowed.includes(current)) {
