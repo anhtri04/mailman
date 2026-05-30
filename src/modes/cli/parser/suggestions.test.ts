@@ -28,6 +28,8 @@ describe('analyzeUnifiedInput', () => {
     expect(analysis.suggestions.map((suggestion) => suggestion.label)).toContain('rest');
     expect(analysis.suggestions.map((suggestion) => suggestion.label)).toContain('graphql');
     expect(analysis.suggestions.map((suggestion) => suggestion.label)).toContain('sse');
+    expect(analysis.suggestions.map((suggestion) => suggestion.label)).toContain('websocket');
+    expect(analysis.suggestions.map((suggestion) => suggestion.label)).toContain('ws');
   });
 
   test('suggests REST methods', () => {
@@ -43,6 +45,12 @@ describe('analyzeUnifiedInput', () => {
     const analysis = analyzeUnifiedInput('http rest GET https://example.com ', context);
     expect(analysis.canSubmit).toBe(true);
     expect(analysis.suggestions.map((suggestion) => suggestion.label)).toContain('--header');
+  });
+
+  test('suggests WebSocket options', () => {
+    const analysis = analyzeUnifiedInput('http websocket wss://example.com/socket ', context);
+    expect(analysis.canSubmit).toBe(true);
+    expect(analysis.suggestions.map((suggestion) => suggestion.label)).toContain('--message');
   });
 
   test('suggests command argument values', () => {

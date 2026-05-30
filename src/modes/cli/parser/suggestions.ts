@@ -48,6 +48,8 @@ const PROTOCOLS = [
   { label: 'graphql', detail: 'GraphQL HTTP request' },
   { label: 'gql', detail: 'Alias for graphql' },
   { label: 'sse', detail: 'Server-Sent Events stream' },
+  { label: 'websocket', detail: 'WebSocket connection' },
+  { label: 'ws', detail: 'Alias for websocket' },
 ];
 
 const REST_OPTIONS = [
@@ -75,6 +77,17 @@ const GRAPHQL_OPTIONS = [
 ];
 
 const SSE_OPTIONS = [
+  { label: '--query', detail: 'Add query parameter' },
+  { label: '-q', detail: 'Add query parameter' },
+  { label: '--header', detail: 'Add header' },
+  { label: '-H', detail: 'Add header' },
+  { label: '--auth', detail: 'Set auth' },
+  { label: '--timeout', detail: 'Set timeout' },
+];
+
+const WEBSOCKET_OPTIONS = [
+  { label: '--message', detail: 'Initial outbound message' },
+  { label: '-m', detail: 'Initial outbound message' },
   { label: '--query', detail: 'Add query parameter' },
   { label: '-q', detail: 'Add query parameter' },
   { label: '--header', detail: 'Add header' },
@@ -163,6 +176,8 @@ function optionValueSuggestions(
       { label: 'basic:user:pass' },
       { label: 'apikey:X-API-Key=TOKEN' },
     ],
+    '--message': [{ label: `'message'` }],
+    '-m': [{ label: `'message'` }],
     '--timeout': [{ label: '30000' }],
     '--stream': [{ label: 'auto' }, { label: 'sse' }, { label: 'off' }],
   };
@@ -445,7 +460,10 @@ function analyzeRequest(raw: string): InputAnalysis {
   }
 
   const protocol = tokens[1]?.value.toLowerCase();
-  if (tokens.length > 0 && (!protocol || !['rest', 'graphql', 'gql', 'sse'].includes(protocol))) {
+  if (
+    tokens.length > 0 &&
+    (!protocol || !['rest', 'graphql', 'gql', 'sse', 'websocket', 'ws'].includes(protocol))
+  ) {
     return {
       raw,
       mode: 'request',
@@ -539,7 +557,12 @@ function analyzeRequest(raw: string): InputAnalysis {
     };
   }
 
-  const options = protocol === 'sse' ? SSE_OPTIONS : GRAPHQL_OPTIONS;
+  const options =
+    protocol === 'sse'
+      ? SSE_OPTIONS
+      : protocol === 'websocket' || protocol === 'ws'
+        ? WEBSOCKET_OPTIONS
+        : GRAPHQL_OPTIONS;
   return {
     raw,
     mode: 'request',
