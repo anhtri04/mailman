@@ -180,7 +180,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
               style={{
                 flexGrow: 1,
                 paddingTop: 0.5,
-                paddingBottom: 0.5,
+                paddingBottom: 0,
                 border: true,
                 borderColor: focusedField === 'key' ? colors.accent.primary : colors.border.default,
               }}
@@ -199,7 +199,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
               style={{
                 flexGrow: 2,
                 paddingTop: 0.5,
-                paddingBottom: 0.5,
+                paddingBottom: 0,
                 border: true,
                 borderColor:
                   focusedField === 'value' ? colors.accent.primary : colors.border.default,
@@ -220,7 +220,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
                 paddingLeft: 2,
                 paddingRight: 2,
                 paddingTop: 0.5,
-                paddingBottom: 0.5,
+                paddingBottom: 0,
                 border: true,
                 borderStyle: 'double',
                 borderColor: colors.accent.primary,
@@ -240,7 +240,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
               paddingLeft: 2,
               paddingRight: 2,
               paddingTop: 0.5,
-              paddingBottom: 0.5,
+              paddingBottom: 0,
               border: true,
               borderColor: showPresets ? colors.accent.primary : colors.border.default,
             }}
@@ -266,7 +266,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
                             paddingLeft: 1,
                             paddingRight: 1,
                             paddingTop: 0.5,
-                            paddingBottom: 0.5,
+                            paddingBottom: 0,
                             border: true,
                             borderColor: colors.border.default,
                           }}
