@@ -126,7 +126,7 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
                   paddingLeft: 1,
                   paddingRight: 1,
                   paddingTop: 0.5,
-                  paddingBottom: 0.5,
+                  paddingBottom: 0,
                 }}
               >
                 <input
@@ -147,7 +147,7 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
                   paddingLeft: 1,
                   paddingRight: 1,
                   paddingTop: 0.5,
-                  paddingBottom: 0.5,
+                  paddingBottom: 0,
                 }}
               >
                 <input
@@ -165,7 +165,7 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
                   paddingLeft: 1,
                   paddingRight: 1,
                   paddingTop: 0.5,
-                  paddingBottom: 0.5,
+                  paddingBottom: 0,
                 }}
                 onMouseDown={() => removeParam(entry.id)}
               >
@@ -185,7 +185,7 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
           paddingLeft: 2,
           paddingRight: 2,
           paddingTop: 0.5,
-          paddingBottom: 0.5,
+          paddingBottom: 0,
           alignSelf: 'flex-start',
         }}
         onMouseDown={addParam}
@@ -201,6 +201,8 @@ export function QueryParamsEditor({ baseUrl, params, onParamsChange }: QueryPara
             border: true,
             borderColor: colors.bg.selection,
             padding: 1,
+            paddingTop: 0.5,
+            paddingBottom: 0,
             marginTop: 1,
             marginBottom: 1,
           }}
