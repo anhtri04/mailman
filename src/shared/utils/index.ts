@@ -9,6 +9,14 @@ export {
   parseJsonForHighlighting,
 } from './response-formatter';
 export type { ContentType } from './response-formatter';
+export {
+  appendJsonPath,
+  buildJsonTreeRows,
+  formatJsonPrimitive,
+  getJsonValueKind,
+  parseJsonTree,
+} from './json-tree';
+export type { JsonPrimitive, JsonTreeParseResult, JsonTreeRow, JsonValue } from './json-tree';
 export { formatGraphQLQuery, formatGraphQLVariables, formatRequestBody } from './request-formatter';
 export type { FormatResult } from './request-formatter';
 export { getListViewport } from './listViewport';

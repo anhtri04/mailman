@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect, useState } from 'react';
 import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { ResponseState } from '../../../types';
@@ -8,6 +8,7 @@ import { HeadersDisplay } from './HeadersDisplay';
 import { detectContentType, formatResponseBody } from '../../../shared/utils/response-formatter';
 import { MailmanLogo } from './MailmanLogo';
 import { ScriptResultsPanel } from './ScriptResultsPanel';
+import { JsonTreeViewer, canRenderJsonTree } from './JsonTreeViewer';
 
 interface ResponsePanelProps {
   focused: boolean;
@@ -44,6 +45,7 @@ export function ResponsePanel({
   copyStatus = 'idle',
 }: ResponsePanelProps) {
   const { colors } = useTheme();
+  const [collapsedJsonPaths, setCollapsedJsonPaths] = useState<Set<string>>(new Set());
   const borderColor = focused ? colors.accent.primary : colors.border.default;
   const isSSEMode = response?.mode === 'sse';
   const hasScriptResults = !!(
@@ -60,6 +62,26 @@ export function ResponsePanel({
     if (!response) return '';
     return formatResponseBody(response.body, contentType);
   }, [response, contentType]);
+
+  const shouldRenderJsonTree = useMemo(() => {
+    return !!response && contentType === 'json' && canRenderJsonTree(response.body);
+  }, [response, contentType]);
+
+  useEffect(() => {
+    setCollapsedJsonPaths(new Set());
+  }, [response?.body]);
+
+  const handleToggleJsonPath = useCallback((path: string) => {
+    setCollapsedJsonPaths((current) => {
+      const next = new Set(current);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
+  }, []);
 
   const contentSize = useMemo(() => {
     if (!response) return '0 B';
@@ -316,14 +338,22 @@ export function ResponsePanel({
             >
               {!isSSEMode && activeTab === 'body' && (
                 <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
-                  <SyntaxHighlighter
-                    code={formattedBody}
-                    language={
-                      contentType === 'json' || contentType === 'xml' || contentType === 'html'
-                        ? contentType
-                        : 'text'
-                    }
-                  />
+                  {shouldRenderJsonTree ? (
+                    <JsonTreeViewer
+                      body={response.body}
+                      collapsedPaths={collapsedJsonPaths}
+                      onTogglePath={handleToggleJsonPath}
+                    />
+                  ) : (
+                    <SyntaxHighlighter
+                      code={formattedBody}
+                      language={
+                        contentType === 'json' || contentType === 'xml' || contentType === 'html'
+                          ? contentType
+                          : 'text'
+                      }
+                    />
+                  )}
                 </scrollbox>
               )}
 
