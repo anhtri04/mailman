@@ -15,6 +15,8 @@ interface CollectionPanelProps {
   onOpenImportModal: () => void;
   onOpenAddModal: (collectionId: string) => void;
   onDeleteItem: (collectionId: string, requestId?: string) => void;
+  activeCollectionId: string | null;
+  activeRequestId: string | null;
 }
 
 type TreeNode =
@@ -51,6 +53,8 @@ export function CollectionPanel({
   onOpenImportModal,
   onOpenAddModal,
   onDeleteItem,
+  activeCollectionId,
+  activeRequestId,
 }: CollectionPanelProps) {
   const { colors } = useTheme();
   const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
@@ -258,6 +262,11 @@ export function CollectionPanel({
             {visibleTreeNodes.map((node) => {
               const isSelected = node.index === selectedIndex;
               const isCollection = node.type === 'collection';
+              const isActiveRequest =
+                node.type === 'request' &&
+                node.request.id === activeRequestId &&
+                node.collectionId === activeCollectionId;
+              const isHighlighted = isActiveRequest || (isSelected && focused);
               const methodLabel = !isCollection ? requestMethodLabel(node.request) : '';
               const methodColors = !isCollection
                 ? colors.methods[methodLabel as keyof typeof colors.methods]
@@ -271,8 +280,7 @@ export function CollectionPanel({
                   style={{
                     flexDirection: 'row',
                     paddingLeft: isCollection ? 0 : 2,
-                    backgroundColor:
-                      isSelected && focused ? colors.bg.focusHighlight : 'transparent',
+                    backgroundColor: isHighlighted ? colors.bg.focusHighlight : 'transparent',
                   }}
                   onMouseDown={() => {
                     setSelectedIndex(node.index);
@@ -294,7 +302,7 @@ export function CollectionPanel({
                   {isCollection ? (
                     <text
                       fg={isSelected ? colors.accent.text : colors.text.primary}
-                      bg={isSelected && focused ? colors.bg.focusHighlight : 'transparent'}
+                      bg={isHighlighted ? colors.bg.focusHighlight : 'transparent'}
                     >
                       <strong>{node.collection.name}</strong>
                     </text>
@@ -313,7 +321,7 @@ export function CollectionPanel({
                       </box>
                       <text
                         fg={colors.text.primary}
-                        bg={isSelected && focused ? colors.bg.focusHighlight : 'transparent'}
+                        bg={isHighlighted ? colors.bg.focusHighlight : 'transparent'}
                       >
                         {' '}
                         {(node.request.name || node.request.url).length > 10

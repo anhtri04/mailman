@@ -1226,6 +1226,8 @@ export function App() {
             setCollectionModal('add');
           }}
           onDeleteItem={handleDeleteItem}
+          activeCollectionId={activeCollectionId}
+          activeRequestId={activeRequestId}
         />
       </box>
 
