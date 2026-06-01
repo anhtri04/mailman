@@ -1,6 +1,6 @@
 {
   "name": "mailman",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "private": true,
   "description": "A terminal-based HTTP client built with Bun and OpenTUI",
   "license": "MIT",
