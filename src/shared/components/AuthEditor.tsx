@@ -245,8 +245,6 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 style={{
                   paddingLeft: 2,
                   paddingRight: 2,
-                  paddingTop: 0.5,
-                  paddingBottom: 0.5,
                   border: true,
                   borderColor:
                     location === 'header' ? colors.accent.primary : colors.border.default,
@@ -261,8 +259,6 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                 style={{
                   paddingLeft: 2,
                   paddingRight: 2,
-                  paddingTop: 0.5,
-                  paddingBottom: 0.5,
                   border: true,
                   borderColor: location === 'query' ? colors.accent.primary : colors.border.default,
                 }}
@@ -282,9 +278,6 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
                   border: true,
                   borderColor: colors.border.default,
                   paddingLeft: 1,
-                  paddingRight: 1,
-                  paddingTop: 0.5,
-                  paddingBottom: 0.5,
                 }}
               >
                 <input
@@ -299,16 +292,13 @@ export function AuthEditor({ auth, onAuthChange }: AuthEditorProps) {
             </box>
 
             {/* Key Value Input */}
-            <box style={{ flexDirection: 'column', gap: 1, marginTop: 1 }}>
+            <box style={{ flexDirection: 'column', gap: 1, marginTop: 1, marginBottom: 1 }}>
               <text fg={colors.text.muted}>Key Value:</text>
               <box
                 style={{
                   border: true,
                   borderColor: colors.border.default,
-                  paddingLeft: 1,
-                  paddingRight: 1,
-                  paddingTop: 0.5,
-                  paddingBottom: 0.5,
+                  paddingLeft: 1
                 }}
               >
                 <input
