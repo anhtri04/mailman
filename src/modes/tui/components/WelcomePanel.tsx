@@ -142,8 +142,6 @@ export function WelcomePanel({ collection, onExportCollection }: WelcomePanelPro
                         borderStyle: 'rounded',
                         paddingLeft: 1,
                         paddingRight: 1,
-                        paddingTop: 0.5,
-                        paddingBottom: 0.5,
                       }}
                       onMouseDown={() => {
                         void handleCopyCurl(req);
