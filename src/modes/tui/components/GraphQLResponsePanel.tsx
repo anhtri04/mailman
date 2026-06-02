@@ -233,7 +233,7 @@ export function GraphQLResponsePanel({
       >
         {response ? (
           <box style={{ flexDirection: 'column', flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
-            <box style={{ flexDirection: 'row', gap: 1, marginBottom: 1, flexShrink: 0 }}>
+            <box style={{ flexDirection: 'row', gap: 1, marginBottom: 0, flexShrink: 0 }}>
               {renderTabButton('body', 'Body')}
               {renderTabButton('headers', 'Headers')}
               {renderTabButton('raw', 'Raw')}

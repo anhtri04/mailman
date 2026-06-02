@@ -332,7 +332,7 @@ export function ResponsePanel({
                 flexGrow: 1,
                 flexShrink: 1,
                 minHeight: 0,
-                marginTop: 1,
+                marginTop: 0,
                 backgroundColor: colors.bg.panel,
               }}
             >
