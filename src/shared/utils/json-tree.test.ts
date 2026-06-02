@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { appendJsonPath, buildJsonTreeRows, parseJsonTree } from './json-tree';
+import { appendJsonPath, buildJsonTreeRows, canRenderJsonTree, parseJsonTree } from './json-tree';
 
 describe('json-tree', () => {
   test('parses valid JSON and reports invalid JSON', () => {
@@ -46,5 +46,12 @@ describe('json-tree', () => {
 
   test('escapes JSON path segments', () => {
     expect(appendJsonPath('$', 'a/b~c')).toBe('$/a~1b~0c');
+  });
+
+  test('detects renderable JSON tree roots', () => {
+    expect(canRenderJsonTree('{"ok":true}')).toBe(true);
+    expect(canRenderJsonTree('[1,2,3]')).toBe(true);
+    expect(canRenderJsonTree('"hello"')).toBe(false);
+    expect(canRenderJsonTree('{invalid')).toBe(false);
   });
 });

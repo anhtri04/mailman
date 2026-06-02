@@ -9,3 +9,4 @@ export { AuthEditor } from './AuthEditor';
 export { ScriptsEditor } from './ScriptsEditor';
 export { FileBrowser } from './FileBrowser';
 export { GraphQLTextEditor } from './GraphQLTextEditor';
+export { JsonTreeViewer } from './JsonTreeViewer';

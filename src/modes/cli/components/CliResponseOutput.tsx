@@ -1,9 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
 import { formatBytes } from '../../../core/services';
 import { detectContentType, formatResponseBody } from '../../../shared/utils/response-formatter';
 import { SyntaxHighlighter } from '../../tui/components/SyntaxHighlighter';
+import { JsonTreeViewer } from '../../../shared/components/JsonTreeViewer';
+import { canRenderJsonTree } from '../../../shared/utils/json-tree';
 import type { ContentType } from '../../../shared/utils/response-formatter';
 import type { ResponseState, SSEEvent } from '../../../core/types';
 import type { CliResponseProtocol, CliResponseSectionId, CliViewToggles } from '../types';
@@ -190,10 +192,41 @@ function CliMetaBlock({ response }: { response: ResponseState }) {
 
 function CliBodyBlock({ body, contentType }: { body: string; contentType: ContentType }) {
   const { colors } = useTheme();
-  const formattedBody = formatResponseBody(body, contentType);
+  const [collapsedJsonPaths, setCollapsedJsonPaths] = useState<Set<string>>(new Set());
+  const formattedBody = useMemo(() => formatResponseBody(body, contentType), [body, contentType]);
+  const shouldRenderJsonTree = useMemo(
+    () => contentType === 'json' && canRenderJsonTree(body),
+    [body, contentType],
+  );
+
+  useEffect(() => {
+    setCollapsedJsonPaths(new Set());
+  }, [body]);
+
+  const handleToggleJsonPath = useCallback((path: string) => {
+    setCollapsedJsonPaths((current) => {
+      const next = new Set(current);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
+  }, []);
 
   if (!formattedBody) {
     return <text fg={colors.text.muted}>[empty body]</text>;
+  }
+
+  if (shouldRenderJsonTree) {
+    return (
+      <JsonTreeViewer
+        body={body}
+        collapsedPaths={collapsedJsonPaths}
+        onTogglePath={handleToggleJsonPath}
+      />
+    );
   }
 
   return (

@@ -12,6 +12,7 @@ export type { ContentType } from './response-formatter';
 export {
   appendJsonPath,
   buildJsonTreeRows,
+  canRenderJsonTree,
   formatJsonPrimitive,
   getJsonValueKind,
   parseJsonTree,

@@ -167,6 +167,11 @@ export function formatJsonPrimitive(value: JsonPrimitive): string {
   return String(value);
 }
 
+export function canRenderJsonTree(body: string): boolean {
+  const parsed = parseJsonTree(body);
+  return parsed.ok && ['object', 'array'].includes(getJsonValueKind(parsed.value));
+}
+
 function getCollapsedSummary(kind: JsonValueKind, childCount: number): string {
   const unit =
     kind === 'array' ? (childCount === 1 ? 'item' : 'items') : childCount === 1 ? 'key' : 'keys';
