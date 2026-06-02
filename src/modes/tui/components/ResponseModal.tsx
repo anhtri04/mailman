@@ -1,4 +1,5 @@
 import { useMemo, useCallback, useEffect, useState } from 'react';
+import { useKeyboard } from '@opentui/react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { ResponseState } from '../../../types';
 import type {
@@ -13,6 +14,9 @@ import { ScriptResultsPanel } from './ScriptResultsPanel';
 import { JsonTreeViewer, canRenderJsonTree } from './JsonTreeViewer';
 
 type ResponseModalTab = GraphqlResponseTab | RestResponseTab;
+
+const REST_TABS: RestResponseTab[] = ['body', 'headers', 'raw'];
+const GRAPHQL_TABS: GraphqlResponseTab[] = ['body', 'headers', 'raw', 'errors'];
 
 type ResponseModalProps = {
   response: ResponseState;
@@ -103,6 +107,35 @@ export function ResponseModal(props: ResponseModalProps) {
       return [];
     }
   }, [response.body, props.variant]);
+
+  const restAvailableTabs = useMemo<RestResponseTab[]>(() => {
+    return hasScriptResults ? [...REST_TABS, 'test'] : REST_TABS;
+  }, [hasScriptResults]);
+
+  const graphqlAvailableTabs = useMemo<GraphqlResponseTab[]>(() => {
+    return hasScriptResults ? [...GRAPHQL_TABS, 'test'] : GRAPHQL_TABS;
+  }, [hasScriptResults]);
+
+  useKeyboard((key) => {
+    if (key.name !== 'tab') return;
+
+    if (props.variant === 'graphql') {
+      const currentIndex = graphqlAvailableTabs.indexOf(props.activeTab);
+      const nextIndex = (currentIndex + 1) % graphqlAvailableTabs.length;
+      const nextTab = graphqlAvailableTabs[nextIndex];
+      if (nextTab) {
+        props.onActiveTabChange(nextTab);
+      }
+      return;
+    }
+
+    const currentIndex = restAvailableTabs.indexOf(props.activeTab);
+    const nextIndex = (currentIndex + 1) % restAvailableTabs.length;
+    const nextTab = restAvailableTabs[nextIndex];
+    if (nextTab) {
+      props.onActiveTabChange(nextTab);
+    }
+  });
 
   const isGraphqlJson = useMemo(() => {
     if (props.variant !== 'graphql') return true;
