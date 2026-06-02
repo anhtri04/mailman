@@ -6,6 +6,7 @@
 [![Version](https://img.shields.io/badge/version-0.2.10-blue.svg)](https://github.com/anhtri04/mailman)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6.svg)](https://www.typescriptlang.org/)
 [![Bun](https://img.shields.io/badge/Runtime-Bun-000000?logo=bun)](https://bun.sh)
+[![BuyMeACoffee](https://raw.githubusercontent.com/pachadotdev/buymeacoffee-badges/main/bmc-yellow.svg)](https://buymeacoffee.com/anhtri04)
 
 </div>
 
