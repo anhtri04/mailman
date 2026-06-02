@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect, useState } from 'react';
 import { useTheme } from '../../../shared/theme/ThemeProvider';
 import type { ResponseState } from '../../../types';
 import type {
@@ -10,6 +10,7 @@ import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { HeadersDisplay } from './HeadersDisplay';
 import { detectContentType, formatResponseBody } from '../../../shared/utils/response-formatter';
 import { ScriptResultsPanel } from './ScriptResultsPanel';
+import { JsonTreeViewer, canRenderJsonTree } from './JsonTreeViewer';
 
 type ResponseModalTab = GraphqlResponseTab | RestResponseTab;
 
@@ -32,6 +33,7 @@ type ResponseModalProps = {
 export function ResponseModal(props: ResponseModalProps) {
   const { response, onClose } = props;
   const { colors } = useTheme();
+  const [collapsedJsonPaths, setCollapsedJsonPaths] = useState<Set<string>>(new Set());
 
   const contentType = useMemo(() => {
     return detectContentType(response.headers, response.body);
@@ -52,6 +54,30 @@ export function ResponseModal(props: ResponseModalProps) {
   const hasScriptResults = !!(
     response.scriptResults?.beforeRequest || response.scriptResults?.afterResponse
   );
+
+  const shouldRenderJsonTree = useMemo(() => {
+    if (props.variant === 'graphql') {
+      return canRenderJsonTree(response.body);
+    }
+
+    return contentType === 'json' && canRenderJsonTree(response.body);
+  }, [response.body, contentType, props.variant]);
+
+  useEffect(() => {
+    setCollapsedJsonPaths(new Set());
+  }, [response.body]);
+
+  const handleToggleJsonPath = useCallback((path: string) => {
+    setCollapsedJsonPaths((current) => {
+      const next = new Set(current);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
+  }, []);
 
   const contentSize = useMemo(() => {
     const bytes = new TextEncoder().encode(response.body).length;
@@ -152,18 +178,25 @@ export function ResponseModal(props: ResponseModalProps) {
         )}
 
         <scrollbox style={{ flexGrow: 1, flexShrink: 1, minHeight: 0 }}>
-          {props.activeTab === 'body' && (
-            <SyntaxHighlighter
-              code={formattedBody}
-              language={
-                props.variant === 'graphql'
-                  ? 'json'
-                  : contentType === 'json' || contentType === 'xml' || contentType === 'html'
-                    ? contentType
-                    : 'text'
-              }
-            />
-          )}
+          {props.activeTab === 'body' &&
+            (shouldRenderJsonTree ? (
+              <JsonTreeViewer
+                body={response.body}
+                collapsedPaths={collapsedJsonPaths}
+                onTogglePath={handleToggleJsonPath}
+              />
+            ) : (
+              <SyntaxHighlighter
+                code={formattedBody}
+                language={
+                  props.variant === 'graphql'
+                    ? 'json'
+                    : contentType === 'json' || contentType === 'xml' || contentType === 'html'
+                      ? contentType
+                      : 'text'
+                }
+              />
+            ))}
 
           {props.activeTab === 'headers' && response.headers && (
             <HeadersDisplay headers={response.headers} />
