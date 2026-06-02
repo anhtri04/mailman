@@ -8,6 +8,7 @@ function createState(overrides: Record<string, unknown> = {}) {
     showHistoryModal: false,
     showResponseModal: false,
     showRequestStatsModal: false,
+    showDocumentModal: false,
     showNotification: false,
     activeModal: null,
     collectionModal: null,
@@ -27,6 +28,7 @@ function createActionLog() {
     setShowResponseModal: (show: boolean) => calls.push(`setShowResponseModal:${String(show)}`),
     setShowRequestStatsModal: (show: boolean) =>
       calls.push(`setShowRequestStatsModal:${String(show)}`),
+    setShowDocumentModal: (show: boolean) => calls.push(`setShowDocumentModal:${String(show)}`),
     setShowNotification: (show: boolean) => calls.push(`setShowNotification:${String(show)}`),
     setActiveModal: (modal: 'headers' | 'body' | 'query' | 'auth' | 'scripts' | null) =>
       calls.push(`setActiveModal:${String(modal)}`),
@@ -67,6 +69,18 @@ describe('handleKeyboardShortcut', () => {
     expect(calls).toEqual(['resetHistoryError', 'setShowHistoryModal:true', 'onOpenHistory']);
   });
 
+  test('opens document modal on Ctrl+D only when active request exists', () => {
+    const { actions, calls } = createActionLog();
+
+    handleKeyboardShortcut(
+      { ctrl: true, name: 'd' },
+      createState({ hasActiveRequest: true }),
+      actions,
+    );
+
+    expect(calls).toEqual(['setShowDocumentModal:true']);
+  });
+
   test('saves request on Ctrl+S only when active request and collection exist', () => {
     const { actions, calls } = createActionLog();
 
@@ -101,6 +115,18 @@ describe('handleKeyboardShortcut', () => {
     );
 
     expect(calls).toEqual(['setActiveModal:null']);
+  });
+
+  test('closes document modal on Escape', () => {
+    const { actions, calls } = createActionLog();
+
+    handleKeyboardShortcut(
+      { ctrl: false, name: 'escape' },
+      createState({ showDocumentModal: true }),
+      actions,
+    );
+
+    expect(calls).toEqual(['setShowDocumentModal:false']);
   });
 
   test('closes notification on Escape', () => {

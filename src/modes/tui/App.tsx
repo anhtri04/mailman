@@ -15,6 +15,7 @@ import {
   WebSocketResponsePanel,
   HistoryModal,
   RequestStatsModal,
+  DocumentModal,
   ScriptsEditor,
   CollectionImportView,
   RequestAddingView,
@@ -134,6 +135,7 @@ export function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showRequestStatsModal, setShowRequestStatsModal] = useState(false);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [notification, setNotification] = useState<AppNotification | null>(null);
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
@@ -156,7 +158,8 @@ export function App() {
     showHelp ||
     showHistoryModal ||
     showResponseModal ||
-    showRequestStatsModal,
+    showRequestStatsModal ||
+    showDocumentModal,
   );
 
   const instructionContextKey = useMemo(
@@ -167,6 +170,7 @@ export function App() {
         showHistoryModal,
         showResponseModal,
         showRequestStatsModal,
+        showDocumentModal,
         activeModal,
         collectionModal,
         isLoading,
@@ -182,6 +186,7 @@ export function App() {
       showHistoryModal,
       showResponseModal,
       showRequestStatsModal,
+      showDocumentModal,
       activeModal,
       collectionModal,
       isLoading,
@@ -289,6 +294,11 @@ export function App() {
       return;
     }
 
+    if (showDocumentModal) {
+      setShowDocumentModal(false);
+      return;
+    }
+
     if (notification) {
       setNotification(null);
       return;
@@ -304,6 +314,7 @@ export function App() {
     showHistoryModal,
     showResponseModal,
     showRequestStatsModal,
+    showDocumentModal,
     notification,
     showThemeSelector,
   ]);
@@ -341,6 +352,7 @@ export function App() {
                 headers: graphqlRequest.headers,
                 auth: graphqlRequest.auth,
                 scripts: graphqlRequest.scripts,
+                document: activeRequest?.document,
               }
             : currentProtocol === 'websocket'
               ? {
@@ -349,6 +361,7 @@ export function App() {
                   url: request.url,
                   headers: request.headers ?? {},
                   initialMessage: summarizeRequestBody(request.body ?? emptyRequestBody()),
+                  document: activeRequest?.document,
                 }
               : {
                   protocol: 'rest',
@@ -359,6 +372,7 @@ export function App() {
                   body: request.body,
                   auth: request.auth,
                   scripts: request.scripts,
+                  document: activeRequest?.document,
                 },
         );
         const updated = await loadCollections();
@@ -372,6 +386,7 @@ export function App() {
     })();
   }, [
     activeCollectionId,
+    activeRequest?.document,
     activeRequestId,
     currentProtocol,
     graphqlRequest,
@@ -432,6 +447,7 @@ export function App() {
       showHistoryModal,
       showResponseModal,
       showRequestStatsModal,
+      showDocumentModal,
       showNotification: Boolean(notification),
       activeModal,
       collectionModal,
@@ -445,6 +461,7 @@ export function App() {
       setShowHistoryModal,
       setShowResponseModal,
       setShowRequestStatsModal,
+      setShowDocumentModal,
       setShowNotification: (show: boolean) => {
         if (!show) setNotification(null);
       },
@@ -1130,6 +1147,26 @@ export function App() {
     setActiveRequestId(null);
   }, []);
 
+  const handleDocumentChange = useCallback(
+    (document: string) => {
+      if (!activeCollectionId || !activeRequestId) return;
+
+      setCollections((current) =>
+        current.map((collection) => {
+          if (collection.id !== activeCollectionId) return collection;
+
+          return {
+            ...collection,
+            requests: collection.requests.map((item) =>
+              item.id === activeRequestId ? { ...item, document } : item,
+            ),
+          };
+        }),
+      );
+    },
+    [activeCollectionId, activeRequestId],
+  );
+
   const handleDeleteItem = useCallback(
     (collectionId: string, requestId?: string) => {
       const collection = collections.find((item) => item.id === collectionId);
@@ -1523,6 +1560,14 @@ export function App() {
               />
             </Modal>
           )}
+        {showDocumentModal && activeRequest && (
+          <DocumentModal
+            requestName={requestName}
+            value={activeRequest.document ?? ''}
+            onChange={handleDocumentChange}
+            onClose={() => setShowDocumentModal(false)}
+          />
+        )}
         {/* Catalog Help Modal */}
         {showHelp && (
           <Modal isOpen={true} onClose={() => setShowHelp(false)} title="Help">

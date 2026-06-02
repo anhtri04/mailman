@@ -21,6 +21,7 @@ interface BaseRequestItem {
   variables?: string;
   auth?: AuthConfig;
   scripts?: RequestScripts;
+  document?: string;
 }
 
 export interface RestRequestItem extends BaseRequestItem {

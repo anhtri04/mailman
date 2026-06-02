@@ -9,6 +9,7 @@ interface UseKeyboardShortcutsState {
   showHistoryModal: boolean;
   showResponseModal: boolean;
   showRequestStatsModal: boolean;
+  showDocumentModal: boolean;
   showNotification: boolean;
   activeModal: EditorModal;
   collectionModal: CollectionModal;
@@ -23,6 +24,7 @@ interface UseKeyboardShortcutsActions {
   setShowHistoryModal: (show: boolean) => void;
   setShowResponseModal: (show: boolean) => void;
   setShowRequestStatsModal: (show: boolean) => void;
+  setShowDocumentModal: (show: boolean) => void;
   setShowNotification: (show: boolean) => void;
   setActiveModal: (modal: EditorModal) => void;
   setCollectionModal: (modal: CollectionModal) => void;
@@ -45,6 +47,7 @@ function isInteractionBlocked(state: UseKeyboardShortcutsState): boolean {
     state.showHistoryModal ||
     state.showResponseModal ||
     state.showRequestStatsModal ||
+    state.showDocumentModal ||
     state.showNotification ||
     state.activeModal !== null ||
     state.collectionModal !== null
@@ -92,6 +95,11 @@ export function handleKeyboardShortcut(
       return;
     }
 
+    if (state.showDocumentModal) {
+      actions.setShowDocumentModal(false);
+      return;
+    }
+
     if (state.showNotification) {
       actions.setShowNotification(false);
       return;
@@ -131,6 +139,13 @@ export function handleKeyboardShortcut(
       actions.resetHistoryError();
       actions.setShowHistoryModal(true);
       actions.onOpenHistory();
+    }
+    return;
+  }
+
+  if (key.ctrl && key.name === 'd') {
+    if (!isInteractionBlocked(state) && state.hasActiveRequest) {
+      actions.setShowDocumentModal(true);
     }
     return;
   }

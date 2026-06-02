@@ -8,6 +8,7 @@ export type InstructionContextKey =
   | 'app.blocked.theme'
   | 'app.blocked.responseModal'
   | 'app.blocked.requestStats'
+  | 'app.blocked.document'
   | 'app.blocked.history'
   | 'app.blocked.editorModal.headers'
   | 'app.blocked.editorModal.body'
@@ -34,6 +35,7 @@ interface InstructionContextInput {
   showHistoryModal: boolean;
   showResponseModal: boolean;
   showRequestStatsModal: boolean;
+  showDocumentModal: boolean;
   activeModal: EditorModal;
   collectionModal: CollectionModal;
   isLoading: boolean;
@@ -64,6 +66,11 @@ export const INSTRUCTION_CATALOG: Record<InstructionContextKey, string[]> = {
     'Esc Close modals / go back',
     'Review timings, sizes, and network details',
     'Stats are saved with request history',
+  ],
+  'app.blocked.document': [
+    'Esc Close modals / go back',
+    'Tab Switch between Markdown and Preview',
+    'Ctrl+S Save request documentation',
   ],
   'app.blocked.history': [
     'Esc Close modals / go back',
@@ -128,6 +135,7 @@ export const INSTRUCTION_CATALOG: Record<InstructionContextKey, string[]> = {
   'request.active.rest.request': [
     'URL bar: type an endpoint and press Enter to send',
     'Ctrl+R Request History',
+    'Ctrl+D Open request document',
     'Ctrl+S Save request changes',
   ],
   'request.active.rest.response': [
@@ -138,6 +146,7 @@ export const INSTRUCTION_CATALOG: Record<InstructionContextKey, string[]> = {
   'request.active.graphql.request': [
     'Edit query and variables, then send',
     'H / A buttons edit headers or auth',
+    'Ctrl+D Open request document',
     'Ctrl+S Save request changes',
   ],
   'request.active.graphql.response': [
@@ -168,6 +177,7 @@ export function getInstructionContextKey(input: InstructionContextInput): Instru
   if (input.showHistoryModal) return 'app.blocked.history';
   if (input.showResponseModal) return 'app.blocked.responseModal';
   if (input.showRequestStatsModal) return 'app.blocked.requestStats';
+  if (input.showDocumentModal) return 'app.blocked.document';
   if (input.activeModal) return `app.blocked.editorModal.${input.activeModal}`;
   if (input.collectionModal) return `app.blocked.collectionModal.${input.collectionModal}`;
 

@@ -9,6 +9,7 @@ describe('getInstructionContextKey', () => {
       showHistoryModal: false,
       showResponseModal: false,
       showRequestStatsModal: false,
+      showDocumentModal: false,
       activeModal: null,
       collectionModal: null,
       isLoading: false,
@@ -29,6 +30,7 @@ describe('getInstructionContextKey', () => {
       showHistoryModal: false,
       showResponseModal: false,
       showRequestStatsModal: false,
+      showDocumentModal: false,
       activeModal: null,
       collectionModal: null,
       isLoading: false,
@@ -42,6 +44,27 @@ describe('getInstructionContextKey', () => {
     expect(key).toBe('request.active.graphql.response');
   });
 
+  test('returns document context when document modal is open', () => {
+    const key = getInstructionContextKey({
+      showHelp: false,
+      showThemeSelector: false,
+      showHistoryModal: false,
+      showResponseModal: false,
+      showRequestStatsModal: false,
+      showDocumentModal: true,
+      activeModal: null,
+      collectionModal: null,
+      isLoading: false,
+      currentProtocol: 'rest',
+      isStreamingResponse: false,
+      activeRequestId: 'r1',
+      focusedArea: 'request',
+      activeCollectionId: 'c1',
+    });
+
+    expect(key).toBe('app.blocked.document');
+  });
+
   test('returns idle context when nothing is selected', () => {
     const key = getInstructionContextKey({
       showHelp: false,
@@ -49,6 +72,7 @@ describe('getInstructionContextKey', () => {
       showHistoryModal: false,
       showResponseModal: false,
       showRequestStatsModal: false,
+      showDocumentModal: false,
       activeModal: null,
       collectionModal: null,
       isLoading: false,
