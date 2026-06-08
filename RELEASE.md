@@ -1,27 +1,27 @@
-## Mailman v0.2.10
+## Mailman v0.2.11
 
 ### What's Changed
 
 #### Added
 
-- Added CLI SSE streaming support using `sendRequestWithStreaming()`, with streamed SSE events rendered in the existing CLI SSE Events section.
-- Added CLI WebSocket request parsing support and request-type handling.
-- Added CLI suggestions for WebSocket request commands.
-- Added collapsible JSON tree rendering for REST and GraphQL response bodies in the TUI, with expand/collapse support and syntax-highlighted fallback for non-tree responses.
-- Added persistent active-request highlighting in the TUI collection panel, so the selected collection request remains visible even when the panel loses focus.
+- Added a TUI request document modal for collection requests, including Markdown preview support and keyboard shortcut/instruction updates.
+- Added collapsible JSON tree rendering for CLI JSON responses using the shared JSON tree viewer.
+- Added JSON tree rendering inside the TUI response modal.
+- Added tab keyboard navigation to the TUI response modal.
 
 #### Changed
 
-- Removed a deprecated CLI response rendering utility.
-- Reduced visual padding in the Welcome panel and Auth editor for a more compact UI.
+- Updated OpenTUI dependencies to version 0.3.4.
+- Shared the JSON tree viewer between TUI and CLI response rendering.
+- Added a Buy Me a Coffee badge to the README.
 
 #### Fixed
 
-- Fixed button sizing in the headers editor.
-- Fixed button sizing in the query params editor.
+- Fixed Markdown preview style keys in the request document modal.
+- Adjusted response panel margins for improved TUI layout in REST and GraphQL response panels.
 
 #### Tests
 
-- Added JSON tree utility coverage for parsing, path handling, and collapsed-row visibility.
-- Added CLI parser coverage for WebSocket request input.
-- Added CLI suggestion coverage for WebSocket request commands.
+- Added keyboard shortcut coverage for the request document modal.
+- Added instruction text coverage for the request document modal.
+- Expanded JSON tree utility coverage for CLI/shared response rendering.
